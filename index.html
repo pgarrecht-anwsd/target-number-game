@@ -217,92 +217,11 @@ function renderNumbers(arr){
   });
 }
 
-function pickOp(op){
-  if(state.selection.firstIndex===null){
-    alert('Pick a number first (click a number), then an operation, then another number.');
-    return;
-  }
-  state.selection.op = op;
-  highlightOp(op);
-}
-
-function highlightOp(op){
-  document.querySelectorAll('.op').forEach(el=>el.style.outline = '');
-  if(op){
-    const el = document.querySelector('.op[data-op="'+op+'"]');
-    if(el) el.style.outline = '3px solid rgba(255,255,255,0.12)';
-  }
-}
-
-function handleNumberClick(idx){
-  // If no first selected, set it
-  if(state.selection.firstIndex===null){
-    state.selection.firstIndex = idx;
-    // highlight selected
-    Array.from(numbersRow.children).forEach((b,i)=> b.style.boxShadow = (i==idx? '0 8px 18px rgba(0,0,0,0.35), 0 0 0 4px rgba(255,255,255,0.03)' : 'inset 0 -6px 0 rgba(0,0,0,0.08)'));
-    return;
-  }
-  // if first selected and op not chosen, user clicked second as attempt to choose op first
-  if(state.selection.op===null){
-    alert('Select an operation after choosing the first number.');
-    return;
-  }
-  if(idx === state.selection.firstIndex){
-    alert('Please pick a different number as the second operand.');
-    return;
-  }
-  // perform operation
-  const a = state.current.numbers[state.selection.firstIndex];
-  const b = state.current.numbers[idx];
-  const op = state.selection.op;
-  let result = null;
-  if(op === '+') result = a + b;
-  else if(op === '-') result = a - b;
-  else if(op === '*') result = a * b;
-  else if(op === '/'){
-    if(b === 0){ alert('Division by zero not allowed.'); resetSelection(); return; }
-    if(a % b !== 0){ alert('This division does not produce a whole number. Try another operation.'); resetSelection(); return; }
-    result = a / b;
-  }
-  // update numbers: replace higher index first to keep indices valid
-  const newNums = state.current.numbers.filter((_,i)=> i!==state.selection.firstIndex && i!==idx);
-  newNums.unshift(result); // put result first to be visible
-  state.current.numbers = newNums;
-  resetSelection();
-  renderNumbers(state.current.numbers);
-  // check win or continue
-  if(state.current.numbers.length === 1){
-    if(state.current.numbers[0] === state.current.target){
-      // success
-      const points = computePoints();
-      state.score += points;
-      scoreEl.textContent = state.score;
-      showFireworks();
-      setTimeout(()=>{
-        alert('Nice! You scored '+points+' points.');
-        nextRound();
-      }, 900);
-    } else {
-      alert('Not the target. The original numbers will be restored so you can try again.');
-      // restore original numbers and keep hints used state
-      state.current.numbers = state.current.originalNumbers.slice();
-      renderNumbers(state.current.numbers);
-    }
-  }
-}
-
 function computePoints(){
   if(state.usedHints === 0) return 100;
   if(state.usedHints === 1) return 80;
   if(state.usedHints === 2) return 60;
   return 0;
-}
-
-function resetSelection(){
-  state.selection.firstIndex = null;
-  state.selection.op = null;
-  highlightOp(null);
-  Array.from(numbersRow.children).forEach(b=> b.style.boxShadow = 'inset 0 -6px 0 rgba(0,0,0,0.08)');
 }
 
 hintBtn.addEventListener('click', ()=>{
@@ -510,6 +429,136 @@ operationButtons.forEach(btn => {
         firstOp = btn;
     });
 });
+  // -----------------------------
+// Helper functions for highlights
+// -----------------------------
+function clearNumHighlight() {
+  document.querySelectorAll('.num').forEach(b => b.classList.remove('selected'));
+}
+function clearOpHighlight() {
+  document.querySelectorAll('.op').forEach(b => b.classList.remove('selected'));
+}
+function highlightNumIndex(idx) {
+  clearNumHighlight();
+  const b = document.querySelector('.num[data-idx="'+idx+'"]');
+  if (b) b.classList.add('selected');
+}
+function highlightOpSymbol(op) {
+  clearOpHighlight();
+  const el = document.querySelector('.op[data-op="'+op+'"]');
+  if (el) el.classList.add('selected');
+}
+
+// -----------------------------
+// Reset selection (visual + state)
+// -----------------------------
+function resetSelection(){
+  state.selection.firstIndex = null;
+  state.selection.op = null;
+  clearNumHighlight();
+  clearOpHighlight();
+}
+
+// -----------------------------
+// Operation selection (toggle)
+// -----------------------------
+function pickOp(op){
+  // Toggle: if same op clicked again, deselect it
+  if(state.selection.op === op){
+    state.selection.op = null;
+    clearOpHighlight();
+    return;
+  }
+  // Otherwise set op and highlight it
+  state.selection.op = op;
+  highlightOpSymbol(op);
+}
+
+// -----------------------------
+// Number click logic (toggle + compute)
+// -----------------------------
+function handleNumberClick(idx){
+  // If no first number selected -> select this one
+  if(state.selection.firstIndex === null){
+    state.selection.firstIndex = idx;
+    highlightNumIndex(idx);
+    return;
+  }
+
+  // If first is selected but no operation chosen:
+  if(state.selection.op === null){
+    // If user clicked the same number again -> deselect it
+    if(idx === state.selection.firstIndex){
+      resetSelection();
+      return;
+    }
+    // If user clicked a different number without choosing op,
+    // treat it as switching the first number: select the new one
+    state.selection.firstIndex = idx;
+    highlightNumIndex(idx);
+    return;
+  }
+
+  // If we have a first number and an operation, this click should be the second operand.
+  // If they clicked the same index as the first number, just deselect everything (safe fallback)
+  if(idx === state.selection.firstIndex){
+    // Deselect second attempt and clear operation (so student can pick a new op or number)
+    // Keep no number selected to avoid accidental reuse.
+    resetSelection();
+    return;
+  }
+
+  // Perform operation between a and b
+  const a = state.current.numbers[state.selection.firstIndex];
+  const b = state.current.numbers[idx];
+  const op = state.selection.op;
+
+  // Division checks: division by zero or non-integer division should CLEAR the operation
+  if(op === '/'){
+    if(b === 0 || a % b !== 0){
+      // Clear operation only, keep first number selected so student can pick a different op or second number
+      state.selection.op = null;
+      clearOpHighlight();
+      // keep the first number highlight so it's clear student must pick a valid op/number
+      highlightNumIndex(state.selection.firstIndex);
+      return;
+    }
+  }
+
+  // All good — apply the operation
+  let result;
+  if(op === '+') result = a + b;
+  else if(op === '-') result = a - b;
+  else if(op === '*') result = a * b;
+  else if(op === '/') result = a / b;
+
+  // Update the numbers array: remove the two operands and add the result at the front
+  const newNums = state.current.numbers.filter((_,i)=> i!==state.selection.firstIndex && i!==idx);
+  newNums.unshift(result);
+  state.current.numbers = newNums;
+
+  // Clear visual selection and render updated number buttons
+  resetSelection();
+  renderNumbers(state.current.numbers);
+
+  // Check for win or continue (this mirrors the original code's flow)
+  if(state.current.numbers.length === 1){
+    if(state.current.numbers[0] === state.current.target){
+      const points = computePoints();
+      state.score += points;
+      scoreEl.textContent = state.score;
+      showFireworks();
+      setTimeout(()=> {
+        // small pause for fireworks then next round
+        nextRound();
+      }, 900);
+    } else {
+      // not the target: restore original numbers for another try
+      state.current.numbers = state.current.originalNumbers.slice();
+      renderNumbers(state.current.numbers);
+    }
+  }
+}
 </script>
 </body>
 </html>
