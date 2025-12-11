@@ -434,7 +434,15 @@ newGame();
 document.getElementById('downloadBtn').addEventListener('click', ()=>{
   alert('Use the ZIP I provided separately to upload into your GitHub repository. (Follow README instructions.)');
 });
-
+// Highlight selected buttons
+document.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Remove "selected" from all buttons first
+        document.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+        // Add "selected" to the clicked button
+        btn.classList.add('selected');
+    });
+});
 </script>
 </body>
 </html>
