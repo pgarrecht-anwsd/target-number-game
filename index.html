@@ -508,56 +508,79 @@ function handleNumberClick(idx){
     return;
   }
 
-  // Perform operation between a and b
-  const a = state.current.numbers[state.selection.firstIndex];
-  const b = state.current.numbers[idx];
-  const op = state.selection.op;
+// -----------------------------------------
+// Perform operation between a and b (with highlights)
+// -----------------------------------------
+const a = state.current.numbers[state.selection.firstIndex];
+const b = state.current.numbers[idx];
+const op = state.selection.op;
 
-  // Division checks: division by zero or non-integer division should CLEAR the operation
-  if(op === '/'){
+// Division rules: invalid -> clear operation only
+if(op === '/'){
     if(b === 0 || a % b !== 0){
-      // Clear operation only, keep first number selected so student can pick a different op or second number
-      state.selection.op = null;
-      clearOpHighlight();
-      // keep the first number highlight so it's clear student must pick a valid op/number
-      highlightNumIndex(state.selection.firstIndex);
-      return;
+        state.selection.op = null;
+        clearOpHighlight();
+        highlightNumIndex(state.selection.firstIndex);
+        return;
     }
-  }
+}
 
-  // All good — apply the operation
-  let result;
-  if(op === '+') result = a + b;
-  else if(op === '-') result = a - b;
-  else if(op === '*') result = a * b;
-  else if(op === '/') result = a / b;
+// Compute result
+let result;
+if(op === '+') result = a + b;
+else if(op === '-') result = a - b;
+else if(op === '*') result = a * b;
+else if(op === '/') result = a / b;
 
-  // Update the numbers array: remove the two operands and add the result at the front
-  const newNums = state.current.numbers.filter((_,i)=> i!==state.selection.firstIndex && i!==idx);
-  newNums.unshift(result);
-  state.current.numbers = newNums;
+// -----------------------------------------
+// Highlight ALL selected parts
+// -----------------------------------------
+highlightNumIndex(state.selection.firstIndex);
+highlightOpSymbol(op);
 
-  // Clear visual selection and render updated number buttons
-  resetSelection();
-  renderNumbers(state.current.numbers);
+// highlight the second number
+const secondButtonEl = document.querySelector('.num[data-idx="'+idx+'"]');
+if(secondButtonEl) secondButtonEl.classList.add('selected');
 
-  // Check for win or continue (this mirrors the original code's flow)
-  if(state.current.numbers.length === 1){
-    if(state.current.numbers[0] === state.current.target){
-      const points = computePoints();
-      state.score += points;
-      scoreEl.textContent = state.score;
-      showFireworks();
-      setTimeout(()=> {
-        // small pause for fireworks then next round
-        nextRound();
-      }, 900);
-    } else {
-      // not the target: restore original numbers for another try
-      state.current.numbers = state.current.originalNumbers.slice();
-      renderNumbers(state.current.numbers);
+// -----------------------------------------
+// Delay actual computation so highlights stay visible briefly
+// -----------------------------------------
+setTimeout(() => {
+
+    // Replace numbers: remove operands and insert result
+    const newNums = state.current.numbers.filter((_,i)=> 
+        i!==state.selection.firstIndex && i!==idx
+    );
+    newNums.unshift(result);
+    state.current.numbers = newNums;
+
+    // Clear highlights and re-render
+    resetSelection();
+    renderNumbers(state.current.numbers);
+
+    // -----------------------------------------
+    // If only 1 number left, check win/loss
+    // -----------------------------------------
+    if(state.current.numbers.length === 1){
+
+        if(state.current.numbers[0] === state.current.target){
+            const points = computePoints();
+            state.score += points;
+            scoreEl.textContent = state.score;
+            showFireworks();
+            setTimeout(nextRound, 900);
+
+        } else {
+            // WRONG FINAL ANSWER → show result for 1 sec
+            setTimeout(() => {
+                state.current.numbers = state.current.originalNumbers.slice();
+                renderNumbers(state.current.numbers);
+            }, 1000);
+        }
     }
-  }
+
+}, 550);  // <- this delay keeps all three highlights visible
+
 }
 </script>
 </body>
