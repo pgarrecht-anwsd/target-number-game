@@ -6,7 +6,7 @@
 <title>Target Number Game</title>
 <style>
   .selected {
-    filter: brightness(130%); /* makes the button color lighter */
+    filter: brightness(150%); /* makes the button color lighter */
 }
 :root{--blue:#1e5799;--op1:#2d7f5e;--op2:#c75f00;--op3:#6b2d7f;--op4:#d03b3b;--white:#fff;}
 html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0b2a4a 0%, #123a63 100%);color:var(--white);display:flex;align-items:center;justify-content:center;}
@@ -441,6 +441,73 @@ document.querySelectorAll('button').forEach(btn => {
         document.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
         // Add "selected" to the clicked button
         btn.classList.add('selected');
+    });
+});
+  //------------------------------------------------------
+// Button selection logic for numbers & operations
+//------------------------------------------------------
+
+// These variables already exist in your game logic.
+// We are just re-using them safely.
+let firstNum = null;
+let firstOp = null;
+
+// Identify number and operation buttons.
+// (Your buttons must already include these classes.)
+const numberButtons = document.querySelectorAll("button.number");
+const operationButtons = document.querySelectorAll("button.operation");
+
+//-------------------------------
+// NUMBER BUTTON BEHAVIOR
+//-------------------------------
+numberButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+
+        // Toggle behavior: second click = deselect
+        if (btn.classList.contains("selected")) {
+            btn.classList.remove("selected");
+
+            // Clear from memory if it was stored
+            if (firstNum === btn) {
+                firstNum = null;
+            }
+
+            return;
+        }
+
+        // Selecting a new number:
+        // Remove previous selection.
+        numberButtons.forEach(b => b.classList.remove("selected"));
+
+        // Highlight this new button.
+        btn.classList.add("selected");
+
+        // Store it in game logic
+        firstNum = btn;
+    });
+});
+
+//-------------------------------
+// OPERATION BUTTON BEHAVIOR
+//-------------------------------
+operationButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+
+        // Toggle behavior
+        if (btn.classList.contains("selected")) {
+            btn.classList.remove("selected");
+
+            if (firstOp === btn) {
+                firstOp = null;
+            }
+
+            return;
+        }
+
+        // Selecting a new operation:
+        operationButtons.forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        firstOp = btn;
     });
 });
 </script>
