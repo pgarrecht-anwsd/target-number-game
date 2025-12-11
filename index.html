@@ -183,7 +183,8 @@ function generateProblem(){
   // attempt until a solvable set and target found
   for(let attempt=0; attempt<2000; attempt++){
     const nums = [];
-    for(let i=0;i<count;i++) nums.push(randInt(maxNum));
+    const startMax = 10; // numbers 0–10
+for(let i=0;i<count;i++) nums.push(randInt(startMax));
     // try pick a target within 0..maxNum that is reachable
     // try all possible targets within 0..maxNum, but randomize order
     const targets = [];
