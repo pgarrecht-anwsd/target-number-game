@@ -378,52 +378,51 @@ const operationButtons = document.querySelectorAll("button.operation");
 
 //-------------------------------
 // NUMBER BUTTON BEHAVIOR
-//-------------------------------
 numberButtons.forEach(btn => {
     btn.addEventListener("click", () => {
 
-        // Toggle behavior: second click = deselect
+        // If clicking a selected number, deselect it
         if (btn.classList.contains("selected")) {
             btn.classList.remove("selected");
 
-            // Clear from memory if it was stored
-            if (firstNum === btn) {
-                firstNum = null;
-            }
+            if (firstNum === btn) firstNum = null;
+            if (secondNum === btn) secondNum = null;
 
             return;
         }
 
-        // Selecting a new number:
-        // Remove previous selection.
-        numberButtons.forEach(b => b.classList.remove("selected"));
+        // If no first number chosen yet:
+        if (!firstNum) {
+            firstNum = btn;
+            btn.classList.add("selected");
+            return;
+        }
 
-        // Highlight this new button.
-        btn.classList.add("selected");
+        // If we have firstNum but no operation, do nothing
+        if (!firstOp) return;
 
-        // Store it in game logic
-        firstNum = btn;
+        // If picking the second number:
+        if (!secondNum) {
+            secondNum = btn;
+            btn.classList.add("selected");
+            return;
+        }
     });
 });
 
 //-------------------------------
 // OPERATION BUTTON BEHAVIOR
-//-------------------------------
 operationButtons.forEach(btn => {
     btn.addEventListener("click", () => {
 
-        // Toggle behavior
+        // If toggling off
         if (btn.classList.contains("selected")) {
             btn.classList.remove("selected");
-
-            if (firstOp === btn) {
-                firstOp = null;
-            }
-
+            firstOp = null;
             return;
         }
 
-        // Selecting a new operation:
+        // Otherwise, select this operation
         operationButtons.forEach(b => b.classList.remove("selected"));
         btn.classList.add("selected");
         firstOp = btn;
