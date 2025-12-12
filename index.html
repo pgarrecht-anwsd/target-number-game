@@ -375,7 +375,7 @@ let firstOp = null;
 // (Your buttons must already include these classes.)
 const numberButtons = document.querySelectorAll("button.number");
 const operationButtons = document.querySelectorAll("button.operation");
-
+ 
 //-------------------------------
 // NUMBER BUTTON BEHAVIOR
 numberButtons.forEach(btn => {
@@ -438,7 +438,6 @@ function clearOpHighlight() {
   document.querySelectorAll('.op').forEach(b => b.classList.remove('selected'));
 }
 function highlightNumIndex(idx) {
-  clearNumHighlight();
   const b = document.querySelector('.num[data-idx="'+idx+'"]');
   if (b) b.classList.add('selected');
 }
@@ -449,14 +448,7 @@ function highlightOpSymbol(op) {
 }
 
 // -----------------------------
-// Reset selection (visual + state)
-// -----------------------------
-function resetSelection(){
-  state.selection.firstIndex = null;
-  state.selection.op = null;
-  clearNumHighlight();
-  clearOpHighlight();
-}
+  q``
 
 // -----------------------------
 // Operation selection (toggle)
