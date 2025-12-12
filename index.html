@@ -5,40 +5,40 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Target Number Game</title>
 <style>
-:root{
-  --blue:#1e5799;
-  --op1:#2d7f5e;
-  --op2:#c75f00;
-  --op3:#6b2d7f;
-  --op4:#d03b3b;
-  --white:#fff;
-}
-html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0b2a4a 0%, #123a63 100%);color:var(--white);display:flex;align-items:center;justify-content:center;}
-.container{width:960px;max-width:96vw;padding:18px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.4);}
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.title{font-size:20px;font-weight:700;}
-.controls{display:flex;gap:8px;align-items:center;}
-.btn{background:rgba(255,255,255,0.06);border:none;color:var(--white);padding:8px 12px;border-radius:8px;cursor:pointer;}
-.small{padding:6px 10px;font-size:14px;}
-.target{background:var(--blue);padding:8px 14px;border-radius:8px;font-weight:800;color:#ff6666;font-size:26px;display:inline-block;min-width:70px;text-align:center;}
-.row{display:flex;gap:12px;align-items:center;justify-content:center;margin:14px 0;}
-.ops{display:flex;gap:8px;justify-content:center;}
-.op{min-width:56px;padding:12px;border-radius:8px;font-size:20px;font-weight:700;border:none;color:var(--white);cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.2);}
-.op.add{background:var(--op1);} .op.sub{background:var(--op2);} .op.mul{background:var(--op3);} .op.div{background:var(--op4);} 
-.numbers{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
-.num{min-width:96px;padding:18px;border-radius:10px;background:var(--blue);border:none;font-size:24px;font-weight:800;color:var(--white);cursor:pointer;box-shadow:inset 0 -6px 0 rgba(0,0,0,0.08);}
-.selected{filter: brightness(150%);}
-.info{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
-.hintBox{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;}
-.footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
-.score{font-weight:700;}
-.hidden{display:none;}
-.message{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.03);}
-.canvas-wrap{position:relative;height:120px;}
-#fireworksCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;display:none;}
-.rules{font-size:13px;opacity:0.9;}
-.settings{display:flex;gap:8px;align-items:center;}
-select,input[type=number]{padding:6px;border-radius:6px;border:none;background:rgba(255,255,255,0.02);color:var(--white);}
+  :root {
+    --blue:#1e5799;
+    --op1:#2d7f5e;
+    --op2:#c75f00;
+    --op3:#6b2d7f;
+    --op4:#d03b3b;
+    --white:#fff;
+  }
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0b2a4a 0%, #123a63 100%);color:var(--white);display:flex;align-items:center;justify-content:center;}
+  .container{width:960px;max-width:96vw;padding:18px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.4);}
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .title{font-size:20px;font-weight:700;}
+  .controls{display:flex;gap:8px;align-items:center;}
+  .btn{background:rgba(255,255,255,0.06);border:none;color:var(--white);padding:8px 12px;border-radius:8px;cursor:pointer;}
+  .small{padding:6px 10px;font-size:14px;}
+  .target{background:var(--blue);padding:8px 14px;border-radius:8px;font-weight:800;color:#ff6666;font-size:26px;display:inline-block;min-width:70px;text-align:center;}
+  .row{display:flex;gap:12px;align-items:center;justify-content:center;margin:14px 0;}
+  .ops{display:flex;gap:8px;justify-content:center;}
+  .op{min-width:56px;padding:12px;border-radius:8px;font-size:20px;font-weight:700;border:none;color:var(--white);cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+  .op.add{background:var(--op1);} .op.sub{background:var(--op2);} .op.mul{background:var(--op3);} .op.div{background:var(--op4);}
+  .numbers{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+  .num{min-width:96px;padding:18px;border-radius:10px;background:var(--blue);border:none;font-size:24px;font-weight:800;color:var(--white);cursor:pointer;box-shadow:inset 0 -6px 0 rgba(0,0,0,0.08);}
+  .info{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+  .hintBox{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+  .score{font-weight:700;}
+  .hidden{display:none;}
+  .message{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.03);}
+  .canvas-wrap{position:relative;height:120px;}
+  #fireworksCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;display:none;}
+  .rules{font-size:13px;opacity:0.9;}
+  .settings{display:flex;gap:8px;align-items:center;}
+  select,input[type=number]{padding:6px;border-radius:6px;border:none;background:rgba(255,255,255,0.02);color:var(--white);}
+  .selected { filter: brightness(150%); }
 </style>
 </head>
 <body>
@@ -76,7 +76,9 @@ select,input[type=number]{padding:6px;border-radius:6px;border:none;background:r
     <button class="op div" data-op="/" aria-label="divide">÷</button>
   </div>
 
-  <div class="row numbers" id="numbersRow" role="list"></div>
+  <div class="row numbers" id="numbersRow" role="list" aria-label="Numbers area">
+    <!-- number buttons injected here -->
+  </div>
 
   <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
     <button id="hintBtn" class="btn small">Hint</button>
@@ -109,12 +111,15 @@ const state = {
   problemsPerGame: 16,
   round: 0,
   score: 0,
-  usedHints: 0,
+  hintsUsed: 0,
   current: null,
   selection: {firstIndex:null, op:null},
+  usedHints: 0
 };
 
+// -----------------------------
 // DOM refs
+// -----------------------------
 const targetEl = document.getElementById('targetValue');
 const numbersRow = document.getElementById('numbersRow');
 const scoreEl = document.getElementById('score');
@@ -134,38 +139,40 @@ const countSelect = document.getElementById('countSelect');
 const STORAGE = 'targetNumberSettings_v1';
 function loadSettings(){
   try{
-    const s = JSON.parse(localStorage.getItem(STORAGE)||"{}");
-    if(s.mode) modeSelect.value=s.mode;
-    if(s.maxNum) maxSelect.value=s.maxNum;
-    if(s.count) countSelect.value=s.count;
-    state.mode=parseInt(modeSelect.value);
-    state.maxNum=parseInt(maxSelect.value);
-    state.problemsPerGame=parseInt(countSelect.value);
+    const s = JSON.parse(localStorage.getItem(STORAGE) || "{}");
+    if(s.mode) modeSelect.value = s.mode;
+    if(s.maxNum) maxSelect.value = s.maxNum;
+    if(s.count) countSelect.value = s.count;
+    state.mode = parseInt(modeSelect.value);
+    state.maxNum = parseInt(maxSelect.value);
+    state.problemsPerGame = parseInt(countSelect.value);
     roundTotalEl.textContent = state.problemsPerGame;
-  }catch(e){console.log(e);}
+  }catch(e){ console.log(e); }
 }
+function saveSettings(){ localStorage.setItem(STORAGE, JSON.stringify({mode:modeSelect.value,maxNum:maxSelect.value,count:countSelect.value})); }
 loadSettings();
-function saveSettings(){ localStorage.setItem(STORAGE,JSON.stringify({mode:modeSelect.value,maxNum:maxSelect.value,count:countSelect.value})); }
+
+// -----------------------------
+// Event listeners for settings
+// -----------------------------
 modeSelect.addEventListener('change', ()=>{ state.mode=parseInt(modeSelect.value); saveSettings(); newProblem(true); });
 maxSelect.addEventListener('change', ()=>{ state.maxNum=parseInt(maxSelect.value); saveSettings(); newProblem(true); });
 countSelect.addEventListener('change', ()=>{ state.problemsPerGame=parseInt(countSelect.value); roundTotalEl.textContent=state.problemsPerGame; saveSettings(); newGame(); });
 
 // -----------------------------
-// Core functions
-// -----------------------------
-function checkSolvable(numbers,target){
-  if(numbers.length===1) return numbers[0]===target?[]:null;
+// Core: solvable check (integer-only)
+function checkSolvable(numbers, target){
+  if(numbers.length === 1) return (numbers[0] === target) ? [] : null;
   for(let i=0;i<numbers.length;i++){
     for(let j=0;j<numbers.length;j++){
       if(i===j) continue;
       const a=numbers[i], b=numbers[j];
-      const rest=numbers.filter((_,idx)=>idx!==i && idx!==j);
-      const candidates=[{val:a+b,desc:a+" + "+b},{val:a-b,desc:a+" - "+b},{val:a*b,desc:a+" * "+b}];
-      if(b!==0 && a%b===0) candidates.push({val:a/b,desc:a+" / "+b});
+      const rest = numbers.filter((_,idx)=> idx!==i && idx!==j);
+      const candidates=[{val:a+b,desc:`${a} + ${b}`},{val:a-b,desc:`${a} - ${b}`},{val:a*b,desc:`${a} * ${b}`}];
+      if(b!==0 && a%b===0) candidates.push({val:a/b,desc:`${a} / ${b}`});
       for(const c of candidates){
         if(!Number.isFinite(c.val) || Math.floor(c.val)!==c.val) continue;
-        const next=[c.val,...rest];
-        const sol=checkSolvable(next,target);
+        const sol = checkSolvable([c.val,...rest],target);
         if(sol!==null) return [{a,b,op:c.desc,result:c.val},...sol];
       }
     }
@@ -173,17 +180,20 @@ function checkSolvable(numbers,target){
   return null;
 }
 
+// -----------------------------
+// Generate problem
 function generateProblem(){
-  const count=state.mode;
-  const startMax=10; // numbers 0-10
-  for(let attempt=0; attempt<2000; attempt++){
+  const count = state.mode;
+  const maxNum = state.maxNum;
+  for(let attempt=0;attempt<2000;attempt++){
     const nums=[];
+    const startMax=10;
     for(let i=0;i<count;i++) nums.push(randInt(startMax));
     const targets=[];
-    for(let t=0;t<=state.maxNum;t++) targets.push(t);
-    for(let k=targets.length-1;k>0;k--){const r=Math.floor(Math.random()*(k+1));[targets[k],targets[r]]=[targets[r],targets[k]];}
+    for(let t=0;t<=maxNum;t++) targets.push(t);
+    for(let k=targets.length-1;k>0;k--){ const r=Math.floor(Math.random()*(k+1)); [targets[k],targets[r]]=[targets[r],targets[k]]; }
     for(const t of targets){
-      const sol=checkSolvable(nums.slice(),t);
+      const sol = checkSolvable(nums.slice(),t);
       if(sol!==null) return {numbers:nums,target:t,solution:sol};
     }
   }
@@ -191,8 +201,7 @@ function generateProblem(){
 }
 
 // -----------------------------
-// UI
-// -----------------------------
+// Render numbers
 function renderNumbers(arr){
   numbersRow.innerHTML='';
   arr.forEach((n,idx)=>{
@@ -205,6 +214,8 @@ function renderNumbers(arr){
   });
 }
 
+// -----------------------------
+// Compute points
 function computePoints(){
   if(state.usedHints===0) return 100;
   if(state.usedHints===1) return 80;
@@ -213,49 +224,80 @@ function computePoints(){
 }
 
 // -----------------------------
-// Selection & highlights
+// Hints
+hintBtn.addEventListener('click',()=>{
+  if(!state.current) return;
+  state.usedHints++;
+  hintsUsedEl.textContent=state.usedHints;
+  const sol=state.current.solution||[];
+  const showSteps = sol.slice(0,state.usedHints);
+  let txt='Hint: ';
+  if(showSteps.length===0) txt+='Press again to reveal first step.';
+  else txt+=showSteps.map((s,i)=>`Step ${i+1}: ${s.a} ${s.op.split(' ')[1]} ${s.b} = ${s.result}`).join(' | ');
+  alert(txt);
+  if(state.usedHints>(state.mode-1)) state.usedHints=state.mode-1;
+});
+
 // -----------------------------
-function resetSelection(){
-  state.selection.firstIndex=null;
-  state.selection.op=null;
-  document.querySelectorAll('.num, .op').forEach(b=>b.classList.remove('selected'));
-}
-function highlightNumIndex(idx){ const b=document.querySelector('.num[data-idx="'+idx+'"]'); if(b) b.classList.add('selected'); }
-function highlightOpSymbol(op){ const el=document.querySelector('.op[data-op="'+op+'"]'); if(el) el.classList.add('selected'); }
+// Reset
+resetBtn.addEventListener('click',()=>{
+  if(!state.current) return;
+  state.current.numbers = state.current.originalNumbers.slice();
+  renderNumbers(state.current.numbers);
+  resetSelection();
+});
+
+// -----------------------------
+// New problem
+newBtn.addEventListener('click',()=> nextRound());
+
+// -----------------------------
+// Highlight helpers
+function clearNumHighlight(){ document.querySelectorAll('.num').forEach(b=>b.classList.remove('selected')); }
+function highlightNumIndex(idx){ const b=document.querySelector(`.num[data-idx="${idx}"]`); if(b) b.classList.add('selected'); }
+function clearOpHighlight(){ document.querySelectorAll('.op').forEach(b=>b.classList.remove('selected')); }
+function highlightOpSymbol(op){ clearOpHighlight(); const el=document.querySelector(`.op[data-op="${op}"]`); if(el) el.classList.add('selected'); }
+
+// -----------------------------
+// Pick operation
+document.querySelectorAll('.op').forEach(b=>b.addEventListener('click',()=> pickOp(b.dataset.op)));
 function pickOp(op){
-  if(state.selection.op===op){ state.selection.op=null; document.querySelectorAll('.op').forEach(b=>b.classList.remove('selected')); return;}
-  state.selection.op=op; highlightOpSymbol(op);
+  if(state.selection.op===op){ state.selection.op=null; clearOpHighlight(); return; }
+  state.selection.op=op;
+  highlightOpSymbol(op);
 }
 
 // -----------------------------
-// Number click logic
-// -----------------------------
+// Handle number click
 function handleNumberClick(idx){
-  const sel=state.selection;
-  const nums=state.current.numbers;
+  const sel = state.selection;
+  const nums = state.current.numbers;
+
   if(sel.firstIndex===null){ sel.firstIndex=idx; highlightNumIndex(idx); return; }
-  if(sel.op===null){ if(idx===sel.firstIndex){ resetSelection(); return; } sel.firstIndex=idx; highlightNumIndex(idx); return; }
+
+  if(sel.op===null){
+    if(idx===sel.firstIndex){ resetSelection(); }
+    return; // ignore other numbers until operation selected
+  }
+
   if(idx===sel.firstIndex){ resetSelection(); return; }
 
-  const a=nums[sel.firstIndex], b=nums[idx], op=sel.op;
-  // division check
-  if(op==='/' && (b===0 || a%b!==0)){ sel.op=null; document.querySelectorAll('.op').forEach(b=>b.classList.remove('selected')); highlightNumIndex(sel.firstIndex); return; }
+  const a = nums[sel.firstIndex], b = nums[idx], op = sel.op;
+  if(op==='/' && (b===0 || a%b!==0)){ sel.op=null; clearOpHighlight(); highlightNumIndex(sel.firstIndex); return; }
 
-  // Compute result
   let result;
   if(op==='+') result=a+b;
   else if(op==='-') result=a-b;
   else if(op==='*') result=a*b;
   else if(op==='/') result=a/b;
 
-  // Highlight
+  // highlight all
   highlightNumIndex(sel.firstIndex);
   highlightOpSymbol(op);
   highlightNumIndex(idx);
 
   setTimeout(()=>{
-    // replace numbers
-    const newNums=nums.filter((_,i)=>i!==sel.firstIndex && i!==idx);
+    const newNums = nums.filter((_,i)=>i!==sel.firstIndex && i!==idx);
     newNums.unshift(result);
     state.current.numbers=newNums;
     resetSelection();
@@ -263,73 +305,65 @@ function handleNumberClick(idx){
 
     if(state.current.numbers.length===1){
       if(state.current.numbers[0]===state.current.target){
-        state.score+=computePoints(); scoreEl.textContent=state.score;
+        state.score+=computePoints();
+        scoreEl.textContent=state.score;
         showFireworks();
-        setTimeout(nextRound,900);
+        setTimeout(nextRound,3000); // 3 sec display for correct
       } else {
-        setTimeout(()=>{ state.current.numbers=state.current.originalNumbers.slice(); renderNumbers(state.current.numbers); },1000);
+        setTimeout(()=>{
+          state.current.numbers=state.current.originalNumbers.slice();
+          renderNumbers(state.current.numbers);
+        },3000); // 3 sec display for incorrect
       }
     }
+
   },550);
 }
 
 // -----------------------------
-// Buttons
-// -----------------------------
-hintBtn.addEventListener('click',()=>{
-  if(!state.current) return;
-  state.usedHints++; hintsUsedEl.textContent=state.usedHints;
-  const sol=state.current.solution||[];
-  const showSteps=sol.slice(0,state.usedHints);
-  let txt='Hint: '; if(showSteps.length===0) txt+='Press again to reveal first step.';
-  else txt+=showSteps.map((s,i)=> `Step ${i+1}: ${s.a} ${s.op.split(' ')[1]} ${s.b} = ${s.result}`).join(' | ');
-  alert(txt);
-  if(state.usedHints>(state.mode-1)) state.usedHints=state.mode-1;
-});
-
-resetBtn.addEventListener('click',()=>{ state.current.numbers=state.current.originalNumbers.slice(); renderNumbers(state.current.numbers); resetSelection(); });
-newBtn.addEventListener('click',()=>{ nextRound(); });
-
-document.querySelectorAll('.op').forEach(b=>b.addEventListener('click',()=>pickOp(b.dataset.op)));
+// Reset selection
+function resetSelection(){ state.selection={firstIndex:null,op:null}; clearNumHighlight(); clearOpHighlight(); }
 
 // -----------------------------
-// Game rounds
-// -----------------------------
-function newGame(){ state.round=0; state.score=0; state.usedHints=0; scoreEl.textContent=state.score; roundNumEl.textContent=state.round; roundTotalEl.textContent=state.problemsPerGame; nextRound(); }
+// Next round
+function newGame(){ state.round=0; state.score=0; state.usedHints=0; scoreEl.textContent=state.score; nextRound(); }
 function nextRound(){
   if(state.round>=state.problemsPerGame){ alert('Game complete! Total score: '+state.score); state.round=0; state.score=0; scoreEl.textContent=state.score; }
-  state.round++; roundNumEl.textContent=state.round;
-  const p=generateProblem();
+  state.round++;
+  roundNumEl.textContent=state.round;
+  const p = generateProblem();
   if(!p){ alert('Unable to generate solvable problem.'); return; }
-  state.current={numbers:p.numbers.slice(), originalNumbers:p.numbers.slice(), target:p.target, solution:p.solution};
-  state.usedHints=0; hintsUsedEl.textContent=0; targetEl.textContent=p.target;
-  renderNumbers(state.current.numbers); resetSelection();
+  state.current={numbers:p.numbers.slice(),originalNumbers:p.numbers.slice(),target:p.target,solution:p.solution};
+  state.usedHints=0; hintsUsedEl.textContent=0;
+  targetEl.textContent=p.target;
+  renderNumbers(state.current.numbers);
+  resetSelection();
 }
 
 // -----------------------------
 // Fireworks
-// -----------------------------
 const canvas=document.getElementById('fireworksCanvas'); const ctx=canvas.getContext('2d'); let cw,ch;
 function resizeCanvas(){ cw=canvas.width=canvas.clientWidth; ch=canvas.height=canvas.clientHeight; }
-window.addEventListener('resize', resizeCanvas); resizeCanvas();
+window.addEventListener('resize',resizeCanvas); resizeCanvas();
 function showFireworks(){
-  canvas.style.display='block';
-  const particles=[];
-  const x=cw*0.5, y=ch*0.5, N=60;
+  canvas.style.display='block'; const particles=[]; const x=cw*0.5; const y=ch*0.5; const N=60;
   for(let i=0;i<N;i++){ const angle=Math.random()*Math.PI*2; const speed=Math.random()*4+1; particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:60+Math.random()*30}); }
   let frame=0; const id=setInterval(()=>{
     ctx.clearRect(0,0,cw,ch);
-    particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.08; p.life--; ctx.beginPath(); ctx.globalAlpha=Math.max(0,p.life/80); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill(); });
+    particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;ctx.beginPath();ctx.globalAlpha=Math.max(0,p.life/80);ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();p.life--;});
     frame++; if(frame>50){ clearInterval(id); ctx.clearRect(0,0,cw,ch); canvas.style.display='none'; }
   },16);
   try{
-    const ac=new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(); const g=ac.createGain(); o.type='sine'; o.frequency.setValueAtTime(880,ac.currentTime); g.gain.setValueAtTime(0.0001,ac.currentTime); g.gain.exponentialRampToValueAtTime(0.2,ac.currentTime+0.01); o.connect(g); g.connect(ac.destination); o.start(); o.frequency.exponentialRampToValueAtTime(660,ac.currentTime+0.3); g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+0.7); setTimeout(()=>{o.stop();ac.close();},800);
-  }catch(e){ console.log('audio failed',e); }
+    const ac = new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(); const g=ac.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(880,ac.currentTime); g.gain.setValueAtTime(0.0001,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.2,ac.currentTime+0.01); o.connect(g); g.connect(ac.destination);
+    o.start(); o.frequency.exponentialRampToValueAtTime(660,ac.currentTime+0.3);
+    g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+0.7); setTimeout(()=>{ o.stop(); ac.close(); },800);
+  }catch(e){console.log('audio failed',e);}
 }
 
 // -----------------------------
-// Start game
-// -----------------------------
+// Initial start
 newGame();
 </script>
 </body>
