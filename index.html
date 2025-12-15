@@ -23,10 +23,10 @@
   .target{background:var(--blue);padding:8px 14px;border-radius:8px;font-weight:800;color:#ff6666;font-size:26px;display:inline-block;min-width:70px;text-align:center;}
   .row{display:flex;gap:12px;align-items:center;justify-content:center;margin:14px 0;}
   .ops{display:flex;gap:8px;justify-content:center;}
-  .op{min-width:56px;padding:12px;border-radius:8px;font-size:20px;font-weight:700;border:none;color:var(--white);cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+  .op{min-width:96px;padding:24px;border-radius:14px;font-size:36px;font-weight:700;border:none;color:var(--white);cursor:pointer;box-shadow:0 6px 12px rgba(0,0,0,0.25);}
   .op.add{background:var(--op1);} .op.sub{background:var(--op2);} .op.mul{background:var(--op3);} .op.div{background:var(--op4);}
   .numbers{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
-  .num{min-width:96px;padding:18px;border-radius:10px;background:var(--blue);border:none;font-size:24px;font-weight:800;color:var(--white);cursor:pointer;box-shadow:inset 0 -6px 0 rgba(0,0,0,0.08);}
+  .num{min-width:180px;padding:36px;border-radius:16px;background:var(--blue);border:none;font-size:44px;font-weight:800;color:var(--white);cursor:pointer;box-shadow:inset 0 -8px 0 rgba(0,0,0,0.15);}
   .info{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
   .hintBox{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;}
   .footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
@@ -82,7 +82,7 @@
 
   <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
     <button id="hintBtn" class="btn small">Hint</button>
-    <button id="resetBtn" class="btn small">Reset Try</button>
+    <button id="resetBtn" class="btn small">Reset Problem</button>
     <button id="newBtn" class="btn small">New Problem</button>
   </div>
 
@@ -91,8 +91,7 @@
   </div>
 
   <div class="footer">
-    <div class="rules">Click a number, then an operation, then another number. Intermediate results must be whole numbers. Negative numbers are allowed.</div>
-    <div><button id="downloadBtn" class="btn small">Download ZIP (for teacher)</button></div>
+    <div class="rules">Click a number, then an operation, then another number. Intermediate results must be integers.</div>
   </div>
 </div>
 
@@ -225,17 +224,57 @@ function computePoints(){
 
 // -----------------------------
 // Hints
-hintBtn.addEventListener('click',()=>{
+hintBtn.addEventListener('click', () => {
   if(!state.current) return;
+
   state.usedHints++;
-  hintsUsedEl.textContent=state.usedHints;
-  const sol=state.current.solution||[];
-  const showSteps = sol.slice(0,state.usedHints);
-  let txt='Hint: ';
-  if(showSteps.length===0) txt+='Press again to reveal first step.';
-  else txt+=showSteps.map((s,i)=>`Step ${i+1}: ${s.a} ${s.op.split(' ')[1]} ${s.b} = ${s.result}`).join(' | ');
-  alert(txt);
-  if(state.usedHints>(state.mode-1)) state.usedHints=state.mode-1;
+  hintsUsedEl.textContent = state.usedHints;
+
+  const sol = state.current.solution;
+  if(!sol || sol.length === 0) return;
+
+  const step = sol[0]; // only first step for visual hint
+  const nums = state.current.numbers;
+
+  // Find indices of a and b
+  const firstIdx = nums.indexOf(step.a);
+  const secondIdx = nums.indexOf(step.b);
+
+  if(firstIdx === -1 || secondIdx === -1) return;
+
+  const opSymbol = step.op.split(' ')[1];
+
+  let cycle = 0;
+
+  function runHintCycle(){
+    // First number
+    highlightNumIndex(firstIdx);
+    setTimeout(() => {
+      clearNumHighlight();
+
+      // Operation
+      highlightOpSymbol(opSymbol);
+      setTimeout(() => {
+        clearOpHighlight();
+
+        // Second number
+        highlightNumIndex(secondIdx);
+        setTimeout(() => {
+          clearNumHighlight();
+          cycle++;
+          if(cycle < 2) runHintCycle();
+        }, 500);
+
+      }, 500);
+
+    }, 500);
+  }
+
+  runHintCycle();
+
+  if(state.usedHints > (state.mode - 1)) {
+    state.usedHints = state.mode - 1;
+  }
 });
 
 // -----------------------------
