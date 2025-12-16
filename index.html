@@ -246,36 +246,42 @@ function solve(nums,target){
 // New problem
 // --------------------
 function newProblem(){
-  solutionBox.style.display='none';
+  solutionBox.style.display = 'none';
   hintBtn.classList.remove('disabled');
-  state.moveCount=0;
-  state.hints=0;
-  hintsEl.textContent=0;
 
-  for (let tries = 0; tries < 40; tries++) {
-  const t = 1 + randInt(state.max - 1); // never 0
+  state.moveCount = 0;
+  state.hints = 0;
+  hintsEl.textContent = 0;
 
-  // Avoid trivial targets
-  if (nums.includes(t)) continue;
+  while (true) {
+    // Generate starting numbers
+    const nums = Array.from(
+      { length: state.mode },
+      () => randInt(10)
+    );
 
-  const sol = solve(nums.slice(), t);
-  if (sol) {
-    state.numbers = nums.slice();
-    state.original = nums.slice();
-    state.target = t;
-    state.solution = sol;
-    state.hints = 0;
-    state.moveCount = 0;
+    // Try multiple random targets for these numbers
+    for (let tries = 0; tries < 50; tries++) {
+      const t = 1 + randInt(state.max - 1); // 1..max, never 0
 
-    targetEl.textContent = t;
-    hintsEl.textContent = 0;
-    updateHintButton();
-    render();
-    resetSelection();
-    return;
+      // Avoid trivial "target already present"
+      if (nums.includes(t)) continue;
+
+      const sol = solve(nums.slice(), t);
+      if (sol) {
+        state.numbers = nums.slice();
+        state.original = nums.slice();
+        state.target = t;
+        state.solution = sol;
+
+        targetEl.textContent = t;
+        render();
+        resetSelection();
+        return;
+      }
+    }
+    // If no target worked, generate new numbers and try again
   }
-}
-
 }
 
 // --------------------
