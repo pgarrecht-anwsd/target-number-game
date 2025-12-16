@@ -234,28 +234,33 @@ function solve(nums,target){
 }
 
 // --------------------
-// New problem (NO zero target)
+// New problem (balanced target selection)
 // --------------------
 function newProblem(){
   while(true){
-    const nums=Array.from({length:state.mode},()=>randInt(10));
-    for(let t=1;t<=state.max;t++){
-      const sol=solve(nums.slice(),t);
+    const nums = Array.from({length: state.mode}, () => randInt(10));
+
+    // Try several random targets for this number set
+    for(let tries = 0; tries < 40; tries++){
+      const t = randInt(state.max); // 0–99 or 0–50, uniformly random
+      const sol = solve(nums.slice(), t);
+
       if(sol){
-        state.numbers=nums.slice();
-        state.original=nums.slice();
-        state.target=t;
-        state.solution=sol;
-        state.hints=0;
-        break;
+        state.numbers = nums.slice();
+        state.original = nums.slice();
+        state.target = t;
+        state.solution = sol;
+        state.hints = 0;
+
+        targetEl.textContent = t;
+        hintsEl.textContent = 0;
+        render();
+        resetSelection();
+        return;
       }
     }
-    if(state.solution.length) break;
+    // If no random target worked, loop and try new numbers
   }
-  targetEl.textContent=state.target;
-  hintsEl.textContent=0;
-  render();
-  resetSelection();
 }
 
 // --------------------
