@@ -400,13 +400,43 @@ function highlightOp(op){
 // --------------------
 // Show solution
 // --------------------
-document.getElementById('solutionBtn').onclick=()=>{
-  state.score+=0;
-  solutionBox.innerHTML='<b>One valid solution:</b><br>';
-  state.solution.forEach((s,i)=>{
-    solutionBox.innerHTML+=`${i+1}) use numbers ${s.ai+1} and ${s.bi+1} with ${s.op}<br>`;
+document.getElementById('solutionBtn').onclick = () => {
+  // Forfeit points for this round
+  state.hints = 99; // ensures no score awarded
+
+  let nums = state.original.slice();
+  let steps = [];
+
+  state.solution.forEach(step => {
+    const a = nums[step.ai];
+    const b = nums[step.bi];
+
+    let symbol = step.op;
+    if (symbol === '*') symbol = '×';
+    if (symbol === '/') symbol = '÷';
+
+    let result;
+    switch (step.op) {
+      case '+': result = a + b; break;
+      case '-': result = a - b; break;
+      case '*': result = a * b; break;
+      case '/': result = a / b; break;
+    }
+
+    steps.push(`${a} ${symbol} ${b} = ${result}`);
+
+    // Rebuild number list exactly as the game does
+    nums = nums.filter((_, i) => i !== step.ai && i !== step.bi);
+    nums.unshift(result);
   });
-  solutionBox.style.display='block';
+
+  solutionBox.innerHTML =
+    `<b>One valid solution:</b><br>${steps.join('; ')}`;
+
+  solutionBox.style.display = 'block';
+
+  // Move to next problem after viewing
+  setTimeout(newProblem, 4000);
 };
 
 // --------------------
