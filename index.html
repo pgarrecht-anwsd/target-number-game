@@ -122,7 +122,9 @@ const status = document.getElementById("status");
 function newGame(){
   state.numbers = [];
   for(let i=0;i<4;i++) state.numbers.push(randInt(10));
+  do {
   state.target = randInt(50);
+} while (state.target === 0);
   state.selection.first = null;
   state.selection.op = null;
   state.hintCount = 0;
