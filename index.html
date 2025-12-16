@@ -1,340 +1,408 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Target Number Game</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-  body{
-    font-family: system-ui, sans-serif;
-    background:#0f172a;
-    color:#e5e7eb;
-    display:flex;
-    justify-content:center;
-  }
+:root{
+  --blue:#1e5799;
+  --op1:#2d7f5e;
+  --op2:#c75f00;
+  --op3:#6b2d7f;
+  --op4:#d03b3b;
+  --white:#fff;
+}
 
-  .container{
-    width:960px;
-    max-width:96vw;
-    margin-top:48px;
-    padding:18px;
-    background:rgba(255,255,255,0.03);
-    border-radius:12px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.4);
-    text-align:center;
-  }
+html,body{
+  height:100%;
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:linear-gradient(180deg,#0b2a4a 0%, #123a63 100%);
+  color:var(--white);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-  h1{margin-top:0}
+.container{
+  width:960px;
+  max-width:96vw;
+  padding:18px;
+  margin-top:48px;
+  background:rgba(255,255,255,0.03);
+  border-radius:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.4);
+}
 
-  .row{
-    display:flex;
-    justify-content:center;
-    gap:14px;
-    margin:16px 0;
-  }
+.header{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
 
-  button{
-    font-size:1.8rem;
-    padding:18px 0;
-    width:120px;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    background:#334155;
-    color:white;
-    transition:transform 0.1s, filter 0.1s;
-  }
+.title{font-size:20px;font-weight:700;}
 
-  .op{width:80px}
+.settings{display:flex;gap:8px;align-items:center;}
+.rules{font-size:13px;opacity:.9;}
 
-  button.selected{
-    filter:brightness(160%);
-    transform:scale(1.05);
-  }
+select{
+  padding:6px;
+  border-radius:6px;
+  border:none;
+  background:rgba(255,255,255,0.05);
+  color:var(--white);
+}
 
-  button:disabled{
-    opacity:0.3;
-    cursor:not-allowed;
-  }
+.target{
+  background:var(--blue);
+  padding:10px 18px;
+  border-radius:10px;
+  font-size:28px;
+  font-weight:800;
+  color:#ff6666;
+  min-width:80px;
+  text-align:center;
+}
 
-  .status{margin-top:12px;font-size:1.2rem}
-  .instructions{opacity:0.8;margin-top:10px}
+.row{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin:18px 0;
+}
 
-  canvas{
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-  }
+.op{
+  min-width:110px;
+  padding:28px;
+  font-size:38px;
+  border-radius:16px;
+  border:none;
+  font-weight:800;
+  color:white;
+  cursor:pointer;
+}
+
+.op.add{background:var(--op1);}
+.op.sub{background:var(--op2);}
+.op.mul{background:var(--op3);}
+.op.div{background:var(--op4);}
+
+.num{
+  min-width:170px;
+  padding:36px;
+  font-size:44px;
+  border-radius:18px;
+  background:var(--blue);
+  border:none;
+  font-weight:800;
+  color:white;
+  cursor:pointer;
+}
+
+.selected{filter:brightness(150%);}
+
+.btn{
+  background:rgba(255,255,255,0.08);
+  border:none;
+  color:white;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.footer{
+  display:flex;
+  justify-content:space-between;
+  margin-top:12px;
+  font-size:13px;
+  opacity:.9;
+}
+
+.canvas-wrap{position:relative;height:120px;}
+#fireworksCanvas{position:absolute;inset:0;display:none;}
 </style>
 </head>
 
 <body>
-<canvas id="fx"></canvas>
-
-<div class="container" role="application" aria-label="Target Number Game">
-  <h1>Target Number</h1>
-  <div class="status" id="status"></div>
-
-  <div class="row nums" id="nums"></div>
-
-  <div class="row ops">
-    <button class="op" data-op="+">+</button>
-    <button class="op" data-op="-">−</button>
-    <button class="op" data-op="*">×</button>
-    <button class="op" data-op="/">÷</button>
+<div class="container">
+  <div class="header">
+    <div class="title">Target Number Game</div>
+    <div class="settings">
+      <label class="rules">Mode:</label>
+      <select id="modeSelect">
+        <option value="4">4 numbers</option>
+        <option value="3">3 numbers</option>
+      </select>
+      <label class="rules">Max:</label>
+      <select id="maxSelect">
+        <option value="99">99</option>
+        <option value="50">50</option>
+      </select>
+    </div>
   </div>
 
   <div class="row">
-    <button id="hintBtn">Hint</button>
-    <button id="resetBtn">Reset</button>
+    <div>Target</div>
+    <div class="target" id="targetValue">--</div>
+    <div>Hints: <span id="hintsUsed">0</span></div>
+    <div>Score: <span id="score">0</span></div>
   </div>
 
-  <div class="instructions">
-    Click a number, then an operation, then another number.<br>
-    Intermediate results must be integers.
+  <div class="row ops">
+    <button class="op add" data-op="+">+</button>
+    <button class="op sub" data-op="-">−</button>
+    <button class="op mul" data-op="*">×</button>
+    <button class="op div" data-op="/">÷</button>
+  </div>
+
+  <div class="row numbers" id="numbersRow"></div>
+
+  <div class="row">
+    <button id="hintBtn" class="btn">Hint</button>
+    <button id="resetBtn" class="btn">Reset</button>
+    <button id="newBtn" class="btn">New</button>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="fireworksCanvas"></canvas>
+  </div>
+
+  <div class="footer">
+    Click a number, then an operation, then another number. Intermediate results must be integers.
   </div>
 </div>
 
 <script>
-// -----------------------------
+// --------------------
 // Utilities
-// -----------------------------
-function randInt(max){ return Math.floor(Math.random()*(max+1)); }
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+// --------------------
+const randInt = m => Math.floor(Math.random()*(m+1));
 
-// -----------------------------
-// Game State
-// -----------------------------
-const state = {
+// --------------------
+// Game state
+// --------------------
+const state={
+  mode:4,
+  max:99,
   numbers:[],
+  original:[],
   target:0,
-  selection:{first:null, op:null},
-  hintCount:0
+  solution:[],
+  selection:{first:null,op:null},
+  score:0,
+  hints:0
 };
 
-const numsDiv = document.getElementById("nums");
-const status = document.getElementById("status");
+// --------------------
+// DOM refs
+// --------------------
+const numbersRow=document.getElementById('numbersRow');
+const targetEl=document.getElementById('targetValue');
+const scoreEl=document.getElementById('score');
+const hintsEl=document.getElementById('hintsUsed');
 
-// -----------------------------
-// Setup
-// -----------------------------
-function newGame(){
-  state.numbers = [];
-  for(let i=0;i<4;i++) state.numbers.push(randInt(10));
-  do {
-  state.target = randInt(50);
-} while (state.target === 0);
-  state.selection.first = null;
-  state.selection.op = null;
-  state.hintCount = 0;
-  render();
-  status.textContent = `Target: ${state.target}`;
-}
-
-// -----------------------------
-// Rendering
-// -----------------------------
-function render(){
-  numsDiv.innerHTML = "";
-  state.numbers.forEach((n,i)=>{
-    const b = document.createElement("button");
-    b.textContent = n;
-    b.className = "num";
-    if(state.selection.first === i) b.classList.add("selected");
-    b.onclick = ()=>numberClick(i);
-    numsDiv.appendChild(b);
-  });
-
-  document.querySelectorAll(".op").forEach(btn=>{
-    btn.classList.toggle("selected", btn.dataset.op === state.selection.op);
-    btn.onclick = ()=>pickOp(btn.dataset.op);
-  });
-}
-
-// -----------------------------
-// Selection Logic
-// -----------------------------
-function numberClick(i){
-  const sel = state.selection;
-
-  if(sel.first === null){
-    sel.first = i;
-    render();
-    return;
-  }
-
-  if(sel.op === null) return;
-
-  // 🔒 BLOCK SAME NUMBER TWICE
-  if(i === sel.first) return;
-
-  compute(sel.first, i, sel.op);
-}
-
-function pickOp(op){
-  if(state.selection.first === null) return;
-  state.selection.op = (state.selection.op === op) ? null : op;
-  render();
-}
-
-// -----------------------------
-// Computation
-// -----------------------------
-async function compute(i,j,op){
-  const a = state.numbers[i];
-  const b = state.numbers[j];
-  let r;
-
-  if(op === "+") r = a+b;
-  if(op === "-") r = a-b;
-  if(op === "*") r = a*b;
-  if(op === "/"){
-    if(b === 0 || a % b !== 0){
-      resetSelection();
-      return;
-    }
-    r = a/b;
-  }
-
-  highlightTriple(i,op,j);
-
-  await sleep(550);
-
-  const hi = Math.max(i,j);
-  const lo = Math.min(i,j);
-  state.numbers.splice(hi,1);
-  state.numbers.splice(lo,1);
-  state.numbers.push(r);
-
-  resetSelection();
-  render();
-
-  if(state.numbers.length === 1){
-    if(state.numbers[0] === state.target){
-      await successFX();
-      newGame();
-    }else{
-      await sleep(3000);
-      render();
-    }
-  }
-}
-
-function resetSelection(){
-  state.selection.first = null;
-  state.selection.op = null;
-}
-
-// -----------------------------
-// Hint Logic (FIXED)
-// -----------------------------
-function findTwoDistinctIndices(arr,a,b){
-  let first=-1, second=-1;
-  for(let i=0;i<arr.length;i++){
-    if(arr[i]===a && first===-1) first=i;
-    else if(arr[i]===b && i!==first){ second=i; break; }
-  }
-  return (first!==-1 && second!==-1) ? [first,second] : null;
-}
-
-async function showHint(){
-  const nums = state.numbers;
+// --------------------
+// Solver (tracks indices)
+// --------------------
+function solve(nums,target){
+  if(nums.length===1) return nums[0]===target?[]:null;
 
   for(let i=0;i<nums.length;i++){
     for(let j=0;j<nums.length;j++){
       if(i===j) continue;
-      const a = nums[i], b = nums[j];
-      const ops = [
-        ["+", a+b],
-        ["-", a-b],
-        ["*", a*b],
-        ["/", (b!==0 && a%b===0)?a/b:null]
-      ];
 
-      for(const [op,res] of ops){
-        if(res===null) continue;
-        const test = nums.filter((_,k)=>k!==i&&k!==j).concat(res);
-        if(test.length===1 && test[0]===state.target){
-          const idx = findTwoDistinctIndices(nums,a,b);
-          if(!idx) return;
-          for(let k=0;k<2;k++){
-            await flash(idx[0],op,idx[1]);
-          }
-          return;
-        }
+      const a=nums[i], b=nums[j];
+      const rest=nums.filter((_,k)=>k!==i&&k!==j);
+
+      const ops=[
+        {v:a+b,op:'+'},
+        {v:a-b,op:'-'},
+        {v:a*b,op:'*'}
+      ];
+      if(b!==0 && a%b===0) ops.push({v:a/b,op:'/'});
+
+      for(const o of ops){
+        if(!Number.isInteger(o.v)) continue;
+        const r=solve([o.v,...rest],target);
+        if(r) return [{ai:i,bi:j,op:o.op},...r];
       }
     }
   }
+  return null;
 }
 
-// -----------------------------
-// Visual Effects
-// -----------------------------
-async function flash(i,op,j){
-  state.selection.first = i;
-  state.selection.op = null;
-  render();
-  await sleep(500);
-  state.selection.op = op;
-  render();
-  await sleep(500);
-  state.selection.first = j;
-  render();
-  await sleep(500);
-  resetSelection();
-  render();
-}
-
-async function highlightTriple(i,op,j){
-  state.selection.first=i;
-  state.selection.op=op;
-  render();
-}
-
-async function successFX(){
-  fireworks();
-  beep();
-  await sleep(3000);
-}
-
-// -----------------------------
-// Fireworks + Sound
-// -----------------------------
-function fireworks(){
-  const c=document.getElementById("fx");
-  const ctx=c.getContext("2d");
-  c.width=innerWidth; c.height=innerHeight;
-  for(let i=0;i<120;i++){
-    ctx.fillStyle=`hsl(${Math.random()*360},100%,60%)`;
-    ctx.beginPath();
-    ctx.arc(Math.random()*c.width,Math.random()*c.height,3,0,6.28);
-    ctx.fill();
+// --------------------
+// New problem (NO zero target)
+// --------------------
+function newProblem(){
+  while(true){
+    const nums=Array.from({length:state.mode},()=>randInt(10));
+    for(let t=1;t<=state.max;t++){
+      const sol=solve(nums.slice(),t);
+      if(sol){
+        state.numbers=nums.slice();
+        state.original=nums.slice();
+        state.target=t;
+        state.solution=sol;
+        state.hints=0;
+        break;
+      }
+    }
+    if(state.solution.length) break;
   }
-  setTimeout(()=>ctx.clearRect(0,0,c.width,c.height),1200);
+  targetEl.textContent=state.target;
+  hintsEl.textContent=0;
+  render();
+  resetSelection();
 }
 
-function beep(){
-  try{
-    const a=new AudioContext();
-    const o=a.createOscillator();
-    o.connect(a.destination);
-    o.frequency.value=880;
-    o.start();
-    o.stop(a.currentTime+0.3);
-  }catch{}
+// --------------------
+// Render
+// --------------------
+function render(){
+  numbersRow.innerHTML='';
+  state.numbers.forEach((n,i)=>{
+    const b=document.createElement('button');
+    b.className='num';
+    b.textContent=n;
+    b.onclick=()=>numberClick(i);
+    numbersRow.appendChild(b);
+  });
 }
 
-// -----------------------------
-// Buttons
-// -----------------------------
-document.getElementById("resetBtn").onclick=newGame;
-document.getElementById("hintBtn").onclick=showHint;
+// --------------------
+// Selection helpers
+// --------------------
+function clearHighlights(){
+  document.querySelectorAll('.selected').forEach(b=>b.classList.remove('selected'));
+}
+function resetSelection(){
+  state.selection={first:null,op:null};
+  clearHighlights();
+}
 
-// -----------------------------
-// Start
-// -----------------------------
-newGame();
+// --------------------
+// Click logic
+// --------------------
+document.querySelectorAll('.op').forEach(b=>{
+  b.onclick=()=>{
+    if(state.selection.first===null) return;
+    clearHighlights();
+    b.classList.add('selected');
+    state.selection.op=b.dataset.op;
+    highlightFirst();
+  };
+});
+
+function highlightFirst(){
+  numbersRow.children[state.selection.first]?.classList.add('selected');
+}
+
+function numberClick(i){
+  const sel=state.selection;
+  if(sel.first===null){
+    sel.first=i;
+    highlightFirst();
+    return;
+  }
+  if(sel.op===null || i===sel.first) return;
+
+  const a=state.numbers[sel.first];
+  const b=state.numbers[i];
+  if(sel.op==='/'&&(b===0||a%b!==0)) return;
+
+  const res=eval(`${a}${sel.op}${b}`);
+  setTimeout(()=>{
+    state.numbers=state.numbers.filter((_,k)=>k!==sel.first&&k!==i);
+    state.numbers.unshift(res);
+    render();
+    resetSelection();
+    if(state.numbers.length===1){
+      if(state.numbers[0]===state.target){
+        state.score+=100;
+        scoreEl.textContent=state.score;
+        showFireworks();
+        setTimeout(newProblem,3000);
+      }else{
+        setTimeout(()=>{
+          state.numbers=state.original.slice();
+          render();
+        },3000);
+      }
+    }
+  },500);
+}
+
+// --------------------
+// Hints (index-safe)
+// --------------------
+document.getElementById('hintBtn').onclick=()=>{
+  if(state.hints>=state.solution.length) return;
+
+  const step=state.solution[state.hints];
+  const ai=step.ai;
+  const bi=step.bi;
+  const op=step.op;
+
+  state.hints++;
+  hintsEl.textContent=state.hints;
+
+  let d=0;
+  for(let r=0;r<2;r++){
+    setTimeout(()=>highlightNum(ai),d+=500);
+    setTimeout(()=>highlightOp(op),d+=500);
+    setTimeout(()=>highlightNum(bi),d+=500);
+    setTimeout(clearHighlights,d+=500);
+  }
+};
+
+function highlightNum(i){
+  clearHighlights();
+  numbersRow.children[i]?.classList.add('selected');
+}
+function highlightOp(op){
+  clearHighlights();
+  document.querySelector(`.op[data-op="${op}"]`)?.classList.add('selected');
+}
+
+// --------------------
+// Reset / New
+// --------------------
+document.getElementById('resetBtn').onclick=()=>{
+  state.numbers=state.original.slice();
+  render();
+  resetSelection();
+};
+document.getElementById('newBtn').onclick=newProblem;
+
+// --------------------
+// Fireworks
+// --------------------
+const canvas=document.getElementById('fireworksCanvas');
+const ctx=canvas.getContext('2d');
+function showFireworks(){
+  canvas.style.display='block';
+  canvas.width=canvas.clientWidth;
+  canvas.height=canvas.clientHeight;
+  let t=0;
+  const id=setInterval(()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<60;i++){
+      ctx.fillStyle='white';
+      ctx.fillRect(
+        canvas.width/2+Math.cos(i+t)*t*3,
+        canvas.height/2+Math.sin(i+t)*t*3,
+        3,3
+      );
+    }
+    if(t++>30){clearInterval(id);canvas.style.display='none';}
+  },30);
+}
+
+// --------------------
+newProblem();
 </script>
 </body>
 </html>
