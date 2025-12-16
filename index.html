@@ -425,18 +425,14 @@ document.getElementById('solutionBtn').onclick = () => {
 
     steps.push(`${a} ${symbol} ${b} = ${result}`);
 
-    // Rebuild number list exactly as the game does
     nums = nums.filter((_, i) => i !== step.ai && i !== step.bi);
     nums.unshift(result);
   });
 
   solutionBox.innerHTML =
-    `<b>One valid solution:</b><br>${steps.join('; ')}`;
+    `<b>One valid solution:</b> ${steps.join('; ')}`;
 
   solutionBox.style.display = 'block';
-
-  // Move to next problem after viewing
-  setTimeout(newProblem, 4000);
 };
 
 // --------------------
