@@ -34,6 +34,7 @@ html,body{
   background:rgba(255,255,255,0.03);
   border-radius:12px;
   box-shadow:0 6px 20px rgba(0,0,0,0.4);
+  position:relative;
 }
 
 .header{
@@ -116,12 +117,37 @@ select{
   pointer-events:none;
 }
 
+.footer{
+  display:flex;
+  justify-content:space-between;
+  margin-top:12px;
+  font-size:13px;
+  opacity:.9;
+}
+
 .solutionBox{
   margin-top:10px;
   background:rgba(0,0,0,0.25);
   padding:10px;
   border-radius:8px;
   font-size:14px;
+}
+
+/* Fireworks */
+.fireworks{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:60px;
+  animation:pop 2s ease-out forwards;
+}
+@keyframes pop{
+  0%{opacity:0;transform:scale(0.6);}
+  20%{opacity:1;transform:scale(1);}
+  100%{opacity:0;}
 }
 </style>
 </head>
@@ -174,14 +200,12 @@ select{
 </div>
 
 <script>
-// --------------------
-// Utilities
-// --------------------
 const randInt = m => Math.floor(Math.random()*(m+1));
 
-// --------------------
-// State
-// --------------------
+function weightedNumber(){
+  return Math.random()<0.1 ? 0 : randInt(10);
+}
+
 const state={
   mode:4,
   max:99,
@@ -198,62 +222,50 @@ const numbersRow=document.getElementById('numbersRow');
 const targetEl=document.getElementById('targetValue');
 const scoreEl=document.getElementById('score');
 const hintBtn=document.getElementById('hintBtn');
-const resetBtn=document.getElementById('resetBtn');
 const solutionBox=document.getElementById('solutionBox');
 
-// --------------------
-// Solver
-// --------------------
 function solve(nums,target){
   if(nums.length===1) return nums[0]===target?[]:null;
-
   for(let i=0;i<nums.length;i++){
     for(let j=0;j<nums.length;j++){
       if(i===j) continue;
-      const a=nums[i], b=nums[j];
+      const a=nums[i],b=nums[j];
       const rest=nums.filter((_,k)=>k!==i&&k!==j);
-
       const ops=[
-        {v:a+b,op:'+',ai:i,bi:j},
-        {v:a*b,op:'*',ai:i,bi:j},
-        {v:a-b,op:'-',ai:i,bi:j},
-        {v:b-a,op:'-',ai:j,bi:i}
+        {v:a+b,op:'+'},
+        {v:a*b,op:'*'},
+        {v:a-b,op:'-'},
+        {v:b-a,op:'-'}
       ];
-      if(b!==0 && a%b===0) ops.push({v:a/b,op:'/',ai:i,bi:j});
-      if(a!==0 && b%a===0) ops.push({v:b/a,op:'/',ai:j,bi:i});
-
+      if(b!==0&&a%b===0) ops.push({v:a/b,op:'/'});
+      if(a!==0&&b%a===0) ops.push({v:b/a,op:'/'});
       for(const o of ops){
         if(!Number.isInteger(o.v)) continue;
         const r=solve([o.v,...rest],target);
-        if(r) return [{ai:o.ai,bi:o.bi,op:o.op},...r];
+        if(r) return [{ai:i,bi:j,op:o.op},...r];
       }
     }
   }
   return null;
 }
 
-// --------------------
-// New problem
-// --------------------
 function newProblem(){
   solutionBox.style.display='none';
   hintBtn.classList.remove('disabled');
-  resetBtn.classList.remove('disabled');
-
   state.moveCount=0;
 
   while(true){
-    const nums=Array.from({length:state.mode},()=>randInt(10));
-    for(let tries=0;tries<50;tries++){
-      const t=1+randInt(state.max-1);
-      if(nums.includes(t)) continue;
-      const sol=solve(nums.slice(),t);
+    const nums=Array.from({length:state.mode},weightedNumber);
+    for(let t=0;t<50;t++){
+      const target=randInt(state.max);
+      if(nums.includes(target)) continue;
+      const sol=solve(nums.slice(),target);
       if(sol){
         state.numbers=nums.slice();
         state.original=nums.slice();
-        state.target=t;
+        state.target=target;
         state.solution=sol;
-        targetEl.textContent=t;
+        targetEl.textContent=target;
         render();
         resetSelection();
         return;
@@ -262,9 +274,6 @@ function newProblem(){
   }
 }
 
-// --------------------
-// Render
-// --------------------
 function render(){
   numbersRow.innerHTML='';
   state.numbers.forEach((n,i)=>{
@@ -276,20 +285,15 @@ function render(){
   });
 }
 
-// --------------------
-// Selection helpers
-// --------------------
 function clearHighlights(){
   document.querySelectorAll('.selected').forEach(b=>b.classList.remove('selected'));
 }
+
 function resetSelection(){
   state.selection={first:null,op:null};
   clearHighlights();
 }
 
-// --------------------
-// Click logic
-// --------------------
 document.querySelectorAll('.op').forEach(b=>{
   b.onclick=()=>{
     if(state.selection.first===null) return;
@@ -302,22 +306,11 @@ document.querySelectorAll('.op').forEach(b=>{
 
 function numberClick(i,btn){
   const sel=state.selection;
-
-  if(sel.first===i && sel.op===null){
-    resetSelection();
-    return;
-  }
-
-  if(sel.first===null){
-    sel.first=i;
-    btn.classList.add('selected');
-    return;
-  }
-
-  if(sel.op===null || i===sel.first) return;
+  if(sel.first===i && sel.op===null){ resetSelection(); return; }
+  if(sel.first===null){ sel.first=i; btn.classList.add('selected'); return; }
+  if(sel.op===null||i===sel.first) return;
 
   btn.classList.add('selected');
-
   const a=state.numbers[sel.first];
   const b=state.numbers[i];
   if(sel.op==='/'&&(b===0||a%b!==0)) return;
@@ -332,25 +325,38 @@ function numberClick(i,btn){
     render();
     resetSelection();
 
-    if(state.numbers.length===1 && state.numbers[0]===state.target){
-      state.score+=100;
-      scoreEl.textContent=state.score;
-      setTimeout(newProblem,3000);
+    if(state.numbers.length===1){
+      if(state.numbers[0]===state.target){
+        state.score+=100;
+        scoreEl.textContent=state.score;
+        fireworks();
+        setTimeout(newProblem,2000);
+      }else{
+        setTimeout(()=>{
+          state.numbers=state.original.slice();
+          render();
+        },3000);
+      }
     }
-  },600);
+  },500);
 }
 
-// --------------------
-// Hint (first move only)
-// --------------------
+function fireworks(){
+  const f=document.createElement('div');
+  f.className='fireworks';
+  f.textContent='🎆🎇✨';
+  document.querySelector('.container').appendChild(f);
+  setTimeout(()=>f.remove(),2000);
+}
+
 hintBtn.onclick=()=>{
   if(state.moveCount>0) return;
-  const s=state.solution[0];
+  const step=state.solution[0];
   let d=0;
   for(let r=0;r<2;r++){
-    setTimeout(()=>highlightNum(s.ai),d+=500);
-    setTimeout(()=>highlightOp(s.op),d+=500);
-    setTimeout(()=>highlightNum(s.bi),d+=500);
+    setTimeout(()=>highlightNum(step.ai),d+=500);
+    setTimeout(()=>highlightOp(step.op),d+=500);
+    setTimeout(()=>highlightNum(step.bi),d+=500);
     setTimeout(clearHighlights,d+=500);
   }
 };
@@ -364,35 +370,38 @@ function highlightOp(op){
   document.querySelector(`.op[data-op="${op}"]`)?.classList.add('selected');
 }
 
-// --------------------
-// Show solution
-// --------------------
 document.getElementById('solutionBtn').onclick=()=>{
-  resetBtn.classList.add('disabled');
-
   let nums=state.original.slice();
-  let steps=[];
-
+  const steps=[];
   state.solution.forEach(s=>{
-    const a=nums[s.ai], b=nums[s.bi];
+    const a=nums[s.ai],b=nums[s.bi];
     const sym=s.op==='*'?'×':s.op==='/'?'÷':s.op;
     const r=eval(`${a}${s.op}${b}`);
     steps.push(`${a} ${sym} ${b} = ${r}`);
     nums=nums.filter((_,i)=>i!==s.ai&&i!==s.bi);
     nums.unshift(r);
   });
-
   solutionBox.innerHTML=`<b>One valid solution:</b> ${steps.join('; ')}`;
   solutionBox.style.display='block';
 };
 
-// --------------------
-resetBtn.onclick=()=>{
+document.getElementById('resetBtn').onclick=()=>{
   state.numbers=state.original.slice();
   render();
   resetSelection();
+  hintBtn.classList.remove('disabled');
 };
+
 document.getElementById('newBtn').onclick=newProblem;
+
+document.getElementById('modeSelect').onchange=e=>{
+  state.mode=+e.target.value;
+  newProblem();
+};
+document.getElementById('maxSelect').onchange=e=>{
+  state.max=+e.target.value;
+  newProblem();
+};
 
 newProblem();
 </script>
