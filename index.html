@@ -4,406 +4,404 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Target Number Game</title>
+
 <style>
-  :root {
-    --blue:#1e5799;
-    --op1:#2d7f5e;
-    --op2:#c75f00;
-    --op3:#6b2d7f;
-    --op4:#d03b3b;
-    --white:#fff;
-  }
-  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0b2a4a 0%, #123a63 100%);color:var(--white);display:flex;align-items:center;justify-content:center;}
-  .container{width:960px;max-width:96vw;padding:18px;margin-top:48px;background:rgba(255,255,255,0.03);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.4);}
-  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-  .title{font-size:20px;font-weight:700;}
-  .controls{display:flex;gap:8px;align-items:center;}
-  .btn{background:rgba(255,255,255,0.06);border:none;color:var(--white);padding:8px 12px;border-radius:8px;cursor:pointer;}
-  .small{padding:6px 10px;font-size:14px;}
-  .target{background:var(--blue);padding:8px 14px;border-radius:8px;font-weight:800;color:#ff6666;font-size:26px;display:inline-block;min-width:70px;text-align:center;}
-  .row{display:flex;gap:12px;align-items:center;justify-content:center;margin:14px 0;}
-  .ops{display:flex;gap:8px;justify-content:center;}
-  .op{min-width:96px;padding:24px;border-radius:14px;font-size:36px;font-weight:700;border:none;color:var(--white);cursor:pointer;box-shadow:0 6px 12px rgba(0,0,0,0.25);}
-  .op.add{background:var(--op1);} .op.sub{background:var(--op2);} .op.mul{background:var(--op3);} .op.div{background:var(--op4);}
-  .numbers{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
-  .num{min-width:160px;padding:36px;border-radius:16px;background:var(--blue);border:none;font-size:44px;font-weight:800;color:var(--white);cursor:pointer;box-shadow:inset 0 -8px 0 rgba(0,0,0,0.15);}
-  .info{display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
-  .hintBox{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;}
-  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
-  .score{font-weight:700;}
-  .hidden{display:none;}
-  .message{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.03);}
-  .canvas-wrap{position:relative;height:120px;}
-  #fireworksCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;display:none;}
-  .rules{font-size:13px;opacity:0.9;}
-  .settings{display:flex;gap:8px;align-items:center;}
-  select,input[type=number]{padding:6px;border-radius:6px;border:none;background:rgba(255,255,255,0.02);color:var(--white);}
-  .selected { filter: brightness(150%); }
+:root{
+  --blue:#1e5799;
+  --op1:#2d7f5e;
+  --op2:#c75f00;
+  --op3:#6b2d7f;
+  --op4:#d03b3b;
+  --white:#fff;
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:linear-gradient(180deg,#0b2a4a 0%, #123a63 100%);
+  color:var(--white);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.container{
+  width:960px;
+  max-width:96vw;
+  padding:18px;
+  margin-top:48px;
+  background:rgba(255,255,255,0.03);
+  border-radius:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.4);
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+
+.title{font-size:20px;font-weight:700;}
+
+.settings{display:flex;gap:8px;align-items:center;}
+.rules{font-size:13px;opacity:.9;}
+
+select{
+  padding:6px;
+  border-radius:6px;
+  border:none;
+  background:rgba(255,255,255,0.05);
+  color:var(--white);
+}
+
+.target{
+  background:var(--blue);
+  padding:10px 18px;
+  border-radius:10px;
+  font-size:28px;
+  font-weight:800;
+  color:#ff6666;
+  min-width:80px;
+  text-align:center;
+}
+
+.row{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin:18px 0;
+}
+
+.op{
+  min-width:110px;
+  padding:28px;
+  font-size:38px;
+  border-radius:16px;
+  border:none;
+  font-weight:800;
+  color:white;
+  cursor:pointer;
+}
+
+.op.add{background:var(--op1);}
+.op.sub{background:var(--op2);}
+.op.mul{background:var(--op3);}
+.op.div{background:var(--op4);}
+
+.num{
+  min-width:170px;
+  padding:36px;
+  font-size:44px;
+  border-radius:18px;
+  background:var(--blue);
+  border:none;
+  font-weight:800;
+  color:white;
+  cursor:pointer;
+}
+
+.selected{filter:brightness(150%);}
+
+.btn{
+  background:rgba(255,255,255,0.08);
+  border:none;
+  color:white;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.footer{
+  display:flex;
+  justify-content:space-between;
+  margin-top:12px;
+  font-size:13px;
+  opacity:.9;
+}
+
+.canvas-wrap{position:relative;height:120px;}
+#fireworksCanvas{position:absolute;inset:0;display:none;}
 </style>
 </head>
+
 <body>
-<div class="container" role="application" aria-label="Target Number Game">
+<div class="container">
   <div class="header">
     <div class="title">Target Number Game</div>
-    <div class="controls">
-      <div class="settings">
-        <label class="rules">Mode:</label>
-        <select id="modeSelect" aria-label="Select 3 or 4 numbers"><option value="4">4 numbers</option><option value="3">3 numbers</option></select>
-        <label class="rules">Max:</label>
-        <select id="maxSelect" aria-label="Select max number"><option value="99">99</option><option value="50">50 (easy)</option></select>
-        <label class="rules">Problems:</label>
-        <select id="countSelect" aria-label="Problems per game"><option>16</option><option>8</option><option>24</option></select>
-      </div>
+    <div class="settings">
+      <label class="rules">Mode:</label>
+      <select id="modeSelect">
+        <option value="4">4 numbers</option>
+        <option value="3">3 numbers</option>
+      </select>
+      <label class="rules">Max:</label>
+      <select id="maxSelect">
+        <option value="99">99</option>
+        <option value="50">50</option>
+      </select>
     </div>
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:space-between;">
-    <div class="info">
-      <div>Target</div>
-      <div class="target" id="targetValue">--</div>
-      <div id="hintPanel" class="hintBox">Hints used: <span id="hintsUsed">0</span></div>
-    </div>
-    <div class="info">
-      <div class="score">Score: <span id="score">0</span></div>
-      <div class="message" id="roundMsg">Round: <span id="roundNum">0</span>/<span id="roundTotal">16</span></div>
-    </div>
+  <div class="row">
+    <div>Target</div>
+    <div class="target" id="targetValue">--</div>
+    <div>Hints: <span id="hintsUsed">0</span></div>
+    <div>Score: <span id="score">0</span></div>
   </div>
 
-  <div class="row ops" role="toolbar" aria-label="Operations">
-    <button class="op add" data-op="+" aria-label="add">+</button>
-    <button class="op sub" data-op="-" aria-label="subtract">−</button>
-    <button class="op mul" data-op="*" aria-label="multiply">×</button>
-    <button class="op div" data-op="/" aria-label="divide">÷</button>
+  <div class="row ops">
+    <button class="op add" data-op="+">+</button>
+    <button class="op sub" data-op="-">−</button>
+    <button class="op mul" data-op="*">×</button>
+    <button class="op div" data-op="/">÷</button>
   </div>
 
-  <div class="row numbers" id="numbersRow" role="list" aria-label="Numbers area">
-    <!-- number buttons injected here -->
+  <div class="row numbers" id="numbersRow"></div>
+
+  <div class="row">
+    <button id="hintBtn" class="btn">Hint</button>
+    <button id="resetBtn" class="btn">Reset</button>
+    <button id="newBtn" class="btn">New</button>
   </div>
 
-  <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
-    <button id="hintBtn" class="btn small">Hint</button>
-    <button id="resetBtn" class="btn small">Reset Problem</button>
-    <button id="newBtn" class="btn small">New Problem</button>
-  </div>
-
-  <div class="canvas-wrap" aria-hidden="true">
+  <div class="canvas-wrap">
     <canvas id="fireworksCanvas"></canvas>
   </div>
 
   <div class="footer">
-    <div class="rules">Click a number, then an operation, then another number. Intermediate results must be integers.</div>
+    Click a number, then an operation, then another number. Intermediate results must be integers.
   </div>
 </div>
 
 <script>
-// -----------------------------
-// Utility
-// -----------------------------
-function randInt(max){ return Math.floor(Math.random()*(max+1)); }
+// --------------------
+// Utilities
+// --------------------
+const randInt = m => Math.floor(Math.random()*(m+1));
 
-// -----------------------------
+// --------------------
 // Game state
-// -----------------------------
-const state = {
-  mode: 4,
-  maxNum: 99,
-  problemsPerGame: 16,
-  round: 0,
-  score: 0,
-  hintsUsed: 0,
-  current: null,
-  selection: {firstIndex:null, op:null},
-  usedHints: 0
+// --------------------
+const state={
+  mode:4,
+  max:99,
+  numbers:[],
+  original:[],
+  target:0,
+  solution:[],
+  selection:{first:null,op:null},
+  score:0,
+  hints:0
 };
 
-// -----------------------------
+// --------------------
 // DOM refs
-// -----------------------------
-const targetEl = document.getElementById('targetValue');
-const numbersRow = document.getElementById('numbersRow');
-const scoreEl = document.getElementById('score');
-const roundNumEl = document.getElementById('roundNum');
-const roundTotalEl = document.getElementById('roundTotal');
-const hintsUsedEl = document.getElementById('hintsUsed');
-const hintBtn = document.getElementById('hintBtn');
-const resetBtn = document.getElementById('resetBtn');
-const newBtn = document.getElementById('newBtn');
-const modeSelect = document.getElementById('modeSelect');
-const maxSelect = document.getElementById('maxSelect');
-const countSelect = document.getElementById('countSelect');
+// --------------------
+const numbersRow=document.getElementById('numbersRow');
+const targetEl=document.getElementById('targetValue');
+const scoreEl=document.getElementById('score');
+const hintsEl=document.getElementById('hintsUsed');
 
-// -----------------------------
-// Storage
-// -----------------------------
-const STORAGE = 'targetNumberSettings_v1';
-function loadSettings(){
-  try{
-    const s = JSON.parse(localStorage.getItem(STORAGE) || "{}");
-    if(s.mode) modeSelect.value = s.mode;
-    if(s.maxNum) maxSelect.value = s.maxNum;
-    if(s.count) countSelect.value = s.count;
-    state.mode = parseInt(modeSelect.value);
-    state.maxNum = parseInt(maxSelect.value);
-    state.problemsPerGame = parseInt(countSelect.value);
-    roundTotalEl.textContent = state.problemsPerGame;
-  }catch(e){ console.log(e); }
-}
-function saveSettings(){ localStorage.setItem(STORAGE, JSON.stringify({mode:modeSelect.value,maxNum:maxSelect.value,count:countSelect.value})); }
-loadSettings();
-
-// -----------------------------
-// Event listeners for settings
-// -----------------------------
-modeSelect.addEventListener('change', ()=>{ state.mode=parseInt(modeSelect.value); saveSettings(); newProblem(true); });
-maxSelect.addEventListener('change', ()=>{ state.maxNum=parseInt(maxSelect.value); saveSettings(); newProblem(true); });
-countSelect.addEventListener('change', ()=>{ state.problemsPerGame=parseInt(countSelect.value); roundTotalEl.textContent=state.problemsPerGame; saveSettings(); newGame(); });
-
-// -----------------------------
-// Core: solvable check (integer-only)
-function checkSolvable(numbers, target){
-  if(numbers.length === 1) return (numbers[0] === target) ? [] : null;
-  for(let i=0;i<numbers.length;i++){
-    for(let j=0;j<numbers.length;j++){
+// --------------------
+// Solver (single solution)
+// --------------------
+function solve(nums,target){
+  if(nums.length===1) return nums[0]===target?[]:null;
+  for(let i=0;i<nums.length;i++){
+    for(let j=0;j<nums.length;j++){
       if(i===j) continue;
-      const a=numbers[i], b=numbers[j];
-      const rest = numbers.filter((_,idx)=> idx!==i && idx!==j);
-      const candidates=[{val:a+b,desc:`${a} + ${b}`},{val:a-b,desc:`${a} - ${b}`},{val:a*b,desc:`${a} * ${b}`}];
-      if(b!==0 && a%b===0) candidates.push({val:a/b,desc:`${a} / ${b}`});
-      for(const c of candidates){
-        if(!Number.isFinite(c.val) || Math.floor(c.val)!==c.val) continue;
-        const sol = checkSolvable([c.val,...rest],target);
-        if(sol!==null) return [{a,b,op:c.desc,result:c.val},...sol];
+      const a=nums[i],b=nums[j];
+      const rest=nums.filter((_,k)=>k!==i&&k!==j);
+      const ops=[
+        {v:a+b,op:'+'},
+        {v:a-b,op:'-'},
+        {v:a*b,op:'*'}
+      ];
+      if(b!==0&&a%b===0) ops.push({v:a/b,op:'/'});
+      for(const o of ops){
+        if(!Number.isInteger(o.v)) continue;
+        const r=solve([o.v,...rest],target);
+        if(r) return [{a,b,op:o.op},...r];
       }
     }
   }
   return null;
 }
 
-// -----------------------------
-// Generate problem
-function generateProblem(){
-  const count = state.mode;
-  const maxNum = state.maxNum;
-  for(let attempt=0;attempt<2000;attempt++){
-    const nums=[];
-    const startMax=10;
-    for(let i=0;i<count;i++) nums.push(randInt(startMax));
-    const targets=[];
-    for(let t=0;t<=maxNum;t++) targets.push(t);
-    for(let k=targets.length-1;k>0;k--){ const r=Math.floor(Math.random()*(k+1)); [targets[k],targets[r]]=[targets[r],targets[k]]; }
-    for(const t of targets){
-      const sol = checkSolvable(nums.slice(),t);
-      if(sol!==null) return {numbers:nums,target:t,solution:sol};
+// --------------------
+// New problem
+// --------------------
+function newProblem(){
+  while(true){
+    const nums=Array.from({length:state.mode},()=>randInt(10));
+    for(let t=0;t<=state.max;t++){
+      const sol=solve(nums.slice(),t);
+      if(sol){
+        state.numbers=nums.slice();
+        state.original=nums.slice();
+        state.target=t;
+        state.solution=sol;
+        state.hints=0;
+        break;
+      }
     }
+    if(state.solution.length) break;
   }
-  return null;
+  targetEl.textContent=state.target;
+  hintsEl.textContent=0;
+  render();
+  resetSelection();
 }
 
-// -----------------------------
-// Render numbers
-function renderNumbers(arr){
+// --------------------
+// Render
+// --------------------
+function render(){
   numbersRow.innerHTML='';
-  arr.forEach((n,idx)=>{
+  state.numbers.forEach((n,i)=>{
     const b=document.createElement('button');
     b.className='num';
     b.textContent=n;
-    b.dataset.idx=idx;
-    b.onclick=()=> handleNumberClick(idx);
+    b.onclick=()=>numberClick(i);
     numbersRow.appendChild(b);
   });
 }
 
-// -----------------------------
-// Compute points
-function computePoints(){
-  if(state.usedHints===0) return 100;
-  if(state.usedHints===1) return 80;
-  if(state.usedHints===2) return 60;
-  return 0;
+// --------------------
+// Selection helpers
+// --------------------
+function clearHighlights(){
+  document.querySelectorAll('.selected').forEach(b=>b.classList.remove('selected'));
 }
 
-// -----------------------------
-// Hints
-hintBtn.addEventListener('click', () => {
-  if(!state.current) return;
-
-  state.usedHints++;
-  hintsUsedEl.textContent = state.usedHints;
-
-  const sol = state.current.solution;
-  if(!sol || sol.length === 0) return;
-
-  const step = sol[0]; // only first step for visual hint
-  const nums = state.current.numbers;
-
-  // Find indices of a and b
-  const firstIdx = nums.indexOf(step.a);
-  const secondIdx = nums.indexOf(step.b);
-
-  if(firstIdx === -1 || secondIdx === -1) return;
-
-  const opSymbol = step.op.split(' ')[1];
-
-  let cycle = 0;
-
-  function runHintCycle(){
-    // First number
-    highlightNumIndex(firstIdx);
-    setTimeout(() => {
-      clearNumHighlight();
-
-      // Operation
-      highlightOpSymbol(opSymbol);
-      setTimeout(() => {
-        clearOpHighlight();
-
-        // Second number
-        highlightNumIndex(secondIdx);
-        setTimeout(() => {
-          clearNumHighlight();
-          cycle++;
-          if(cycle < 2) runHintCycle();
-        }, 500);
-
-      }, 500);
-
-    }, 500);
-  }
-
-  runHintCycle();
-
-  if(state.usedHints > (state.mode - 1)) {
-    state.usedHints = state.mode - 1;
-  }
-});
-
-// -----------------------------
-// Reset
-resetBtn.addEventListener('click',()=>{
-  if(!state.current) return;
-  state.current.numbers = state.current.originalNumbers.slice();
-  renderNumbers(state.current.numbers);
-  resetSelection();
-});
-
-// -----------------------------
-// New problem
-newBtn.addEventListener('click',()=> nextRound());
-
-// -----------------------------
-// Highlight helpers
-function clearNumHighlight(){ document.querySelectorAll('.num').forEach(b=>b.classList.remove('selected')); }
-function highlightNumIndex(idx){ const b=document.querySelector(`.num[data-idx="${idx}"]`); if(b) b.classList.add('selected'); }
-function clearOpHighlight(){ document.querySelectorAll('.op').forEach(b=>b.classList.remove('selected')); }
-function highlightOpSymbol(op){ clearOpHighlight(); const el=document.querySelector(`.op[data-op="${op}"]`); if(el) el.classList.add('selected'); }
-
-// -----------------------------
-// Pick operation
-document.querySelectorAll('.op').forEach(b=>b.addEventListener('click',()=> pickOp(b.dataset.op)));
-function pickOp(op){
-  if(state.selection.op===op){ state.selection.op=null; clearOpHighlight(); return; }
-  state.selection.op=op;
-  highlightOpSymbol(op);
+function resetSelection(){
+  state.selection={first:null,op:null};
+  clearHighlights();
 }
 
-// -----------------------------
-// Handle number click
-function handleNumberClick(idx){
-  const sel = state.selection;
-  const nums = state.current.numbers;
+// --------------------
+// Click logic
+// --------------------
+document.querySelectorAll('.op').forEach(b=>{
+  b.onclick=()=>{
+    if(state.selection.first===null) return;
+    clearHighlights();
+    b.classList.add('selected');
+    state.selection.op=b.dataset.op;
+    highlightFirst();
+  };
+});
 
-  if(sel.firstIndex===null){ sel.firstIndex=idx; highlightNumIndex(idx); return; }
+function highlightFirst(){
+  const btn=numbersRow.children[state.selection.first];
+  if(btn) btn.classList.add('selected');
+}
 
-  if(sel.op===null){
-    if(idx===sel.firstIndex){ resetSelection(); }
-    return; // ignore other numbers until operation selected
+function numberClick(i){
+  const sel=state.selection;
+  if(sel.first===null){
+    sel.first=i;
+    highlightFirst();
+    return;
   }
+  if(sel.op===null) return;
 
-  if(idx===sel.firstIndex){ resetSelection(); return; }
+  const a=state.numbers[sel.first];
+  const b=state.numbers[i];
+  if(sel.op==='/'&&(b===0||a%b!==0)) return;
 
-  const a = nums[sel.firstIndex], b = nums[idx], op = sel.op;
-  if(op==='/' && (b===0 || a%b!==0)){ sel.op=null; clearOpHighlight(); highlightNumIndex(sel.firstIndex); return; }
-
-  let result;
-  if(op==='+') result=a+b;
-  else if(op==='-') result=a-b;
-  else if(op==='*') result=a*b;
-  else if(op==='/') result=a/b;
-
-  // highlight all
-  highlightNumIndex(sel.firstIndex);
-  highlightOpSymbol(op);
-  highlightNumIndex(idx);
-
+  const res=eval(`${a}${sel.op}${b}`);
   setTimeout(()=>{
-    const newNums = nums.filter((_,i)=>i!==sel.firstIndex && i!==idx);
-    newNums.unshift(result);
-    state.current.numbers=newNums;
+    state.numbers=state.numbers.filter((_,k)=>k!==sel.first&&k!==i);
+    state.numbers.unshift(res);
+    render();
     resetSelection();
-    renderNumbers(state.current.numbers);
-
-    if(state.current.numbers.length===1){
-      if(state.current.numbers[0]===state.current.target){
-        state.score+=computePoints();
+    if(state.numbers.length===1){
+      if(state.numbers[0]===state.target){
+        state.score+=100;
         scoreEl.textContent=state.score;
         showFireworks();
-        setTimeout(nextRound,3000); // 3 sec display for correct
-      } else {
+        setTimeout(newProblem,3000);
+      }else{
         setTimeout(()=>{
-          state.current.numbers=state.current.originalNumbers.slice();
-          renderNumbers(state.current.numbers);
-        },3000); // 3 sec display for incorrect
+          state.numbers=state.original.slice();
+          render();
+        },3000);
       }
     }
-
-  },550);
+  },500);
 }
 
-// -----------------------------
-// Reset selection
-function resetSelection(){ state.selection={firstIndex:null,op:null}; clearNumHighlight(); clearOpHighlight(); }
+// --------------------
+// Hints (deterministic)
+// --------------------
+document.getElementById('hintBtn').onclick=()=>{
+  if(state.hints>=state.solution.length) return;
+  state.hints++;
+  hintsEl.textContent=state.hints;
 
-// -----------------------------
-// Next round
-function newGame(){ state.round=0; state.score=0; state.usedHints=0; scoreEl.textContent=state.score; nextRound(); }
-function nextRound(){
-  if(state.round>=state.problemsPerGame){ alert('Game complete! Total score: '+state.score); state.round=0; state.score=0; scoreEl.textContent=state.score; }
-  state.round++;
-  roundNumEl.textContent=state.round;
-  const p = generateProblem();
-  if(!p){ alert('Unable to generate solvable problem.'); return; }
-  state.current={numbers:p.numbers.slice(),originalNumbers:p.numbers.slice(),target:p.target,solution:p.solution};
-  state.usedHints=0; hintsUsedEl.textContent=0;
-  targetEl.textContent=p.target;
-  renderNumbers(state.current.numbers);
+  const step=state.solution[state.hints-1];
+  const nums=state.numbers;
+  const ai=nums.indexOf(step.a);
+  const bi=nums.indexOf(step.b);
+
+  let d=0;
+  for(let r=0;r<2;r++){
+    setTimeout(()=>highlightNum(ai),d+=500);
+    setTimeout(()=>highlightOp(step.op),d+=500);
+    setTimeout(()=>highlightNum(bi),d+=500);
+    setTimeout(clearHighlights,d+=500);
+  }
+};
+
+function highlightNum(i){
+  clearHighlights();
+  const b=numbersRow.children[i];
+  if(b) b.classList.add('selected');
+}
+
+function highlightOp(op){
+  clearHighlights();
+  document.querySelector(`.op[data-op="${op}"]`)?.classList.add('selected');
+}
+
+// --------------------
+// Reset / New
+// --------------------
+document.getElementById('resetBtn').onclick=()=>{
+  state.numbers=state.original.slice();
+  render();
   resetSelection();
-}
+};
+document.getElementById('newBtn').onclick=newProblem;
 
-// -----------------------------
+// --------------------
 // Fireworks
-const canvas=document.getElementById('fireworksCanvas'); const ctx=canvas.getContext('2d'); let cw,ch;
-function resizeCanvas(){ cw=canvas.width=canvas.clientWidth; ch=canvas.height=canvas.clientHeight; }
-window.addEventListener('resize',resizeCanvas); resizeCanvas();
+// --------------------
+const canvas=document.getElementById('fireworksCanvas');
+const ctx=canvas.getContext('2d');
 function showFireworks(){
-  canvas.style.display='block'; const particles=[]; const x=cw*0.5; const y=ch*0.5; const N=60;
-  for(let i=0;i<N;i++){ const angle=Math.random()*Math.PI*2; const speed=Math.random()*4+1; particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:60+Math.random()*30}); }
-  let frame=0; const id=setInterval(()=>{
-    ctx.clearRect(0,0,cw,ch);
-    particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;ctx.beginPath();ctx.globalAlpha=Math.max(0,p.life/80);ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();p.life--;});
-    frame++; if(frame>50){ clearInterval(id); ctx.clearRect(0,0,cw,ch); canvas.style.display='none'; }
-  },16);
-  try{
-    const ac = new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(); const g=ac.createGain();
-    o.type='sine'; o.frequency.setValueAtTime(880,ac.currentTime); g.gain.setValueAtTime(0.0001,ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.2,ac.currentTime+0.01); o.connect(g); g.connect(ac.destination);
-    o.start(); o.frequency.exponentialRampToValueAtTime(660,ac.currentTime+0.3);
-    g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+0.7); setTimeout(()=>{ o.stop(); ac.close(); },800);
-  }catch(e){console.log('audio failed',e);}
+  canvas.style.display='block';
+  canvas.width=canvas.clientWidth;
+  canvas.height=canvas.clientHeight;
+  let t=0;
+  const id=setInterval(()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<60;i++){
+      ctx.fillStyle='white';
+      ctx.fillRect(
+        canvas.width/2+Math.cos(i+t)*t*3,
+        canvas.height/2+Math.sin(i+t)*t*3,
+        3,3
+      );
+    }
+    if(t++>30){clearInterval(id);canvas.style.display='none';}
+  },30);
 }
 
-// -----------------------------
-// Initial start
-newGame();
+// --------------------
+newProblem();
 </script>
 </body>
 </html>
