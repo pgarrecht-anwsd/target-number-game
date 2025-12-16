@@ -252,22 +252,30 @@ function newProblem(){
   state.hints=0;
   hintsEl.textContent=0;
 
-  while(true){
-    const nums=Array.from({length:state.mode},()=>randInt(10));
-    for(let t=0;t<=state.max;t++){
-      const sol=solve(nums.slice(),t);
-      if(sol){
-        state.numbers=nums.slice();
-        state.original=nums.slice();
-        state.target=t;
-        state.solution=sol;
-        targetEl.textContent=t;
-        render();
-        resetSelection();
-        return;
-      }
-    }
+  for (let tries = 0; tries < 40; tries++) {
+  const t = 1 + randInt(state.max - 1); // never 0
+
+  // Avoid trivial targets
+  if (nums.includes(t)) continue;
+
+  const sol = solve(nums.slice(), t);
+  if (sol) {
+    state.numbers = nums.slice();
+    state.original = nums.slice();
+    state.target = t;
+    state.solution = sol;
+    state.hints = 0;
+    state.moveCount = 0;
+
+    targetEl.textContent = t;
+    hintsEl.textContent = 0;
+    updateHintButton();
+    render();
+    resetSelection();
+    return;
   }
+}
+
 }
 
 // --------------------
