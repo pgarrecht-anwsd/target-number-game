@@ -43,7 +43,6 @@ html,body{
 }
 
 .title{font-size:20px;font-weight:700;}
-
 .settings{display:flex;gap:8px;align-items:center;}
 .rules{font-size:13px;opacity:.9;}
 
@@ -125,8 +124,13 @@ select{
   opacity:.9;
 }
 
-.canvas-wrap{position:relative;height:120px;}
-#fireworksCanvas{position:absolute;inset:0;display:none;}
+.solutionBox{
+  margin-top:10px;
+  background:rgba(0,0,0,0.25);
+  padding:10px;
+  border-radius:8px;
+  font-size:14px;
+}
 </style>
 </head>
 
@@ -166,13 +170,12 @@ select{
 
   <div class="row">
     <button id="hintBtn" class="btn">Hint (first move only)</button>
+    <button id="solutionBtn" class="btn">Show solution</button>
     <button id="resetBtn" class="btn">Reset</button>
     <button id="newBtn" class="btn">New</button>
   </div>
 
-  <div class="canvas-wrap">
-    <canvas id="fireworksCanvas"></canvas>
-  </div>
+  <div id="solutionBox" class="solutionBox" style="display:none"></div>
 
   <div class="footer">
     Click a number, then an operation, then another number. Intermediate results must be integers.
@@ -186,7 +189,7 @@ select{
 const randInt = m => Math.floor(Math.random()*(m+1));
 
 // --------------------
-// Game state
+// State
 // --------------------
 const state={
   mode:4,
@@ -198,20 +201,18 @@ const state={
   selection:{first:null,op:null},
   score:0,
   hints:0,
-  moved:false
+  moveCount:0
 };
 
-// --------------------
-// DOM refs
-// --------------------
 const numbersRow=document.getElementById('numbersRow');
 const targetEl=document.getElementById('targetValue');
 const scoreEl=document.getElementById('score');
 const hintsEl=document.getElementById('hintsUsed');
 const hintBtn=document.getElementById('hintBtn');
+const solutionBox=document.getElementById('solutionBox');
 
 // --------------------
-// Solver (index-safe, friendly subtraction)
+// SOLVER (correct, ordered)
 // --------------------
 function solve(nums,target){
   if(nums.length===1) return nums[0]===target?[]:null;
@@ -219,21 +220,22 @@ function solve(nums,target){
   for(let i=0;i<nums.length;i++){
     for(let j=0;j<nums.length;j++){
       if(i===j) continue;
-
       const a=nums[i], b=nums[j];
       const rest=nums.filter((_,k)=>k!==i&&k!==j);
 
       const ops=[
-        {v:a+b,op:'+'},
-        ...(a>=b?[{v:a-b,op:'-'}]:[]),
-        {v:a*b,op:'*'}
+        {v:a+b,op:'+',ai:i,bi:j},
+        {v:a*b,op:'*',ai:i,bi:j},
+        {v:a-b,op:'-',ai:i,bi:j},
+        {v:b-a,op:'-',ai:j,bi:i}
       ];
-      if(b!==0 && a%b===0) ops.push({v:a/b,op:'/'});
+      if(b!==0 && a%b===0) ops.push({v:a/b,op:'/',ai:i,bi:j});
+      if(a!==0 && b%a===0) ops.push({v:b/a,op:'/',ai:j,bi:i});
 
       for(const o of ops){
         if(!Number.isInteger(o.v)) continue;
         const r=solve([o.v,...rest],target);
-        if(r) return [{ai:i,bi:j,op:o.op},...r];
+        if(r) return [{ai:o.ai,bi:o.bi,op:o.op},...r];
       }
     }
   }
@@ -244,23 +246,22 @@ function solve(nums,target){
 // New problem
 // --------------------
 function newProblem(){
+  solutionBox.style.display='none';
+  hintBtn.classList.remove('disabled');
+  state.moveCount=0;
+  state.hints=0;
+  hintsEl.textContent=0;
+
   while(true){
-    const nums = Array.from({length: state.mode}, () => randInt(10));
-    for(let tries=0;tries<40;tries++){
-      const t=randInt(state.max);
+    const nums=Array.from({length:state.mode},()=>randInt(10));
+    for(let t=0;t<=state.max;t++){
       const sol=solve(nums.slice(),t);
       if(sol){
-        Object.assign(state,{
-          numbers:nums.slice(),
-          original:nums.slice(),
-          target:t,
-          solution:sol,
-          hints:0,
-          moved:false
-        });
+        state.numbers=nums.slice();
+        state.original=nums.slice();
+        state.target=t;
+        state.solution=sol;
         targetEl.textContent=t;
-        hintsEl.textContent=0;
-        hintBtn.classList.remove('disabled');
         render();
         resetSelection();
         return;
@@ -278,23 +279,21 @@ function render(){
     const b=document.createElement('button');
     b.className='num';
     b.textContent=n;
-    b.onclick=()=>numberClick(i);
+    b.onclick=()=>numberClick(i,b);
     numbersRow.appendChild(b);
   });
 }
 
 // --------------------
-// Selection helpers
+// Selection
 // --------------------
 function clearHighlights(){
   document.querySelectorAll('.selected').forEach(b=>b.classList.remove('selected'));
 }
+
 function resetSelection(){
   state.selection={first:null,op:null};
   clearHighlights();
-}
-function highlightFirst(){
-  numbersRow.children[state.selection.first]?.classList.add('selected');
 }
 
 // --------------------
@@ -306,14 +305,13 @@ document.querySelectorAll('.op').forEach(b=>{
     clearHighlights();
     b.classList.add('selected');
     state.selection.op=b.dataset.op;
-    highlightFirst();
+    numbersRow.children[state.selection.first]?.classList.add('selected');
   };
 });
 
-function numberClick(i){
+function numberClick(i,btn){
   const sel=state.selection;
 
-  // Toggle off first number
   if(sel.first===i && sel.op===null){
     resetSelection();
     return;
@@ -321,21 +319,21 @@ function numberClick(i){
 
   if(sel.first===null){
     sel.first=i;
-    highlightFirst();
+    btn.classList.add('selected');
     return;
   }
 
   if(sel.op===null) return;
 
+  btn.classList.add('selected');
+
   const a=state.numbers[sel.first];
   const b=state.numbers[i];
   if(sel.op==='/'&&(b===0||a%b!==0)) return;
 
-  numbersRow.children[i]?.classList.add('selected');
-  state.moved=true;
-  hintBtn.classList.add('disabled');
-
   const res=eval(`${a}${sel.op}${b}`);
+  state.moveCount++;
+  hintBtn.classList.add('disabled');
 
   setTimeout(()=>{
     state.numbers=state.numbers.filter((_,k)=>k!==sel.first&&k!==i);
@@ -344,43 +342,29 @@ function numberClick(i){
     resetSelection();
 
     if(state.numbers.length===1){
-      setTimeout(()=>{
-        if(state.numbers[0]===state.target){
-          state.score+=computeScore();
-          scoreEl.textContent=state.score;
-          showFireworks();
-          setTimeout(newProblem,3000);
-        }else{
+      if(state.numbers[0]===state.target){
+        state.score+=state.hints?80:100;
+        scoreEl.textContent=state.score;
+        setTimeout(newProblem,3000);
+      }else{
+        setTimeout(()=>{
           state.numbers=state.original.slice();
           render();
-        }
-      },3000);
+        },3000);
+      }
     }
-  },500);
+  },600);
 }
 
 // --------------------
-// Scoring
-// --------------------
-function computeScore(){
-  if(state.hints===0) return 100;
-  if(state.hints===1) return 80;
-  if(state.hints===2) return 60;
-  return 0;
-}
-
-// --------------------
-// Hints (first move only)
+// Hint (first move only)
 // --------------------
 hintBtn.onclick=()=>{
-  if(state.moved) return;
+  if(state.moveCount>0) return;
+  state.hints=1;
+  hintsEl.textContent=1;
 
-  const step=state.solution[state.hints];
-  if(!step) return;
-
-  state.hints++;
-  hintsEl.textContent=state.hints;
-
+  const step=state.solution[0];
   let d=0;
   for(let r=0;r<2;r++){
     setTimeout(()=>highlightNum(step.ai),d+=500);
@@ -400,40 +384,24 @@ function highlightOp(op){
 }
 
 // --------------------
-// Reset / New
+// Show solution
+// --------------------
+document.getElementById('solutionBtn').onclick=()=>{
+  state.score+=0;
+  solutionBox.innerHTML='<b>One valid solution:</b><br>';
+  state.solution.forEach((s,i)=>{
+    solutionBox.innerHTML+=`${i+1}) use numbers ${s.ai+1} and ${s.bi+1} with ${s.op}<br>`;
+  });
+  solutionBox.style.display='block';
+};
+
 // --------------------
 document.getElementById('resetBtn').onclick=()=>{
   state.numbers=state.original.slice();
-  state.moved=false;
-  hintBtn.classList.remove('disabled');
   render();
   resetSelection();
 };
 document.getElementById('newBtn').onclick=newProblem;
-
-// --------------------
-// Fireworks
-// --------------------
-const canvas=document.getElementById('fireworksCanvas');
-const ctx=canvas.getContext('2d');
-function showFireworks(){
-  canvas.style.display='block';
-  canvas.width=canvas.clientWidth;
-  canvas.height=canvas.clientHeight;
-  let t=0;
-  const id=setInterval(()=>{
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    for(let i=0;i<60;i++){
-      ctx.fillStyle='white';
-      ctx.fillRect(
-        canvas.width/2+Math.cos(i+t)*t*3,
-        canvas.height/2+Math.sin(i+t)*t*3,
-        3,3
-      );
-    }
-    if(t++>30){clearInterval(id);canvas.style.display='none';}
-  },30);
-}
 
 newProblem();
 </script>
