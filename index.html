@@ -390,6 +390,8 @@ solutionBtn.onclick=()=>{
   hintBtn.classList.add('disabled');
   resetBtn.classList.add('disabled');
   solutionBtn.classList.add('disabled');
+  state.problems++;
+  problemsEl.textContent = state.problems;
 
   let nums=state.original.slice();
   const steps=[];
