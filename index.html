@@ -51,8 +51,12 @@ select{
   padding:6px;
   border-radius:6px;
   border:none;
-  background:rgba(255,255,255,0.05);
-  color:var(--white);
+  background:rgba(255,255,255,0.08);
+  color:white;
+}
+select option{
+  background:#123a63;
+  color:white;
 }
 
 .target{
@@ -104,7 +108,7 @@ select{
 .selected{filter:brightness(150%);}
 
 .btn{
-  background:rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.1);
   border:none;
   color:white;
   padding:8px 14px;
@@ -113,16 +117,15 @@ select{
 }
 
 .btn.disabled{
-  opacity:0.4;
+  opacity:0.35;
   pointer-events:none;
 }
 
 .footer{
-  display:flex;
-  justify-content:space-between;
   margin-top:12px;
   font-size:13px;
   opacity:.9;
+  text-align:center;
 }
 
 .solutionBox{
@@ -141,7 +144,7 @@ select{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:60px;
+  font-size:64px;
   animation:pop 2s ease-out forwards;
 }
 @keyframes pop{
@@ -173,7 +176,10 @@ select{
   <div class="row">
     <div>Target</div>
     <div class="target" id="targetValue">--</div>
-    <div>Score: <span id="score">0</span></div>
+    <div>
+      Score: <span id="score">0</span> |
+      Problems: <span id="problems">0</span>
+    </div>
   </div>
 
   <div class="row ops">
@@ -186,10 +192,10 @@ select{
   <div class="row numbers" id="numbersRow"></div>
 
   <div class="row">
-    <button id="hintBtn" class="btn">Hint (first move only)</button>
-    <button id="solutionBtn" class="btn">Show solution</button>
+    <button id="hintBtn" class="btn">Hint (1st Move Only)</button>
+    <button id="solutionBtn" class="btn">Show Solution</button>
     <button id="resetBtn" class="btn">Reset</button>
-    <button id="newBtn" class="btn">New</button>
+    <button id="newBtn" class="btn">New Problem</button>
   </div>
 
   <div id="solutionBox" class="solutionBox" style="display:none"></div>
@@ -201,10 +207,7 @@ select{
 
 <script>
 const randInt = m => Math.floor(Math.random()*(m+1));
-
-function weightedNumber(){
-  return Math.random()<0.1 ? 0 : randInt(10);
-}
+const weightedNumber = () => Math.random()<0.1 ? 0 : randInt(10);
 
 const state={
   mode:4,
@@ -215,13 +218,19 @@ const state={
   solution:[],
   selection:{first:null,op:null},
   score:0,
-  moveCount:0
+  problems:0,
+  moveCount:0,
+  usedHint:false,
+  solutionShown:false
 };
 
 const numbersRow=document.getElementById('numbersRow');
 const targetEl=document.getElementById('targetValue');
 const scoreEl=document.getElementById('score');
+const problemsEl=document.getElementById('problems');
 const hintBtn=document.getElementById('hintBtn');
+const resetBtn=document.getElementById('resetBtn');
+const solutionBtn=document.getElementById('solutionBtn');
 const solutionBox=document.getElementById('solutionBox');
 
 function solve(nums,target){
@@ -252,7 +261,12 @@ function solve(nums,target){
 function newProblem(){
   solutionBox.style.display='none';
   hintBtn.classList.remove('disabled');
+  resetBtn.classList.remove('disabled');
+  solutionBtn.classList.remove('disabled');
+
   state.moveCount=0;
+  state.usedHint=false;
+  state.solutionShown=false;
 
   while(true){
     const nums=Array.from({length:state.mode},weightedNumber);
@@ -288,7 +302,6 @@ function render(){
 function clearHighlights(){
   document.querySelectorAll('.selected').forEach(b=>b.classList.remove('selected'));
 }
-
 function resetSelection(){
   state.selection={first:null,op:null};
   clearHighlights();
@@ -296,7 +309,7 @@ function resetSelection(){
 
 document.querySelectorAll('.op').forEach(b=>{
   b.onclick=()=>{
-    if(state.selection.first===null) return;
+    if(state.selection.first===null||state.solutionShown) return;
     clearHighlights();
     b.classList.add('selected');
     state.selection.op=b.dataset.op;
@@ -305,9 +318,10 @@ document.querySelectorAll('.op').forEach(b=>{
 });
 
 function numberClick(i,btn){
+  if(state.solutionShown) return;
   const sel=state.selection;
-  if(sel.first===i && sel.op===null){ resetSelection(); return; }
-  if(sel.first===null){ sel.first=i; btn.classList.add('selected'); return; }
+  if(sel.first===i&&sel.op===null){resetSelection();return;}
+  if(sel.first===null){sel.first=i;btn.classList.add('selected');return;}
   if(sel.op===null||i===sel.first) return;
 
   btn.classList.add('selected');
@@ -326,9 +340,18 @@ function numberClick(i,btn){
     resetSelection();
 
     if(state.numbers.length===1){
+      state.problems++;
+      problemsEl.textContent=state.problems;
+
       if(state.numbers[0]===state.target){
-        state.score+=100;
-        scoreEl.textContent=state.score;
+        if(!state.solutionShown){
+          const award =
+            state.usedHint
+              ? (state.mode===3 ? 50 : 70)
+              : 100;
+          state.score+=award;
+          scoreEl.textContent=state.score;
+        }
         fireworks();
         setTimeout(newProblem,2000);
       }else{
@@ -350,7 +373,8 @@ function fireworks(){
 }
 
 hintBtn.onclick=()=>{
-  if(state.moveCount>0) return;
+  if(state.moveCount>0||state.solutionShown) return;
+  state.usedHint=true;
   const step=state.solution[0];
   let d=0;
   for(let r=0;r<2;r++){
@@ -370,7 +394,12 @@ function highlightOp(op){
   document.querySelector(`.op[data-op="${op}"]`)?.classList.add('selected');
 }
 
-document.getElementById('solutionBtn').onclick=()=>{
+solutionBtn.onclick=()=>{
+  state.solutionShown=true;
+  hintBtn.classList.add('disabled');
+  resetBtn.classList.add('disabled');
+  solutionBtn.classList.add('disabled');
+
   let nums=state.original.slice();
   const steps=[];
   state.solution.forEach(s=>{
@@ -385,7 +414,8 @@ document.getElementById('solutionBtn').onclick=()=>{
   solutionBox.style.display='block';
 };
 
-document.getElementById('resetBtn').onclick=()=>{
+resetBtn.onclick=()=>{
+  if(state.solutionShown) return;
   state.numbers=state.original.slice();
   render();
   resetSelection();
