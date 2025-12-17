@@ -416,7 +416,11 @@ solutionBtn.onclick=()=>{
 
 resetBtn.onclick=()=>{
   if(state.solutionShown) return;
-  state.numbers=state.original.slice();
+
+  state.numbers = state.original.slice();
+  state.moveCount = 0;     // ✅ allow hint again
+  state.usedHint = false;  // ✅ fresh attempt
+
   render();
   resetSelection();
   hintBtn.classList.remove('disabled');
