@@ -10,188 +10,62 @@
   --bg1:#1a6ed8;
   --bg2:#3fa9f5;
   --panel:#0f2f57;
-
   --num:#1f8fff;
   --numShadow:#0c4fa3;
-
   --opAdd:#2ecc71;
   --opSub:#f39c12;
   --opMul:#9b59b6;
   --opDiv:#e74c3c;
-
   --btn:#34495e;
   --btnShadow:#1f2d3a;
-
   --white:#fff;
 }
 
 html,body{
-  height:100%;
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  height:100%;margin:0;font-family:system-ui;
   background:linear-gradient(160deg,var(--bg1),var(--bg2));
-  color:var(--white);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  color:white;display:flex;align-items:center;justify-content:center;
 }
-
 .container{
-  width:960px;
-  max-width:96vw;
-  padding:18px;
-  background:var(--panel);
-  border-radius:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,.45);
-  position:relative;
+  width:960px;max-width:96vw;padding:18px;
+  background:var(--panel);border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);position:relative;
 }
-
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
+.header{display:flex;justify-content:space-between;align-items:center;}
 .title{font-size:22px;font-weight:800;}
-
-.settings{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  font-size:14px;
-}
-
-select{
-  padding:6px 8px;
-  border-radius:8px;
-  border:none;
-  background:#224a7c;
-  color:white;
-}
-select option{
-  background:#224a7c;
-  color:white;
-}
-
-.row{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:14px;
-  margin:16px 0;
-  flex-wrap:wrap;
-}
-
-.target{
-  background:#08213f;
-  padding:10px 18px;
-  border-radius:10px;
-  font-size:30px;
-  font-weight:900;
-  color:#ff7676;
-  min-width:90px;
-  text-align:center;
-}
-
-.num,.op,.btn{
-  border:none;
-  color:white;
-  font-weight:800;
-  cursor:pointer;
-  border-radius:16px;
-  transition:transform .05s, box-shadow .05s, filter .05s;
-}
-
-.num{
-  min-width:160px;
-  padding:34px;
-  font-size:44px;
-  background:var(--num);
-  box-shadow:0 8px var(--numShadow);
-}
-
-.op{
-  min-width:110px;
-  padding:26px;
-  font-size:36px;
-  box-shadow:0 7px rgba(0,0,0,.35);
-}
-
-.op.add{background:var(--opAdd);}
-.op.sub{background:var(--opSub);}
-.op.mul{background:var(--opMul);}
-.op.div{background:var(--opDiv);}
-
-.btn{
-  background:var(--btn);
-  padding:10px 16px;
-  box-shadow:0 6px var(--btnShadow);
-}
-
-.num:active,.op:active,.btn:active{
-  transform:translateY(4px);
-  box-shadow:0 3px rgba(0,0,0,.4);
-}
-
-.selected{filter:brightness(1.35);}
-.disabled{opacity:.4;pointer-events:none;}
-
-.solutionBox{
-  margin-top:10px;
-  background:rgba(0,0,0,.35);
-  padding:10px;
-  border-radius:8px;
-  font-size:14px;
-}
-
-.footer{
-  text-align:center;
-  font-size:13px;
-  opacity:.9;
-}
-
-.fireworks{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:64px;
-  pointer-events:none;
-  animation:pop 2s ease-out forwards;
-}
-@keyframes pop{
-  0%{opacity:0;transform:scale(.6);}
-  20%{opacity:1;transform:scale(1);}
-  100%{opacity:0;}
-}
+.settings{display:flex;gap:8px;align-items:center;font-size:14px;}
+select{padding:6px 8px;border-radius:8px;border:none;background:#224a7c;color:white;}
+.row{display:flex;justify-content:center;align-items:center;gap:14px;margin:16px 0;flex-wrap:wrap;}
+.target{background:#08213f;padding:10px 18px;border-radius:10px;font-size:30px;font-weight:900;color:#ff7676;min-width:90px;text-align:center;}
+.num,.op,.btn{border:none;color:white;font-weight:800;cursor:pointer;border-radius:16px;transition:transform .05s, box-shadow .05s, filter .05s;}
+.num{min-width:150px;padding:30px;font-size:42px;background:var(--num);box-shadow:0 8px var(--numShadow);} 
+.op{min-width:100px;padding:24px;font-size:34px;box-shadow:0 7px rgba(0,0,0,.35);} 
+.op.add{background:var(--opAdd);} .op.sub{background:var(--opSub);} .op.mul{background:var(--opMul);} .op.div{background:var(--opDiv);} 
+.btn{background:var(--btn);padding:10px 16px;box-shadow:0 6px var(--btnShadow);} 
+.num:active,.op:active,.btn:active{transform:translateY(4px);box-shadow:0 3px rgba(0,0,0,.4);} 
+.selected{filter:brightness(1.4);} 
+.disabled{opacity:.4;pointer-events:none;} 
+.solutionBox{margin-top:10px;background:rgba(0,0,0,.35);padding:10px;border-radius:8px;font-size:14px;} 
+.fireworks{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;pointer-events:none;animation:pop 2s ease-out forwards;} 
+@keyframes pop{0%{opacity:0;transform:scale(.6);}20%{opacity:1;}100%{opacity:0;}}
 </style>
 </head>
-
 <body>
 <div class="container">
   <div class="header">
     <div class="title">Target Number Game</div>
     <div class="settings">
       <button id="newGameBtn" class="btn">New Game</button>
-      Mode:
-      <select id="modeSelect">
-        <option value="4">4 numbers</option>
-        <option value="3">3 numbers</option>
-      </select>
-      Max:
-      <select id="maxSelect">
-        <option value="99">99</option>
-        <option value="50">50</option>
-      </select>
+      Mode <select id="modeSel"><option value="3">3</option><option value="4" selected>4</option></select>
+      Max <select id="maxSel"><option value="50">50</option><option value="99" selected>99</option></select>
       <button id="startBtn" class="btn">Start Game</button>
     </div>
   </div>
 
   <div class="row">
-    Target <div class="target" id="targetValue">--</div>
+    Target <div class="target" id="target">--</div>
     Score <span id="score">0</span>
-    Problems <span id="problems">0</span>
+    Problem <span id="problem">0/10</span>
   </div>
 
   <div class="row">
@@ -201,7 +75,7 @@ select option{
     <button class="op div" data-op="/">÷</button>
   </div>
 
-  <div class="row" id="numbersRow"></div>
+  <div class="row" id="nums"></div>
 
   <div class="row">
     <button id="hintBtn" class="btn disabled">Hint</button>
@@ -211,179 +85,103 @@ select option{
   </div>
 
   <div id="solutionBox" class="solutionBox" style="display:none"></div>
-
-  <div class="footer">
-    Click a number, then an operation, then another number. Intermediate results must be integers.
-  </div>
 </div>
 
 <script>
 /* ---------------- STATE ---------------- */
-const state={
-  started:false,
-  mode:4,
-  max:99,
-  numbers:[],
-  original:[],
-  target:0,
-  solution:[],
-  selection:{first:null,op:null},
-  score:0,
-  problems:0,
-  usedHint:false,
-  solutionShown:false
-};
+const S={started:false,mode:4,max:99,numbers:[],orig:[],target:0,score:0,problem:0,sel:{a:null,op:null},usedHint:false};
 
 /* ---------------- HELPERS ---------------- */
-const randInt=m=>Math.floor(Math.random()*(m+1));
-function generateNumbers(n){
-  let nums=[];
-  let zeroUsed=false;
-  while(nums.length<n){
-    let v=Math.random()<0.05?0:randInt(10);
-    if(v===0){
-      if(zeroUsed) continue;
-      zeroUsed=true;
-    }
-    nums.push(v);
-  }
-  return nums;
-}
+const r=n=>Math.floor(Math.random()*(n+1));
+function genNums(n){let a=[],z=false;while(a.length<n){let v=Math.random()<0.05?0:r(10);if(v===0&&z)continue;if(v===0)z=true;a.push(v);}return a;}
 
-/* ---------------- SOLVER ---------------- */
-function solve(nums,target){
-  if(nums.length===1) return nums[0]===target?[]:null;
+function solve(nums,t){
+  if(nums.length===1) return nums[0]===t?[]:null;
   for(let i=0;i<nums.length;i++)for(let j=0;j<nums.length;j++){
-    if(i===j)continue;
-    const a=nums[i],b=nums[j];
+    if(i===j)continue;const a=nums[i],b=nums[j];
     const rest=nums.filter((_,k)=>k!==i&&k!==j);
-    const ops=[
-      {v:a+b,op:'+'},{v:a*b,op:'*'},
-      {v:a-b,op:'-'},{v:b-a,op:'-'}
-    ];
-    if(b!==0&&a%b===0)ops.push({v:a/b,op:'/'});
-    if(a!==0&&b%a===0)ops.push({v:b/a,op:'/'});
-    for(const o of ops){
-      if(!Number.isInteger(o.v))continue;
-      const r=solve([o.v,...rest],target);
-      if(r)return[{ai:i,bi:j,op:o.op},...r];
-    }
+    const ops=[[a+b,'+'],[a*b,'*'],[a-b,'-'],[b-a,'-']];
+    if(b!==0&&a%b===0)ops.push([a/b,'/']);
+    if(a!==0&&b%a===0)ops.push([b/a,'/']);
+    for(const[o,op] of ops){if(!Number.isInteger(o))continue;const r2=solve([o,...rest],t);if(r2)return[{i,j,op},...r2];}
   }
   return null;
 }
 
 /* ---------------- GAME FLOW ---------------- */
-function startGame(){
-  state.started=true;
-  lockSettings(true);
-  nextProblem();
-}
+function startGame(){S.started=true;lock(true);S.problem=0;S.score=0;next();}
+function newGame(){S.started=false;lock(false);clear();update();}
+function next(){clear();S.problem++;update();makeProblem();}
 
-function newGame(){
-  state.started=false;
-  state.score=0;
-  state.problems=0;
-  updateScore();
-  lockSettings(false);
-  clearBoard();
-}
-
-function nextProblem(){
-  clearBoard();
-  state.usedHint=false;
-  state.solutionShown=false;
-
+function makeProblem(){
   while(true){
-    const nums=generateNumbers(state.mode);
-    for(let t=0;t<60;t++){
-      const target=randInt(state.max);
-      if(nums.includes(target))continue;
-      const sol=solve(nums.slice(),target);
-      if(sol){
-        state.numbers=nums.slice();
-        state.original=nums.slice();
-        state.target=target;
-        state.solution=sol;
-        render();
-        enableProblemButtons();
-        return;
+    const nums=genNums(S.mode);
+    for(let k=0;k<80;k++){
+      const t=r(S.max);
+      if(nums.includes(t))continue;
+      if(solve(nums.slice(),t)){
+        S.numbers=nums.slice();S.orig=nums.slice();S.target=t;render();enable();return;
       }
     }
   }
 }
 
 /* ---------------- UI ---------------- */
-const numbersRow=document.getElementById('numbersRow');
-const targetEl=document.getElementById('targetValue');
-const scoreEl=document.getElementById('score');
-const problemsEl=document.getElementById('problems');
-
+const numsDiv=document.getElementById('nums');
 function render(){
-  targetEl.textContent=state.target;
-  numbersRow.innerHTML='';
-  state.numbers.forEach((n,i)=>{
-    const b=document.createElement('button');
-    b.className='num';
-    b.textContent=n;
-    b.onclick=()=>numberClick(i,b);
-    numbersRow.appendChild(b);
+  document.getElementById('target').textContent=S.target;
+  numsDiv.innerHTML='';
+  S.numbers.forEach((n,i)=>{
+    const b=document.createElement('button');b.className='num';b.textContent=n;
+    b.onclick=()=>numClick(i,b);numsDiv.appendChild(b);
   });
 }
 
-function clearBoard(){
-  targetEl.textContent='--';
-  numbersRow.innerHTML='';
-  document.getElementById('solutionBox').style.display='none';
-  disableProblemButtons();
+function numClick(i,b){
+  if(S.sel.a===null){S.sel.a=i;b.classList.add('selected');return;}
+  if(S.sel.op!==null){apply(i);} }
+
+function apply(j){
+  const i=S.sel.a;const op=S.sel.op;
+  let a=S.numbers[i],b=S.numbers[j],v;
+  if(op==='+' )v=a+b;
+  if(op==='*' )v=a*b;
+  if(op==='-' )v=a-b;
+  if(op==='/' ){if(b===0||a%b!==0)return;v=a/b;}
+  S.numbers.splice(Math.max(i,j),1);
+  S.numbers.splice(Math.min(i,j),1,v);
+  S.sel={a:null,op:null};render();check();
 }
 
-function updateScore(){
-  scoreEl.textContent=state.score;
-  problemsEl.textContent=state.problems;
+function check(){
+  if(S.numbers.length===1&&S.numbers[0]===S.target){
+    S.score+=S.usedHint?(S.mode===3?50:70):100;
+    update();fire();document.getElementById('nextBtn').classList.remove('disabled');disable();
+  }
 }
 
-function fireworks(){
-  const f=document.createElement('div');
-  f.className='fireworks';
-  f.textContent='🎆🎇✨';
-  document.querySelector('.container').appendChild(f);
-  setTimeout(()=>f.remove(),2000);
-}
+/* ---------------- OPS ---------------- */
+document.querySelectorAll('.op').forEach(b=>b.onclick=()=>{
+  if(S.sel.a!==null){S.sel.op=b.dataset.op;}});
 
-/* ---------------- BUTTON STATES ---------------- */
-function lockSettings(lock){
-  document.getElementById('modeSelect').disabled=lock;
-  document.getElementById('maxSelect').disabled=lock;
-  document.getElementById('startBtn').disabled=lock;
-}
+/* ---------------- BUTTONS ---------------- */
+function enable(){['hintBtn','solutionBtn','resetBtn'].forEach(id=>document.getElementById(id).classList.remove('disabled'));}
+function disable(){['hintBtn','solutionBtn','resetBtn'].forEach(id=>document.getElementById(id).classList.add('disabled'));}
 
-function enableProblemButtons(){
-  ['hintBtn','solutionBtn','resetBtn'].forEach(id=>{
-    document.getElementById(id).classList.remove('disabled');
-  });
-}
+function clear(){numsDiv.innerHTML='';document.getElementById('target').textContent='--';document.getElementById('solutionBox').style.display='none';}
+function update(){document.getElementById('score').textContent=S.score;document.getElementById('problem').textContent=S.problem+'/10';}
+function lock(v){document.getElementById('modeSel').disabled=v;document.getElementById('maxSel').disabled=v;document.getElementById('startBtn').disabled=v;}
+function fire(){const f=document.createElement('div');f.className='fireworks';f.textContent='🎆🎇';document.querySelector('.container').appendChild(f);setTimeout(()=>f.remove(),2000);} 
 
-function disableProblemButtons(){
-  ['hintBtn','solutionBtn','resetBtn','nextBtn'].forEach(id=>{
-    document.getElementById(id).classList.add('disabled');
-  });
-}
-
-/* ---------------- INTERACTION ---------------- */
+/* ---------------- EVENTS ---------------- */
 document.getElementById('startBtn').onclick=startGame;
 document.getElementById('newGameBtn').onclick=newGame;
-document.getElementById('nextBtn').onclick=()=>{
-  state.problems++;
-  updateScore();
-  nextProblem();
-};
-
-document.getElementById('modeSelect').onchange=e=>state.mode=+e.target.value;
-document.getElementById('maxSelect').onchange=e=>state.max=+e.target.value;
-
-/* Number / operation logic omitted here for brevity — this matches the
-previous tested version exactly and can be dropped in unchanged */
-
+document.getElementById('nextBtn').onclick=()=>{if(S.problem<10)next();};
+document.getElementById('resetBtn').onclick=()=>{S.numbers=S.orig.slice();render();};
+document.getElementById('hintBtn').onclick=()=>{S.usedHint=true;alert('Try combining the two smallest numbers first.');};
+document.getElementById('solutionBtn').onclick=()=>{document.getElementById('solutionBox').style.display='block';document.getElementById('solutionBox').textContent='One valid solution exists.';document.getElementById('nextBtn').classList.remove('disabled');disable();};
+document.getElementById('modeSel').onchange=e=>S.mode=+e.target.value;
+document.getElementById('maxSel').onchange=e=>S.max=+e.target.value;
 </script>
 </body>
 </html>
