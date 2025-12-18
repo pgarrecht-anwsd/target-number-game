@@ -172,6 +172,22 @@ select option{background:#224a7c;color:white;}
    ====================== */
 
 const newProblemBtn = document.getElementById('newProblemBtn');
+startBtn.onclick = () => {
+  if (state.gameStarted) return;
+
+  state.gameStarted = true;
+
+  startBtn.classList.add('disabled');
+  targetEl.textContent = state.target;
+
+  renderNumbers();                 // reveal numbers
+  hintBtn.classList.remove('disabled');
+  resetBtn.classList.remove('disabled');
+  solutionBtn.classList.remove('disabled');
+
+  modeSelect.disabled = true;
+  maxSelect.disabled = true;
+};
 
 /* enable New Problem when solution shown */
 solutionBtn.onclick = () => {
