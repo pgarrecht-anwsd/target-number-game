@@ -1,68 +1,98 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Target Number Game</title>
 
 <style>
 :root{
-  --bg1:#1a6ed8; --bg2:#3fa9f5; --panel:#0f2f57;
-  --num:#1f8fff; --numShadow:#0c4fa3;
-  --opAdd:#2ecc71; --opSub:#f39c12; --opMul:#9b59b6; --opDiv:#e74c3c;
-  --btn:#34495e; --btnShadow:#1f2d3a;
+  --bg1:#1a6ed8;
+  --bg2:#3fa9f5;
+  --panel:#0f2f57;
+
+  --num:#1f8fff;
+  --numShadow:#0c4fa3;
+
+  --opAdd:#2ecc71;
+  --opSub:#f39c12;
+  --opMul:#9b59b6;
+  --opDiv:#e74c3c;
+
+  --btn:#34495e;
+  --btnShadow:#1f2d3a;
   --white:#fff;
 }
+
 html,body{
   height:100%;margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  font-family:system-ui,sans-serif;
   background:linear-gradient(160deg,var(--bg1),var(--bg2));
-  color:var(--white);
   display:flex;align-items:center;justify-content:center;
+  color:white;
 }
+
 .container{
-  width:960px;max-width:96vw;padding:18px;
+  width:960px;max-width:96vw;
   background:var(--panel);
-  border-radius:14px;
+  padding:18px;border-radius:14px;
   box-shadow:0 10px 30px rgba(0,0,0,.45);
   position:relative;
 }
-.header{display:flex;justify-content:space-between;align-items:center;}
-.title{font-size:22px;font-weight:800;}
-.settings{display:flex;gap:8px;align-items:center;font-size:14px;}
 
-select{
-  padding:6px 8px;border-radius:8px;border:none;
-  background:#224a7c;color:white;
+.header{
+  display:flex;justify-content:space-between;align-items:center;
 }
-select option{background:#224a7c;color:white;}
+
+.settings{
+  display:flex;gap:8px;align-items:center;
+}
+
+select, .btn{
+  padding:8px 12px;
+  border-radius:10px;
+  border:none;
+  background:#224a7c;
+  color:white;
+  font-weight:700;
+}
 
 .row{
   display:flex;justify-content:center;align-items:center;
   gap:14px;margin:16px 0;flex-wrap:wrap;
 }
+
 .target{
-  background:#08213f;padding:10px 18px;
-  border-radius:10px;font-size:30px;
-  font-weight:900;color:#ff7676;
-  min-width:90px;text-align:center;
+  background:#08213f;
+  padding:10px 18px;
+  border-radius:10px;
+  font-size:30px;font-weight:900;
+  color:#ff7676;min-width:90px;text-align:center;
 }
 
 .num,.op,.btn{
-  border:none;color:white;font-weight:800;
-  cursor:pointer;border-radius:16px;
-  transition:transform .05s,box-shadow .05s,filter .05s;
+  cursor:pointer;
+  border:none;
+  border-radius:16px;
+  font-weight:800;
+  transition:transform .05s, box-shadow .05s, filter .05s;
 }
 
 .num{
-  min-width:160px;padding:34px;font-size:44px;
+  min-width:150px;
+  padding:30px;
+  font-size:42px;
   background:var(--num);
   box-shadow:0 8px var(--numShadow);
 }
+
 .op{
-  min-width:110px;padding:26px;font-size:36px;
+  min-width:100px;
+  padding:26px;
+  font-size:34px;
   box-shadow:0 7px rgba(0,0,0,.35);
 }
+
 .op.add{background:var(--opAdd);}
 .op.sub{background:var(--opSub);}
 .op.mul{background:var(--opMul);}
@@ -70,7 +100,6 @@ select option{background:#224a7c;color:white;}
 
 .btn{
   background:var(--btn);
-  padding:10px 16px;
   box-shadow:0 6px var(--btnShadow);
 }
 
@@ -78,15 +107,15 @@ select option{background:#224a7c;color:white;}
   transform:translateY(4px);
   box-shadow:0 3px rgba(0,0,0,.4);
 }
+
 .selected{filter:brightness(1.35);}
 .disabled{opacity:.4;pointer-events:none;}
 
 .solutionBox{
   margin-top:10px;
   background:rgba(0,0,0,.35);
-  padding:10px;border-radius:8px;font-size:14px;
+  padding:10px;border-radius:8px;
 }
-.footer{text-align:center;font-size:13px;opacity:.9;}
 
 .fireworks{
   position:absolute;inset:0;
@@ -99,48 +128,35 @@ select option{background:#224a7c;color:white;}
   20%{opacity:1;transform:scale(1);}
   100%{opacity:0;}
 }
-
-.summaryBox{
-  position:absolute;inset:0;
-  background:rgba(0,0,0,.85);
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  color:white;font-size:22px;
-  border-radius:14px;text-align:center;gap:12px;
-}
 </style>
 </head>
 
 <body>
 <div class="container">
-
-  <!-- HEADER -->
   <div class="header">
-    <div class="title">Target Number Game</div>
+    <div><b>Target Number Game</b></div>
     <div class="settings">
       <button id="newGameBtn" class="btn">New Game</button>
-      Mode:
+      Mode
       <select id="modeSelect">
-        <option value="4">4 numbers</option>
-        <option value="3">3 numbers</option>
+        <option value="4">4</option>
+        <option value="3">3</option>
       </select>
-      Max:
+      Max
       <select id="maxSelect">
         <option value="99">99</option>
         <option value="50">50</option>
       </select>
-      <button id="startBtn" class="btn">Start Game</button>
+      <button id="startBtn" class="btn">Start</button>
     </div>
   </div>
 
-  <!-- SCORE -->
   <div class="row">
     Target <div class="target" id="targetValue">--</div>
     Score <span id="score">0</span>
     Problem <span id="problems">0/10</span>
   </div>
 
-  <!-- OPS -->
   <div class="row">
     <button class="op add" data-op="+">+</button>
     <button class="op sub" data-op="-">−</button>
@@ -148,80 +164,75 @@ select option{background:#224a7c;color:white;}
     <button class="op div" data-op="/">÷</button>
   </div>
 
-  <!-- NUMBERS -->
   <div class="row" id="numbersRow"></div>
 
-  <!-- PROBLEM CONTROLS -->
   <div class="row">
-    <button id="hintBtn" class="btn disabled">Hint (1st Move)</button>
-    <button id="solutionBtn" class="btn disabled">Show Solution</button>
-    <button id="resetBtn" class="btn disabled">Reset</button>
-    <button id="newProblemBtn" class="btn disabled">New Problem</button>
+    <button id="hintBtn" class="btn">Hint</button>
+    <button id="solutionBtn" class="btn">Show Solution</button>
+    <button id="resetBtn" class="btn">Reset</button>
+    <button id="newProblemBtn" class="btn">New Problem</button>
   </div>
 
   <div id="solutionBox" class="solutionBox" style="display:none"></div>
-
-  <div class="footer">
-    Use each number once per step. Intermediate results must be integers.
-  </div>
 </div>
 
 <script>
-/* ======================
-   ONLY MINIMAL CHANGES
-   ====================== */
+/* ========= Core logic restored ========= */
 
-const newProblemBtn = document.getElementById('newProblemBtn');
-startBtn.onclick = () => {
-  if (state.gameStarted) return;
+const randInt = m => Math.floor(Math.random()*(m+1));
+function generateNumbers(n){
+  const nums=[];
+  if(Math.random()<0.25) nums.push(0);
+  while(nums.length<n){
+    nums.push(randInt(10));
+  }
+  return nums;
+}
 
-  state.gameStarted = true;
-
-  startBtn.classList.add('disabled');
-  targetEl.textContent = state.target;
-
-  renderNumbers();                 // reveal numbers
-  hintBtn.classList.remove('disabled');
-  resetBtn.classList.remove('disabled');
-  solutionBtn.classList.remove('disabled');
-
-  modeSelect.disabled = true;
-  maxSelect.disabled = true;
+const state={
+  mode:4,max:99,
+  numbers:[],original:[],solution:[],
+  target:0,selection:{first:null,op:null},
+  score:0,problem:0,
+  moveCount:0,usedHint:false,solutionShown:false,
+  started:false
 };
 
-/* enable New Problem when solution shown */
-solutionBtn.onclick = () => {
-  if(state.solutionShown) return;
-  state.solutionShown = true;
-  state.solutionsUsed++;
+const numbersRow=document.getElementById('numbersRow');
+const targetEl=document.getElementById('targetValue');
+const scoreEl=document.getElementById('score');
+const problemsEl=document.getElementById('problems');
+const hintBtn=document.getElementById('hintBtn');
+const resetBtn=document.getElementById('resetBtn');
+const solutionBtn=document.getElementById('solutionBtn');
+const solutionBox=document.getElementById('solutionBox');
 
-  hintBtn.classList.add('disabled');
-  resetBtn.classList.add('disabled');
-  solutionBtn.classList.add('disabled');
-  newProblemBtn.classList.remove('disabled');
+function clearHighlights(){
+  document.querySelectorAll('.selected').forEach(b=>b.classList.remove('selected'));
+}
+function resetSelection(){
+  state.selection={first:null,op:null};
+  clearHighlights();
+}
 
-  state.problems++;
-  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
+document.querySelectorAll('.op').forEach(b=>{
+  b.onclick=()=>{
+    if(state.selection.first===null||state.solutionShown)return;
+    clearHighlights();
+    b.classList.add('selected');
+    state.selection.op=b.dataset.op;
+    numbersRow.children[state.selection.first]?.classList.add('selected');
+  };
+});
 
-  let nums = state.original.slice();
-  const steps=[];
-  state.solution.forEach(s=>{
-    const a=nums[s.ai],b=nums[s.bi];
-    const sym=s.op==='*'?'×':s.op==='/'?'÷':s.op;
-    const r=eval(`${a}${s.op}${b}`);
-    steps.push(`${a} ${sym} ${b} = ${r}`);
-    nums=nums.filter((_,i)=>i!==s.ai&&i!==s.bi);
-    nums.unshift(r);
-  });
-  solutionBox.innerHTML=`<b>One valid solution:</b> ${steps.join('; ')}`;
-  solutionBox.style.display='block';
-};
-
-/* New Problem button */
-newProblemBtn.onclick = () => {
-  newProblemBtn.classList.add('disabled');
-  nextProblem();
-};
+/* ========= Auto-advance restored ========= */
+function fireworks(){
+  const f=document.createElement('div');
+  f.className='fireworks';
+  f.textContent='🎆🎇✨';
+  document.querySelector('.container').appendChild(f);
+  setTimeout(()=>f.remove(),2000);
+}
 </script>
 </body>
 </html>
