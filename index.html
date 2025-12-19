@@ -553,9 +553,6 @@
       solutionBtn.classList.add('disabled');
       nextBtn.classList.remove('disabled');
 
-      state.problems++;
-      problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
-
       let nums = state.original.slice();
       const steps = [];
 
@@ -610,14 +607,15 @@
     };
 
     function nextProblem() {
-      if (state.problems >= state.totalProblems) {
-        showSummary();
-        return;
-      }
+  if (state.problems >= state.totalProblems) {
+    showSummary();
+    return;
+  }
 
-      generateProblem();
-      problemsEl.textContent = `${state.problems + 1}/${state.totalProblems}`;
-    }
+  state.problems++;
+  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
+  generateProblem();
+}
 
     /* --------------------------------------------------
        End-of-game summary
