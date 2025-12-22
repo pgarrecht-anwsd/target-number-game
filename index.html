@@ -605,6 +605,19 @@
       modeSelect.disabled = true;
       maxSelect.disabled = true;
     };
+    
+nextBtn.onclick = () => {
+  // Prevent advancing past last problem
+  if (state.problems >= state.totalProblems) {
+    alert('Game over');
+    return;
+  }
+
+  state.problems++;
+  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
+
+  generateProblem();
+};
 
     function nextProblem() {
   if (state.problems >= state.totalProblems) {
