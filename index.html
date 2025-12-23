@@ -305,40 +305,50 @@
        -------------------------------------------------- */
 
     function solve(nums, target) {
-      if (nums.length === 1) {
-        return nums[0] === target ? [] : null;
+  if (nums.length === 1) {
+    return nums[0] === target ? [] : null;
+  }
+
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = 0; j < nums.length; j++) {
+      if (i === j) continue;
+
+      const a = nums[i];
+      const b = nums[j];
+      const rest = nums.filter((_, k) => k !== i && k !== j);
+
+      const candidates = [];
+
+      // Addition
+      candidates.push({ a, b, op: '+', result: a + b });
+
+      // Multiplication
+      candidates.push({ a, b, op: '*', result: a * b });
+
+      // Subtraction (both orders, explicit)
+      candidates.push({ a, b, op: '-', result: a - b });
+      candidates.push({ a: b, b: a, op: '-', result: b - a });
+
+      // Division (only exact, explicit order)
+      if (b !== 0 && a % b === 0) {
+        candidates.push({ a, b, op: '/', result: a / b });
+      }
+      if (a !== 0 && b % a === 0) {
+        candidates.push({ a: b, b: a, op: '/', result: b / a });
       }
 
-      for (let i = 0; i < nums.length; i++) {
-        for (let j = 0; j < nums.length; j++) {
-          if (i === j) continue;
+      for (const c of candidates) {
+        if (!Number.isInteger(c.result)) continue;
 
-          const a = nums[i];
-          const b = nums[j];
-          const rest = nums.filter((_, k) => k !== i && k !== j);
-
-         const ops = [
-  { v: a + b, op: '+', ai: i, bi: j },
-  { v: a * b, op: '*', ai: i, bi: j },
-  { v: a - b, op: '-', ai: i, bi: j },
-  { v: b - a, op: '-', ai: j, bi: i }
-];
-
-        if (b !== 0 && a % b === 0)
-  ops.push({ v: a / b, op: '/', ai: i, bi: j });
-
-if (a !== 0 && b % a === 0)
-  ops.push({ v: b / a, op: '/', ai: j, bi: i });
-
-          for (const o of ops) {
-            if (!Number.isInteger(o.v)) continue;
-            const r = solve([o.v, ...rest], target);
-           if (r) return [{ a, b, op: o.op, result: o.v }, ...r];
-          }
+        const next = solve([c.result, ...rest], target);
+        if (next) {
+          return [{ a: c.a, b: c.b, op: c.op, result: c.result }, ...next];
         }
       }
-      return null;
     }
+  }
+  return null;
+}
 
     /* --------------------------------------------------
        Problem generation
@@ -561,42 +571,27 @@ if (a !== 0 && b % a === 0)
   state.solutionShown = true;
   state.solutionsUsed++;
 
-  // Disable other buttons
   hintBtn.classList.add('disabled');
   resetBtn.classList.add('disabled');
   solutionBtn.classList.add('disabled');
   nextBtn.classList.remove('disabled');
 
-  // Copy original numbers to work with
-  let nums = state.original.slice();
+  state.problems++;
+  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
+
   const steps = [];
 
-  // Track used numbers by removing them from nums as we go
-  state.solution.forEach(step => {
-    // Find first available index of a and b
-    let ai = nums.indexOf(step.a);
-    nums.splice(ai, 1);
+  state.solution.forEach(s => {
+    const sym =
+      s.op === '*' ? '×' :
+      s.op === '/' ? '÷' :
+      s.op;
 
-    let bi = nums.indexOf(step.b);
-    nums.splice(bi, 1);
-
-    // Calculate result
-    let r = eval(`${step.a}${step.op}${step.b}`);
-
-    // Suppress negative results in display
-    const displayA = step.a < 0 ? `(${step.a})` : step.a;
-    const displayB = step.b < 0 ? `(${step.b})` : step.b;
-    const sym = step.op === '*' ? '×' : step.op === '/' ? '÷' : step.op;
-    const displayR = r < 0 ? `(${r})` : r;
-
-    steps.push(`${displayA} ${sym} ${displayB} = ${displayR}`);
-
-    // Add result back to nums for next steps
-    nums.unshift(r);
+    steps.push(`${s.a} ${sym} ${s.b} = ${s.result}`);
   });
 
-  // Show solution
-  solutionBox.innerHTML = `<b>One valid solution:</b> ${steps.join('; ')}`;
+  solutionBox.innerHTML =
+    `<b>One valid solution:</b> ${steps.join('; ')}`;
   solutionBox.style.display = 'block';
 };
 
