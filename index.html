@@ -511,43 +511,52 @@
        -------------------------------------------------- */
 
     hintBtn.onclick = () => {
-  if (state.moveCount > 0 || state.solutionShown) return;
-
-  state.usedHint++;
-  state.hintsUsed++;
+  if (state.solutionShown) return;
+  if (!state.solution || !state.solution.length) return;
 
   const step = state.solution[0];
 
-  // Suppress hints that produce negative results
-  const aVal = step.a;
-  const bVal = step.b;
-  const op = step.op;
+  // Find matching buttons WITHOUT changing state
+  const numberButtons = [...document.querySelectorAll('.number')];
+  const opButtons = [...document.querySelectorAll('.op')];
 
-  let valid = true;
-  if ((op === '-' && aVal - bVal < 0) ||
-      (op === '/' && (bVal === 0 || aVal % bVal !== 0))) {
-    valid = false;
-  }
+  const btnA = numberButtons.find(
+    b => Number(b.textContent) === step.a
+  );
 
-  if (!valid) return; // skip hint if it would be negative or invalid
+  const btnB = numberButtons.find(
+    b => Number(b.textContent) === step.b && b !== btnA
+  );
 
-  let numsCopy = state.numbers.slice();
+  const opMap = {
+    '+': '+',
+    '-': '-',
+    '*': '×',
+    '/': '÷'
+  };
 
-  // Find first available index of a and b in the current numbers
-  const ai = numsCopy.indexOf(aVal);
-  numsCopy[ai] = null; // mark as used
-  const bi = numsCopy.indexOf(bVal);
+  const opBtn = opButtons.find(
+    b => b.textContent === opMap[step.op]
+  );
 
-  let delay = 0;
-  const highlightNumber = i => numbersRow.children[i]?.classList.add('selected');
-  const highlightOperator = o => document.querySelector(`.op[data-op="${o}"]`)?.classList.add('selected');
-  const clear = () => clearSelection();
+  if (!btnA || !btnB || !opBtn) return;
 
-  // Sequence: first number, operator, second number, then clear
-  [() => highlightNumber(ai),
-   () => highlightOperator(op),
-   () => highlightNumber(bi),
-   clear].forEach(fn => setTimeout(fn, delay += 500));
+  // Blink sequence
+  const highlight = el => el.classList.add('hint');
+  const unhighlight = el => el.classList.remove('hint');
+
+  highlight(btnA);
+  setTimeout(() => {
+    highlight(opBtn);
+    setTimeout(() => {
+      highlight(btnB);
+      setTimeout(() => {
+        unhighlight(btnA);
+        unhighlight(opBtn);
+        unhighlight(btnB);
+      }, 500);
+    }, 500);
+  }, 500);
 };
 
     function highlightNum(i) {
