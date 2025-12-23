@@ -333,7 +333,7 @@ if (a !== 0 && b % a === 0)
           for (const o of ops) {
             if (!Number.isInteger(o.v)) continue;
             const r = solve([o.v, ...rest], target);
-           if (r) return [{ a, b, op: o.op }, ...r];
+           if (r) return [{ a, b, op: o.op, result: o.v }, ...r];
           }
         }
       }
@@ -524,7 +524,14 @@ let d = 0;
 
 // find indices of values in the CURRENT numbers
 const ai = state.numbers.indexOf(step.a);
-const bi = state.numbers.indexOf(step.b);
+
+// if a and b are the same value, find a different index for b
+let bi;
+if (step.a === step.b) {
+  bi = state.numbers.findIndex((v, i) => v === step.b && i !== ai);
+} else {
+  bi = state.numbers.indexOf(step.b);
+}
 
 [
   () => highlightNum(ai),
@@ -567,7 +574,7 @@ const bi = state.numbers.indexOf(step.b);
         const a = s.a;
 const b = s.b;
 const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
-const r = eval(`${a}${s.op}${b}`);
+const r = s.result;
 
 steps.push(`${a} ${sym} ${b} = ${r}`);
 
