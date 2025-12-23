@@ -317,20 +317,23 @@
           const b = nums[j];
           const rest = nums.filter((_, k) => k !== i && k !== j);
 
-          const ops = [
-            { v: a + b, op: '+' },
-            { v: a * b, op: '*' },
-            { v: a - b, op: '-' },
-            { v: b - a, op: '-' }
-          ];
+         const ops = [
+  { v: a + b, op: '+', ai: i, bi: j },
+  { v: a * b, op: '*', ai: i, bi: j },
+  { v: a - b, op: '-', ai: i, bi: j },
+  { v: b - a, op: '-', ai: j, bi: i }
+];
 
-          if (b !== 0 && a % b === 0) ops.push({ v: a / b, op: '/' });
-          if (a !== 0 && b % a === 0) ops.push({ v: b / a, op: '/' });
+        if (b !== 0 && a % b === 0)
+  ops.push({ v: a / b, op: '/', ai: i, bi: j });
+
+if (a !== 0 && b % a === 0)
+  ops.push({ v: b / a, op: '/', ai: j, bi: i });
 
           for (const o of ops) {
             if (!Number.isInteger(o.v)) continue;
             const r = solve([o.v, ...rest], target);
-            if (r) return [{ ai: i, bi: j, op: o.op }, ...r];
+           if (r) return [{ ai: o.ai, bi: o.bi, op: o.op }, ...r];
           }
         }
       }
