@@ -520,14 +520,18 @@ if (a !== 0 && b % a === 0)
       state.hintsUsed++;
 
       const step = state.solution[0];
-      let d = 0;
+let d = 0;
 
-      [
-        () => highlightNum(step.ai),
-        () => highlightOp(step.op),
-        () => highlightNum(step.bi),
-        clearHighlights
-      ].forEach(fn => setTimeout(fn, d += 500));
+// find indices of values in the CURRENT numbers
+const ai = state.numbers.indexOf(step.a);
+const bi = state.numbers.indexOf(step.b);
+
+[
+  () => highlightNum(ai),
+  () => highlightOp(step.op),
+  () => highlightNum(bi),
+  clearHighlights
+].forEach(fn => setTimeout(fn, d += 500));
     };
 
     function highlightNum(i) {
