@@ -573,8 +573,14 @@ if (a !== 0 && b % a === 0)
     steps.push(`${a} ${sym} ${b} = ${result}`);
 
     // Remove used numbers
-    nums = nums.filter((_, i) => i !== s.ai && i !== s.bi);
-    nums.unshift(result);
+    // Remove used numbers safely using splice (higher index first)
+const maxIdx = Math.max(s.ai, s.bi);
+const minIdx = Math.min(s.ai, s.bi);
+nums.splice(maxIdx, 1);
+nums.splice(minIdx, 1);
+
+// Insert result at start of array
+nums.unshift(r);
   });
 
   solutionBox.innerHTML = `<b>One valid solution:</b> ${steps.join('; ')}`;
