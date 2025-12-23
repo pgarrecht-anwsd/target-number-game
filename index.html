@@ -436,66 +436,53 @@ if (a !== 0 && b % a === 0)
        -------------------------------------------------- */
 
     function numberClick(i, btn) {
-      if (state.solutionShown || !state.gameStarted) return;
+  if (state.solutionShown || !state.gameStarted) return;
 
-      const s = state.selection;
+  const s = state.selection;
 
-      // Deselect if clicking same number again
-      if (s.first === i && s.op === null) {
-        resetSelection();
-        return;
-      }
+  // Deselect if clicking the same number again before choosing operator
+  if (s.first === i && s.op === null) {
+    resetSelection();
+    return;
+  }
 
-      // First number selection
-      if (s.first === null) {
-        s.first = i;
-        btn.classList.add('selected');
-        return;
-      }
+  // First number selection
+  if (s.first === null) {
+    s.first = i;
+    btn.classList.add('selected');
+    return;
+  }
 
-      // Must have operator and second number
-      if (s.op === null || i === s.first) return;
+  // Must have operator and second number, and can't select the same number twice
+  if (s.op === null || i === s.first) return;
 
-      btn.classList.add('selected');
+  btn.classList.add('selected');
 
-      const a = state.numbers[s.first];
-      const b = state.numbers[i];
+  const a = state.numbers[s.first];
+  const b = state.numbers[i];
 
-      // Division must be exact
-      if (s.op === '/' && (b === 0 || a % b !== 0)) return;
+  // Division must be exact
+  if (s.op === '/' && (b === 0 || a % b !== 0)) return;
 
-      const res = eval(`${a}${s.op}${b}`);
-      state.moveCount++;
-      hintBtn.classList.add('disabled');
+  // Compute result
+  const res = eval(`${a}${s.op}${b}`);
 
-      setTimeout(() => {
-        state.numbers = state.numbers
-          .filter((_, k) => k !== s.first && k !== i);
-        state.numbers.unshift(res);
+  // Replace the two numbers in the array with the result
+  const newNumbers = [];
+  state.numbers.forEach((num, idx) => {
+    if (idx !== s.first && idx !== i) newNumbers.push(num);
+  });
+  newNumbers.unshift(res); // add result at the start
+  state.numbers = newNumbers;
 
-        renderNumbers();
-        resetSelection();
+  renderNumbers();
+  resetSelection();
 
-        // Check end of problem
-        if (state.numbers.length === 1) {
-          state.problems++;
-
-          if (state.numbers[0] === state.target &&
-              !state.solutionShown) {
-
-            const pts = state.usedHint
-              ? (state.mode === 3 ? 50 : 70)
-              : 100;
-
-            state.score += pts;
-            scoreEl.textContent = state.score;
-
-            fireworks();
-            setTimeout(nextProblem, 2000);
-          }
-        }
-      }, 400);
-    }
+  // Check end of problem
+  if (state.numbers.length === 1) {
+    nextBtn.classList.remove('disabled');
+  }
+}
 
     /* --------------------------------------------------
        Effects
