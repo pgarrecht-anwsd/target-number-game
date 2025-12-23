@@ -333,7 +333,7 @@ if (a !== 0 && b % a === 0)
           for (const o of ops) {
             if (!Number.isInteger(o.v)) continue;
             const r = solve([o.v, ...rest], target);
-           if (r) return [{ ai: o.ai, bi: o.bi, op: o.op }, ...r];
+           if (r) return [{ a, b, op: o.op }, ...r];
           }
         }
       }
@@ -560,14 +560,17 @@ if (a !== 0 && b % a === 0)
       const steps = [];
 
       state.solution.forEach(s => {
-        const a = nums[s.ai];
-        const b = nums[s.bi];
-        const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
-        const r = eval(`${a}${s.op}${b}`);
+        const a = s.a;
+const b = s.b;
+const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
+const r = eval(`${a}${s.op}${b}`);
 
-        steps.push(`${a} ${sym} ${b} = ${r}`);
-        nums = nums.filter((_, i) => i !== s.ai && i !== s.bi);
-        nums.unshift(r);
+steps.push(`${a} ${sym} ${b} = ${r}`);
+
+// remove by VALUE, not index
+nums.splice(nums.indexOf(a), 1);
+nums.splice(nums.indexOf(b), 1);
+nums.unshift(r);
       });
 
       solutionBox.innerHTML = `<b>One valid solution:</b> ${steps.join('; ')}`;
