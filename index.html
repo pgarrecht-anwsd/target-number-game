@@ -516,47 +516,36 @@
 
   const step = state.solution[0];
 
-  // Find matching buttons WITHOUT changing state
-  const numberButtons = [...document.querySelectorAll('.number')];
-  const opButtons = [...document.querySelectorAll('.op')];
+  // Get live buttons in the same order as state.numbers
+  const numberBtns = [...document.querySelectorAll('#numbers button')];
+  const opBtns     = [...document.querySelectorAll('#ops button')];
 
-  const btnA = numberButtons.find(
-    b => Number(b.textContent) === step.a
-  );
+  const btnA = numberBtns[step.ai];
+  const btnB = numberBtns[step.bi];
 
-  const btnB = numberButtons.find(
-    b => Number(b.textContent) === step.b && b !== btnA
-  );
+  const opSymbol = step.op === '*' ? '×'
+                  : step.op === '/' ? '÷'
+                  : step.op;
 
-  const opMap = {
-    '+': '+',
-    '-': '-',
-    '*': '×',
-    '/': '÷'
-  };
-
-  const opBtn = opButtons.find(
-    b => b.textContent === opMap[step.op]
-  );
+  const opBtn = opBtns.find(b => b.textContent === opSymbol);
 
   if (!btnA || !btnB || !opBtn) return;
 
-  // Blink sequence
-  const highlight = el => el.classList.add('hint');
-  const unhighlight = el => el.classList.remove('hint');
+  const blink = el => el.classList.add('hint');
+  const clear = el => el.classList.remove('hint');
 
-  highlight(btnA);
+  blink(btnA);
   setTimeout(() => {
-    highlight(opBtn);
+    blink(opBtn);
     setTimeout(() => {
-      highlight(btnB);
+      blink(btnB);
       setTimeout(() => {
-        unhighlight(btnA);
-        unhighlight(opBtn);
-        unhighlight(btnB);
-      }, 500);
-    }, 500);
-  }, 500);
+        clear(btnA);
+        clear(opBtn);
+        clear(btnB);
+      }, 400);
+    }, 400);
+  }, 400);
 };
 
     function highlightNum(i) {
