@@ -548,41 +548,41 @@ if (a !== 0 && b % a === 0)
   state.solutionShown = true;
   state.solutionsUsed++;
 
+  // Disable other buttons
   hintBtn.classList.add('disabled');
   resetBtn.classList.add('disabled');
   solutionBtn.classList.add('disabled');
   nextBtn.classList.remove('disabled');
 
+  // Copy original numbers to work with
   let nums = state.original.slice();
   const steps = [];
 
-  state.solution.forEach(s => {
-    let a = nums[s.ai];
-    let b = nums[s.bi];
-    let result;
+  // Track used numbers by removing them from nums as we go
+  state.solution.forEach(step => {
+    // Find first available index of a and b
+    let ai = nums.indexOf(step.a);
+    nums.splice(ai, 1);
 
-    // Compute result but force non-negative display if possible
-    switch(s.op){
-      case '+': result = a + b; break;
-      case '-': result = Math.max(a - b, 0); break;  // suppress negatives
-      case '*': result = a * b; break;
-      case '/': result = a >= b ? Math.floor(a / b) : Math.floor(b / a); break;
-    }
+    let bi = nums.indexOf(step.b);
+    nums.splice(bi, 1);
 
-    const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
-    steps.push(`${a} ${sym} ${b} = ${result}`);
+    // Calculate result
+    let r = eval(`${step.a}${step.op}${step.b}`);
 
-    // Remove used numbers
-    // Remove used numbers safely using splice (higher index first)
-const maxIdx = Math.max(s.ai, s.bi);
-const minIdx = Math.min(s.ai, s.bi);
-nums.splice(maxIdx, 1);
-nums.splice(minIdx, 1);
+    // Suppress negative results in display
+    const displayA = step.a < 0 ? `(${step.a})` : step.a;
+    const displayB = step.b < 0 ? `(${step.b})` : step.b;
+    const sym = step.op === '*' ? '×' : step.op === '/' ? '÷' : step.op;
+    const displayR = r < 0 ? `(${r})` : r;
 
-// Insert result at start of array
-nums.unshift(r);
+    steps.push(`${displayA} ${sym} ${displayB} = ${displayR}`);
+
+    // Add result back to nums for next steps
+    nums.unshift(r);
   });
 
+  // Show solution
   solutionBox.innerHTML = `<b>One valid solution:</b> ${steps.join('; ')}`;
   solutionBox.style.display = 'block';
 };
