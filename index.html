@@ -507,24 +507,37 @@ if (a !== 0 && b % a === 0)
   state.hintsUsed++;
 
   const step = state.solution[0];
+
+  // Suppress hints that produce negative results
+  const aVal = step.a;
+  const bVal = step.b;
+  const op = step.op;
+
+  let valid = true;
+  if ((op === '-' && aVal - bVal < 0) ||
+      (op === '/' && (bVal === 0 || aVal % bVal !== 0))) {
+    valid = false;
+  }
+
+  if (!valid) return; // skip hint if it would be negative or invalid
+
   let numsCopy = state.numbers.slice();
 
-  // Determine actual indices to highlight, accounting for duplicates
-  const ai = numsCopy.indexOf(step.a);
-  numsCopy[ai] = null;  // mark as used
-  const bi = numsCopy.indexOf(step.b);
+  // Find first available index of a and b in the current numbers
+  const ai = numsCopy.indexOf(aVal);
+  numsCopy[ai] = null; // mark as used
+  const bi = numsCopy.indexOf(bVal);
 
-  // Avoid negative hints: skip if operation would be negative
-  if (step.op === '-' && step.a - step.b < 0) return;
-  if (step.op === '/' && (step.b === 0 || step.a % step.b !== 0)) return;
+  let delay = 0;
+  const highlightNumber = i => numbersRow.children[i]?.classList.add('selected');
+  const highlightOperator = o => document.querySelector(`.op[data-op="${o}"]`)?.classList.add('selected');
+  const clear = () => clearSelection();
 
-  let d = 0;
-  [
-    () => highlightNum(ai),
-    () => highlightOp(step.op),
-    () => highlightNum(bi),
-    clearHighlights
-  ].forEach(fn => setTimeout(fn, d += 500));
+  // Sequence: first number, operator, second number, then clear
+  [() => highlightNumber(ai),
+   () => highlightOperator(op),
+   () => highlightNumber(bi),
+   clear].forEach(fn => setTimeout(fn, delay += 500));
 };
 
     function highlightNum(i) {
