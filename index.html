@@ -509,7 +509,9 @@
     solutionBtn.classList.add('disabled');
 
     // Require explicit New Problem click
-    nextBtn.classList.remove('disabled');
+    setTimeout(() => {
+  nextProblem();
+}, 1000);
   } else {
     // Incorrect final value
     nextBtn.classList.remove('disabled');
