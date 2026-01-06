@@ -493,8 +493,28 @@
 
   // Check end of problem
   if (state.numbers.length === 1) {
+  const finalValue = state.numbers[0];
+
+  if (finalValue === state.target) {
+    // Correct solution
+    state.score++;
+    scoreEl.textContent = state.score;
+
+    fireworks();
+
+    // Lock the board
+    state.solutionShown = true;
+    hintBtn.classList.add('disabled');
+    resetBtn.classList.add('disabled');
+    solutionBtn.classList.add('disabled');
+
+    // Require explicit New Problem click
+    nextBtn.classList.remove('disabled');
+  } else {
+    // Incorrect final value
     nextBtn.classList.remove('disabled');
   }
+}
 }
 
     /* --------------------------------------------------
@@ -520,11 +540,13 @@
   const step = state.solution[0];
 
   // Get live buttons in the same order as state.numbers
-  const numberBtns = [...document.querySelectorAll('#numbers button')];
-  const opBtns     = [...document.querySelectorAll('#ops button')];
+  const numberBtns = [...numbersRow.querySelectorAll('.num')];
+const opBtns     = [...document.querySelectorAll('.op')];
 
-  const btnA = numberBtns[step.ai];
-  const btnB = numberBtns[step.bi];
+  const btnA = numberBtns.find(b => Number(b.textContent) === step.a);
+const btnB = numberBtns.find(
+  b => Number(b.textContent) === step.b && b !== btnA
+);
 
   const opSymbol = step.op === '*' ? '×'
                   : step.op === '/' ? '÷'
@@ -576,9 +598,6 @@
   resetBtn.classList.add('disabled');
   solutionBtn.classList.add('disabled');
   nextBtn.classList.remove('disabled');
-
-  state.problems++;
-  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
 
   const steps = [];
 
