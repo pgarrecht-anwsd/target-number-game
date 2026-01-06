@@ -539,7 +539,28 @@
   if (state.solutionShown) return;
   if (!state.solution || !state.solution.length) return;
 
-  const step = state.solution[0];
+  let step = null;
+
+for (const s of state.solution) {
+  // Must exist on the board as two distinct buttons
+  const numberBtns = [...numbersRow.querySelectorAll('.num')];
+  const btnA = numberBtns.find(b => Number(b.textContent) === s.a);
+  const btnB = numberBtns.find(
+    b => Number(b.textContent) === s.b && b !== btnA
+  );
+
+  if (!btnA || !btnB) continue;
+
+  const result = compute(s.a, s.b, s.op);
+
+  // Suppress negative or invalid hint steps
+  if (!Number.isFinite(result) || result < 0) continue;
+
+  step = s;
+  break;
+}
+
+if (!step) return;
 
   // Get live buttons in the same order as state.numbers
   const numberBtns = [...numbersRow.querySelectorAll('.num')];
