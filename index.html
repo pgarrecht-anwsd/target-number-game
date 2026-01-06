@@ -240,525 +240,290 @@
        GAME LOGIC (JavaScript)
        ============================== -->
   <script>
+/* ==================================================
+   Utilities
+   ================================================== */
+const randInt = m => Math.floor(Math.random() * (m + 1));
 
-    /* --------------------------------------------------
-       Utility functions
-       -------------------------------------------------- */
+const weightedNumber = (existing=[]) => {
+  if (existing.includes(0)) return 1 + randInt(10);
+  return Math.random() < 0.05 ? 0 : 1 + randInt(10);
+};
 
-    // Random integer from 0..m
-    const randInt = m => Math.floor(Math.random() * (m + 1));
+/* ==================================================
+   State
+   ================================================== */
+let state = {
+  mode: 4,
+  max: 99,
+  numbers: [],
+  original: [],
+  solution: [],
+  target: 0,
 
-    // Weighted number generation:
-    // - Small chance of zero
-    // - Avoids multiple zeros
-    const weightedNumber = (existing = []) => {
-      if (existing.includes(0)) return 1 + randInt(10);
-      return Math.random() < 0.05 ? 0 : 1 + randInt(10);
-    };
+  selection: { first:null, op:null },
 
-    /* --------------------------------------------------
-       Global game state
-       -------------------------------------------------- */
+  score: 0,
+  problems: 0,
+  totalProblems: 10,
 
-    let state = {
-      mode: 4,
-      max: 99,
-      numbers: [],
-      original: [],
-      solution: [],
-      target: 0,
+  hintsUsed: 0,
+  solutionsUsed: 0,
 
-      selection: { first: null, op: null },
+  solutionShown: false,
+  gameStarted: false,
+  hintAnimating: false
+};
 
-      score: 0,
-      problems: 0,
-      moveCount: 0,
-      usedHint: 0,
-      solutionShown: false,
-      gameStarted: false,
+/* ==================================================
+   DOM
+   ================================================== */
+const numbersRow  = document.getElementById('numbersRow');
+const targetEl    = document.getElementById('targetValue');
+const scoreEl     = document.getElementById('score');
+const problemsEl  = document.getElementById('problems');
 
-      totalProblems: 10,
-      hintsUsed: 0,
-      solutionsUsed: 0
-    };
+const hintBtn     = document.getElementById('hintBtn');
+const resetBtn    = document.getElementById('resetBtn');
+const solutionBtn = document.getElementById('solutionBtn');
+const solutionBox = document.getElementById('solutionBox');
+const startBtn    = document.getElementById('startBtn');
+const nextBtn     = document.getElementById('nextBtn');
 
-    /* --------------------------------------------------
-       DOM references
-       -------------------------------------------------- */
+const modeSelect  = document.getElementById('modeSelect');
+const maxSelect   = document.getElementById('maxSelect');
+const newGameBtn  = document.getElementById('newGameBtn');
 
-    const numbersRow  = document.getElementById('numbersRow');
-    const targetEl    = document.getElementById('targetValue');
-    const scoreEl     = document.getElementById('score');
-    const problemsEl  = document.getElementById('problems');
+/* ==================================================
+   Solver (unchanged logic, clean output)
+   ================================================== */
+function solve(nums, target) {
+  if (nums.length === 1) return nums[0] === target ? [] : null;
 
-    const hintBtn     = document.getElementById('hintBtn');
-    const resetBtn    = document.getElementById('resetBtn');
-    const solutionBtn = document.getElementById('solutionBtn');
-    const solutionBox = document.getElementById('solutionBox');
-    const startBtn    = document.getElementById('startBtn');
-    const nextBtn     = document.getElementById('nextBtn');
+  for (let i=0;i<nums.length;i++) {
+    for (let j=0;j<nums.length;j++) {
+      if (i===j) continue;
 
-    const modeSelect  = document.getElementById('modeSelect');
-    const maxSelect   = document.getElementById('maxSelect');
-    const newGameBtn  = document.getElementById('newGameBtn');
+      const a = nums[i], b = nums[j];
+      const rest = nums.filter((_,k)=>k!==i&&k!==j);
 
-    /* --------------------------------------------------
-       Solver (recursive backtracking)
-       Finds *one* valid solution sequence
-       -------------------------------------------------- */
+      const ops = [
+        {a,b,op:'+',r:a+b},
+        {a,b,op:'*',r:a*b},
+        {a,b,op:'-',r:a-b},
+        {a:b,b:a,op:'-',r:b-a}
+      ];
+      if (b!==0 && a%b===0) ops.push({a,b,op:'/',r:a/b});
+      if (a!==0 && b%a===0) ops.push({a:b,b:a,op:'/',r:b/a});
 
-    function solve(nums, target) {
-  if (nums.length === 1) {
-    return nums[0] === target ? [] : null;
-  }
-
-  for (let i = 0; i < nums.length; i++) {
-    for (let j = 0; j < nums.length; j++) {
-      if (i === j) continue;
-
-      const a = nums[i];
-      const b = nums[j];
-      const rest = nums.filter((_, k) => k !== i && k !== j);
-
-      const candidates = [];
-
-      // Addition
-      candidates.push({ a, b, op: '+', result: a + b });
-
-      // Multiplication
-      candidates.push({ a, b, op: '*', result: a * b });
-
-      // Subtraction (both orders, explicit)
-      candidates.push({ a, b, op: '-', result: a - b });
-      candidates.push({ a: b, b: a, op: '-', result: b - a });
-
-      // Division (only exact, explicit order)
-      if (b !== 0 && a % b === 0) {
-        candidates.push({ a, b, op: '/', result: a / b });
-      }
-      if (a !== 0 && b % a === 0) {
-        candidates.push({ a: b, b: a, op: '/', result: b / a });
-      }
-
-      for (const c of candidates) {
-        if (!Number.isInteger(c.result)) continue;
-
-        const next = solve([c.result, ...rest], target);
-        if (next) {
-          return [{ a: c.a, b: c.b, op: c.op, result: c.result }, ...next];
-        }
+      for (const o of ops) {
+        if (!Number.isInteger(o.r)) continue;
+        const next = solve([o.r,...rest], target);
+        if (next) return [{a:o.a,b:o.b,op:o.op,result:o.r},...next];
       }
     }
   }
   return null;
 }
 
-    /* --------------------------------------------------
-       Problem generation
-       -------------------------------------------------- */
-
-    function generateProblem() {
-      solutionBox.style.display = 'none';
-
-      state.numbers = [];
-      state.selection = { first: null, op: null };
-      state.moveCount = 0;
-      state.usedHint = 0;
-      state.solutionShown = false;
-
-      let nums = [];
-      for (let i = 0; i < state.mode; i++) nums.push(weightedNumber(nums));
-
-      let t, sol = null;
-      for (let tries = 0; tries < 60; tries++) {
-        t = randInt(state.max);
-        if (nums.includes(t)) continue;
-        sol = solve([...nums], t);
-        if (sol) break;
-      }
-
-      if (!sol) return generateProblem();
-
-      state.numbers  = nums.slice();
-      state.original = nums.slice();
-      state.target   = t;
-      state.solution = sol;
-
-      if (state.gameStarted) {
-        targetEl.textContent = state.target;
-        renderNumbers();
-        hintBtn.classList.remove('disabled');
-        resetBtn.classList.remove('disabled');
-        solutionBtn.classList.remove('disabled');
-      } else {
-        targetEl.textContent = '--';
-        renderNumbers(true);
-        hintBtn.classList.add('disabled');
-        resetBtn.classList.add('disabled');
-        solutionBtn.classList.add('disabled');
-        startBtn.classList.remove('disabled');
-      }
-    }
-
-    /* --------------------------------------------------
-       Rendering helpers
-       -------------------------------------------------- */
-
-    function renderNumbers(hidden = false) {
-      numbersRow.innerHTML = '';
-
-      state.numbers.forEach((n, i) => {
-        const b = document.createElement('button');
-        b.className = 'num';
-        b.textContent = hidden ? '?' : n;
-        b.onclick = () => numberClick(i, b);
-        numbersRow.appendChild(b);
-      });
-    }
-
-    function clearHighlights() {
-      document.querySelectorAll('.selected')
-        .forEach(b => b.classList.remove('selected'));
-    }
-
-    function resetSelection() {
-      state.selection = { first: null, op: null };
-      clearHighlights();
-    }
-
-    /* --------------------------------------------------
-       Operator selection
-       -------------------------------------------------- */
-
-    document.querySelectorAll('.op').forEach(b => {
-      b.onclick = () => {
-        if (state.selection.first === null ||
-            state.solutionShown ||
-            !state.gameStarted) return;
-
-        clearHighlights();
-        b.classList.add('selected');
-        state.selection.op = b.dataset.op;
-        numbersRow.children[state.selection.first]
-          ?.classList.add('selected');
-      };
-    });
-
-    /* --------------------------------------------------
-       Number click logic
-       -------------------------------------------------- */
-
-    function numberClick(i, btn) {
-  if (state.solutionShown || !state.gameStarted) return;
-
-  const s = state.selection;
-
-  // Deselect if clicking the same number again before choosing operator
-  if (s.first === i && s.op === null) {
-    resetSelection();
-    return;
-  }
-
-  // First number selection
-  if (s.first === null) {
-    s.first = i;
-    btn.classList.add('selected');
-    return;
-  }
-
-  // Must have operator and second number, and can't select the same number twice
-  if (s.op === null || i === s.first) return;
-
-  btn.classList.add('selected');
-
-  const a = state.numbers[s.first];
-  const b = state.numbers[i];
-
-  // Division must be exact
-  if (s.op === '/' && (b === 0 || a % b !== 0)) return;
-
-  // Compute result
-  const res = eval(`${a}${s.op}${b}`);
-
-  // Replace the two numbers in the array with the result
-  const newNumbers = [];
-  state.numbers.forEach((num, idx) => {
-    if (idx !== s.first && idx !== i) newNumbers.push(num);
+/* ==================================================
+   Rendering
+   ================================================== */
+function renderNumbers(hidden=false){
+  numbersRow.innerHTML='';
+  state.numbers.forEach((n,i)=>{
+    const b=document.createElement('button');
+    b.className='num';
+    b.textContent=hidden?'?':n;
+    b.onclick=()=>numberClick(i,b);
+    numbersRow.appendChild(b);
   });
-  newNumbers.unshift(res); // add result at the start
-  state.numbers = newNumbers;
+}
+
+function resetSelection(){
+  state.selection={first:null,op:null};
+  document.querySelectorAll('.selected').forEach(b=>b.classList.remove('selected'));
+}
+
+/* ==================================================
+   Problem generation
+   ================================================== */
+function generateProblem(){
+  solutionBox.style.display='none';
+  resetSelection();
+  state.solutionShown=false;
+
+  let nums=[];
+  for(let i=0;i<state.mode;i++) nums.push(weightedNumber(nums));
+
+  let sol=null,t;
+  for(let tries=0;tries<80;tries++){
+    t=randInt(state.max);
+    if(nums.includes(t)) continue;
+    sol=solve([...nums],t);
+    if(sol) break;
+  }
+  if(!sol) return generateProblem();
+
+  state.numbers=[...nums];
+  state.original=[...nums];
+  state.solution=sol;
+  state.target=t;
+
+  targetEl.textContent=state.gameStarted?t:'--';
+  renderNumbers(!state.gameStarted);
+
+  hintBtn.classList.toggle('disabled',!state.gameStarted);
+  resetBtn.classList.toggle('disabled',!state.gameStarted);
+  solutionBtn.classList.toggle('disabled',!state.gameStarted);
+  nextBtn.classList.add('disabled');
+}
+
+/* ==================================================
+   Number / operator interaction
+   ================================================== */
+document.querySelectorAll('.op').forEach(b=>{
+  b.onclick=()=>{
+    if(state.selection.first===null||state.solutionShown) return;
+    resetSelection();
+    state.selection.op=b.dataset.op;
+    b.classList.add('selected');
+  };
+});
+
+function numberClick(i,btn){
+  if(state.solutionShown) return;
+  const s=state.selection;
+
+  if(s.first===null){
+    s.first=i; btn.classList.add('selected'); return;
+  }
+  if(s.op===null||i===s.first) return;
+
+  const a=state.numbers[s.first], b=state.numbers[i];
+  if(s.op==='/'&&(b===0||a%b!==0)) return;
+
+  const r=eval(`${a}${s.op}${b}`);
+  state.numbers=state.numbers.filter((_,k)=>k!==s.first&&k!==i);
+  state.numbers.unshift(r);
 
   renderNumbers();
   resetSelection();
 
-  // Check end of problem
-  if (state.numbers.length === 1) {
-  const finalValue = state.numbers[0];
-
-  if (finalValue === state.target) {
-    // Correct solution
-    state.score++;
-    scoreEl.textContent = state.score;
-
-    fireworks();
-
-    // Lock the board
-    state.solutionShown = true;
+  if(state.numbers.length===1){
+    if(state.numbers[0]===state.target){
+      state.score++;
+      scoreEl.textContent=state.score;
+      fireworks();
+      setTimeout(nextProblem,1000);
+    } else {
+      nextBtn.classList.remove('disabled');
+    }
+    state.solutionShown=true;
     hintBtn.classList.add('disabled');
     resetBtn.classList.add('disabled');
     solutionBtn.classList.add('disabled');
-
-    // Require explicit New Problem click
-    setTimeout(() => {
-  nextProblem();
-}, 1000);
-  } else {
-    // Incorrect final value
-    nextBtn.classList.remove('disabled');
   }
 }
-}
 
-    /* --------------------------------------------------
-       Effects
-       -------------------------------------------------- */
+/* ==================================================
+   Hint (robust & safe)
+   ================================================== */
+hintBtn.onclick=()=>{
+  if(state.solutionShown||state.hintAnimating) return;
 
-    function fireworks() {
-      const f = document.createElement('div');
-      f.className = 'fireworks';
-      f.textContent = '🎆🎇✨';
-      document.querySelector('.container').appendChild(f);
-      setTimeout(() => f.remove(), 2000);
-    }
+  const nums=[...numbersRow.querySelectorAll('.num')];
+  const ops=[...document.querySelectorAll('.op')];
 
-    /* --------------------------------------------------
-       Hint logic (first move only)
-       -------------------------------------------------- */
-
-    hintBtn.onclick = () => {
-  if (state.solutionShown) return;
-  if (!state.solution || !state.solution.length) return;
-
-  let step = null;
-
-for (const s of state.solution) {
-  // Must exist on the board as two distinct buttons
-  const numberBtns = [...numbersRow.querySelectorAll('.num')];
-  const btnA = numberBtns.find(b => Number(b.textContent) === s.a);
-  const btnB = numberBtns.find(
-    b => Number(b.textContent) === s.b && b !== btnA
-  );
-
-  if (!btnA || !btnB) continue;
-
-  const result = compute(s.a, s.b, s.op);
-
-  // Suppress negative or invalid hint steps
-  if (!Number.isFinite(result) || result < 0) continue;
-
-  step = s;
-  break;
-}
-
-if (!step) return;
-
-  // Get live buttons in the same order as state.numbers
-  const numberBtns = [...numbersRow.querySelectorAll('.num')];
-const opBtns     = [...document.querySelectorAll('.op')];
-
-  const btnA = numberBtns.find(b => Number(b.textContent) === step.a);
-const btnB = numberBtns.find(
-  b => Number(b.textContent) === step.b && b !== btnA
-);
-
-  const opSymbol = step.op === '*' ? '×'
-                  : step.op === '/' ? '÷'
-                  : step.op;
-
-  const opBtn = opBtns.find(b => b.textContent === opSymbol);
-
-  if (!btnA || !btnB || !opBtn) return;
-
-  const blink = el => el.classList.add('hint');
-  const clear = el => el.classList.remove('hint');
-
-  blink(btnA);
-  setTimeout(() => {
-    blink(opBtn);
-    setTimeout(() => {
-      blink(btnB);
-      setTimeout(() => {
-        clear(btnA);
-        clear(opBtn);
-        clear(btnB);
-      }, 400);
-    }, 400);
-  }, 400);
-};
-
-    function highlightNum(i) {
-      clearHighlights();
-      numbersRow.children[i]?.classList.add('selected');
-    }
-
-    function highlightOp(op) {
-      clearHighlights();
-      document.querySelector(`.op[data-op="${op}"]`)
-        ?.classList.add('selected');
-    }
-
-    /* --------------------------------------------------
-       Show full solution
-       -------------------------------------------------- */
-
-    solutionBtn.onclick = () => {
-  if (state.solutionShown) return;
-
-  state.solutionShown = true;
-  state.solutionsUsed++;
-
-  hintBtn.classList.add('disabled');
-  resetBtn.classList.add('disabled');
-  solutionBtn.classList.add('disabled');
-  nextBtn.classList.remove('disabled');
-
-  const steps = [];
-
-  state.solution.forEach(s => {
-    const sym =
-      s.op === '*' ? '×' :
-      s.op === '/' ? '÷' :
-      s.op;
-
-    steps.push(`${s.a} ${sym} ${s.b} = ${s.result}`);
+  const step=state.solution.find(s=>{
+    const a=nums.find(n=>+n.textContent===s.a);
+    const b=nums.find(n=>+n.textContent===s.b&&n!==a);
+    return a&&b&&s.result>=0;
   });
+  if(!step) return;
 
-  solutionBox.innerHTML =
-    `<b>One valid solution:</b> ${steps.join('; ')}`;
-  solutionBox.style.display = 'block';
+  const aBtn=nums.find(n=>+n.textContent===step.a);
+  const bBtn=nums.find(n=>+n.textContent===step.b&&n!==aBtn);
+  const opBtn=ops.find(o=>o.dataset.op===step.op);
+
+  state.hintAnimating=true;
+  [aBtn,opBtn,bBtn].forEach((el,i)=>{
+    setTimeout(()=>el.classList.add('hint'),i*400);
+    setTimeout(()=>el.classList.remove('hint'),1200);
+  });
+  setTimeout(()=>state.hintAnimating=false,1300);
 };
 
-    /* --------------------------------------------------
-       Reset current problem
-       -------------------------------------------------- */
-
-    resetBtn.onclick = () => {
-      if (state.solutionShown) return;
-
-      state.numbers = state.original.slice();
-      state.moveCount = 0;
-      state.usedHint = 0;
-
-      renderNumbers();
-      resetSelection();
-      hintBtn.classList.remove('disabled');
-    };
-
-    /* --------------------------------------------------
-       Start / progression
-       -------------------------------------------------- */
-
-    startBtn.onclick = () => {
-      startBtn.classList.add('disabled');
-      targetEl.textContent = state.target;
-
-      renderNumbers();
-
-      hintBtn.classList.remove('disabled');
-      resetBtn.classList.remove('disabled');
-      solutionBtn.classList.remove('disabled');
-
-      state.gameStarted = true;
-      modeSelect.disabled = true;
-      maxSelect.disabled = true;
-    };
-    
-nextBtn.onclick = () => {
-  // Prevent advancing past last problem
-  if (state.problems >= state.totalProblems) {
-    alert('Game over');
-    return;
-  }
-
-  state.problems++;
-  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
-
-  generateProblem();
+/* ==================================================
+   Solution
+   ================================================== */
+solutionBtn.onclick=()=>{
+  state.solutionShown=true;
+  state.solutionsUsed++;
+  solutionBox.style.display='block';
+  solutionBox.innerHTML=
+    `<b>One valid solution:</b> `+
+    state.solution.map(s=>{
+      const sym=s.op==='*'?'×':s.op==='/'?'÷':s.op;
+      return `${s.a} ${sym} ${s.b} = ${s.result}`;
+    }).join('; ');
+  nextBtn.classList.remove('disabled');
 };
 
-    function nextProblem() {
-  if (state.problems >= state.totalProblems) {
-    showSummary();
-    return;
-  }
-
+/* ==================================================
+   Progression & summary
+   ================================================== */
+function nextProblem(){
   state.problems++;
-  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
+  problemsEl.textContent=`${state.problems}/${state.totalProblems}`;
+  if(state.problems>=state.totalProblems) return showSummary();
   generateProblem();
 }
 
-    /* --------------------------------------------------
-       End-of-game summary
-       -------------------------------------------------- */
+nextBtn.onclick=nextProblem;
 
-    function showSummary() {
-      const summary = document.createElement('div');
-      summary.className = 'summaryBox';
+function showSummary(){
+  const s=document.createElement('div');
+  s.className='summaryBox';
+  s.innerHTML=`
+    <b>Game Over</b>
+    <div>Score: ${state.score}/${state.totalProblems}</div>
+    <div>Hints Used: ${state.hintsUsed}</div>
+    <div>Solutions Shown: ${state.solutionsUsed}</div>
+    <button class="btn" id="restartBtn">New Game</button>`;
+  document.querySelector('.container').appendChild(s);
+  document.getElementById('restartBtn').onclick=()=>{
+    s.remove(); resetGame();
+  };
+}
 
-      summary.innerHTML = `
-        <b>Game Over</b><br>
-        Final Score: ${state.score}<br>
-        Correct: ${state.score > 0 ? state.problems : '0'}/10<br>
-        Hints Used: ${state.hintsUsed}<br>
-        Solutions Used: ${state.solutionsUsed}<br>
-        <button class="btn" id="restartBtn">New Game</button>
-      `;
+/* ==================================================
+   Reset & init
+   ================================================== */
+function resetGame(){
+  state.score=0;
+  state.problems=0;
+  state.gameStarted=false;
+  scoreEl.textContent='0';
+  problemsEl.textContent='0/10';
+  modeSelect.disabled=false;
+  maxSelect.disabled=false;
+  generateProblem();
+}
 
-      document.querySelector('.container').appendChild(summary);
+startBtn.onclick=()=>{
+  state.gameStarted=true;
+  startBtn.classList.add('disabled');
+  modeSelect.disabled=true;
+  maxSelect.disabled=true;
+  generateProblem();
+};
 
-      document.getElementById('restartBtn').onclick = () => {
-        summary.remove();
-        resetGame();
-      };
-    }
+newGameBtn.onclick=resetGame;
+modeSelect.onchange=e=>state.mode=+e.target.value;
+maxSelect.onchange=e=>state.max=+e.target.value;
 
-    /* --------------------------------------------------
-       Full game reset
-       -------------------------------------------------- */
-
-    function resetGame() {
-      state = {
-        ...state,
-        score: 0,
-        problems: 0,
-        moveCount: 0,
-        usedHint: 0,
-        solutionShown: false,
-        gameStarted: false,
-        hintsUsed: 0,
-        solutionsUsed: 0
-      };
-
-      scoreEl.textContent = '0';
-      problemsEl.textContent = '0/10';
-
-      modeSelect.disabled = false;
-      maxSelect.disabled = false;
-
-      generateProblem();
-    }
-
-    /* --------------------------------------------------
-       Settings & initialization
-       -------------------------------------------------- */
-
-    newGameBtn.onclick = resetGame;
-    modeSelect.onchange = e => { state.mode = +e.target.value; };
-    maxSelect.onchange  = e => { state.max  = +e.target.value; };
-
-    // Initial problem on load
-    generateProblem();
-
-  </script>
+generateProblem();
+</script>
 </body>
 </html>
