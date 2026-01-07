@@ -398,7 +398,14 @@ function numberClick(i,btn){
   if(s.first===null){
     s.first=i; btn.classList.add('selected'); return;
   }
-  if(s.op===null||i===s.first) return;
+  // Prevent selecting the same number twice
+if (i === s.first) return;
+
+// Must have operator before resolving
+if (s.op === null) {
+  btn.classList.add('selected');
+  return;
+}
 
   const a=state.numbers[s.first], b=state.numbers[i];
   if(s.op==='/'&&(b===0||a%b!==0)) return;
