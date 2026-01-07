@@ -398,7 +398,7 @@ function numberClick(i, btn) {
 
   // STEP 1: select first number
   if (s.first === null) {
-    clearHighlights();
+    resetSelection();
     s.first = i;
     btn.classList.add('selected');
     return;
@@ -410,7 +410,7 @@ function numberClick(i, btn) {
   // STEP 2: operator must already be chosen
   if (!s.op) return;
 
-  // STEP 3: resolve operation immediately
+  // STEP 3: resolve operation
   const a = state.numbers[s.first];
   const b = state.numbers[i];
 
@@ -427,37 +427,22 @@ function numberClick(i, btn) {
 
   if (!Number.isInteger(result)) return;
 
-  // Build new numbers array
-  const next = [];
-  state.numbers.forEach((n, idx) => {
-    if (idx !== s.first && idx !== i) next.push(n);
-  });
-  next.unshift(result);
+  // ✅ APPLY RESULT IMMEDIATELY
+  const newNums = state.numbers.filter((_, idx) =>
+    idx !== s.first && idx !== i
+  );
+  newNums.push(result);
+  state.numbers = newNums;
 
-  state.numbers = next;
   resetSelection();
   renderNumbers();
 
-  // End-of-problem check
-  if (state.numbers.length === 1) {
-    const finalValue = state.numbers[0];
-
-    if (finalValue === state.target) {
-      state.score++;
-      scoreEl.textContent = state.score;
-      fireworks();
-
-      state.solutionShown = true;
-      hintBtn.classList.add('disabled');
-      resetBtn.classList.add('disabled');
-      solutionBtn.classList.add('disabled');
-
-      setTimeout(nextProblem, 1000);
-    } else {
-      nextBtn.classList.remove('disabled');
-    }
+  // ✅ WIN CHECK
+  if (state.numbers.length === 1 && state.numbers[0] === state.target) {
+    winGame();
   }
 }
+
 /* ==================================================
    Hint (robust & safe)
    ================================================== */
