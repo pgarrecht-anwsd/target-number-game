@@ -391,48 +391,73 @@ document.querySelectorAll('.op').forEach(b=>{
   };
 });
 
-function numberClick(i,btn){
-  if(state.solutionShown) return;
-  const s=state.selection;
+function numberClick(i, btn) {
+  if (!state.gameStarted || state.solutionShown) return;
 
-  if(s.first===null){
-    s.first=i; btn.classList.add('selected'); return;
+  const s = state.selection;
+
+  // STEP 1: select first number
+  if (s.first === null) {
+    clearHighlights();
+    s.first = i;
+    btn.classList.add('selected');
+    return;
   }
-  // Prevent selecting the same number twice
-if (i === s.first) return;
 
-// Must have operator before resolving
-if (s.op === null) {
-  btn.classList.add('selected');
-  return;
-}
+  // Prevent using the same number twice
+  if (i === s.first) return;
 
-  const a=state.numbers[s.first], b=state.numbers[i];
-  if(s.op==='/'&&(b===0||a%b!==0)) return;
+  // STEP 2: operator must already be chosen
+  if (!s.op) return;
 
-  const r=eval(`${a}${s.op}${b}`);
-  state.numbers=state.numbers.filter((_,k)=>k!==s.first&&k!==i);
-  state.numbers.unshift(r);
+  // STEP 3: resolve operation immediately
+  const a = state.numbers[s.first];
+  const b = state.numbers[i];
 
-  renderNumbers();
+  // Division must be exact
+  if (s.op === '/' && (b === 0 || a % b !== 0)) return;
+
+  let result;
+  switch (s.op) {
+    case '+': result = a + b; break;
+    case '-': result = a - b; break;
+    case '*': result = a * b; break;
+    case '/': result = a / b; break;
+  }
+
+  if (!Number.isInteger(result)) return;
+
+  // Build new numbers array
+  const next = [];
+  state.numbers.forEach((n, idx) => {
+    if (idx !== s.first && idx !== i) next.push(n);
+  });
+  next.unshift(result);
+
+  state.numbers = next;
   resetSelection();
+  renderNumbers();
 
-  if(state.numbers.length===1){
-    if(state.numbers[0]===state.target){
+  // End-of-problem check
+  if (state.numbers.length === 1) {
+    const finalValue = state.numbers[0];
+
+    if (finalValue === state.target) {
       state.score++;
-      scoreEl.textContent=state.score;
+      scoreEl.textContent = state.score;
       fireworks();
-      setTimeout(nextProblem,1000);
+
+      state.solutionShown = true;
+      hintBtn.classList.add('disabled');
+      resetBtn.classList.add('disabled');
+      solutionBtn.classList.add('disabled');
+
+      setTimeout(nextProblem, 1000);
     } else {
       nextBtn.classList.remove('disabled');
     }
-    state.solutionShown=true;
-    hintBtn.classList.add('disabled');
-    resetBtn.classList.add('disabled');
-    solutionBtn.classList.add('disabled');
   }
 }
-
 /* ==================================================
    Hint (robust & safe)
    ================================================== */
