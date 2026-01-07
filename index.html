@@ -293,7 +293,20 @@ const nextBtn     = document.getElementById('nextBtn');
 const modeSelect  = document.getElementById('modeSelect');
 const maxSelect   = document.getElementById('maxSelect');
 const newGameBtn  = document.getElementById('newGameBtn');
+const opButtons = document.querySelectorAll('.op');
 
+opButtons.forEach(btn => {
+  btn.onclick = () => {
+    if (!state.gameStarted) return;
+
+    // Clear previous operator highlight
+    opButtons.forEach(b => b.classList.remove('selected'));
+
+    state.selection.op = btn.dataset.op;
+
+    btn.classList.add('selected');
+  };
+});
 /* ==================================================
    Solver (unchanged logic, clean output)
    ================================================== */
@@ -390,7 +403,22 @@ document.querySelectorAll('.op').forEach(b=>{
     b.classList.add('selected');
   };
 });
+function operatorClick(op, btn) {
+  if (!state.gameStarted || state.solutionShown) return;
 
+  // Must have first number selected
+  if (state.selection.first === null) return;
+
+  // Clear previous operator highlight
+  document.querySelectorAll('.op.selected')
+    .forEach(b => b.classList.remove('selected'));
+
+  // Save operator
+  state.selection.op = op;
+
+  // Highlight operator
+  btn.classList.add('selected');
+}
 function numberClick(i, btn) {
   if (!state.gameStarted || state.solutionShown) return;
 
