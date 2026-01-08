@@ -486,7 +486,9 @@ if (a !== 0 && b % a === 0)
 
         // Check end of problem
         if (state.numbers.length === 1) {
-          state.problems++;
+  // problem solved
+  // DO NOT increment problems here
+}
 
           if (state.numbers[0] === state.target &&
               !state.solutionShown) {
@@ -629,6 +631,7 @@ nums.unshift(r);
       state.gameStarted = true;
       modeSelect.disabled = true;
       maxSelect.disabled = true;
+      advanceProblem();
     };
     
 nextBtn.onclick = () => {
@@ -650,9 +653,7 @@ function advanceProblem() {
     return;
   }
 
-  state.problems++;
-  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
-  generateProblem();
+  advanceProblem();
 }
 
     /* --------------------------------------------------
