@@ -332,8 +332,16 @@ if (a !== 0 && b % a === 0)
 
           for (const o of ops) {
             if (!Number.isInteger(o.v)) continue;
+            if (o.v < 0) continue;
             const r = solve([o.v, ...rest], target);
-           if (r) return [{ a, b, op: o.op, result: o.v }, ...r];
+           if (r) {
+  return [{
+    a: nums[o.ai],
+    b: nums[o.bi],
+    op: o.op,
+    result: o.v
+  }, ...r];
+}
           }
         }
       }
