@@ -486,7 +486,6 @@ if (a !== 0 && b % a === 0)
 
         // Check end of problem
         if (state.numbers.length === 1) {
-          state.problems++;
 
           if (state.numbers[0] === state.target &&
               !state.solutionShown) {
@@ -631,18 +630,7 @@ nums.unshift(r);
       maxSelect.disabled = true;
     };
     
-nextBtn.onclick = () => {
-  // Prevent advancing past last problem
-  if (state.problems >= state.totalProblems) {
-    alert('Game over');
-    return;
-  }
-
-  state.problems++;
-  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
-
-  generateProblem();
-};
+nextBtn.onclick = nextProblem;
 
     function nextProblem() {
   if (state.problems >= state.totalProblems) {
