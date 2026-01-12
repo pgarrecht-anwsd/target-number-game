@@ -655,7 +655,7 @@ nextBtn.onclick = nextProblem;
       summary.innerHTML = `
         <b>Game Over</b><br>
         Final Score: ${state.score}<br>
-        Correct: ${state.score > 0 ? state.problems : '0'}/10<br>
+        Correct: ${state.score}/${state.totalProblems}<br>
         Hints Used: ${state.hintsUsed}<br>
         Solutions Used: ${state.solutionsUsed}<br>
         <button class="btn" id="restartBtn">New Game</button>
