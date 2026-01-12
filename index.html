@@ -470,7 +470,10 @@ if (a !== 0 && b % a === 0)
       const b = state.numbers[i];
 
       // Division must be exact
-      if (s.op === '/' && (b === 0 || a % b !== 0)) return;
+      if (s.op === '/' && (b === 0 || a % b !== 0)) {
+  resetSelection();
+  return;
+}
 
       const res = eval(`${a}${s.op}${b}`);
       state.moveCount++;
@@ -655,7 +658,6 @@ nextBtn.onclick = nextProblem;
       summary.innerHTML = `
         <b>Game Over</b><br>
         Final Score: ${state.score}<br>
-        Correct: ${state.score}/${state.totalProblems}<br>
         Hints Used: ${state.hintsUsed}<br>
         Solutions Used: ${state.solutionsUsed}<br>
         <button class="btn" id="restartBtn">New Game</button>
