@@ -171,25 +171,24 @@
       text-align:center;
       gap:12px;
     }
-    .correct-badge {
+  .star {
   position: absolute;
-  top: 40%;
   left: 50%;
-  transform: translateX(-50%) scale(0.5);
-  background: #2ecc71;
-  color: white;
-  padding: 16px 28px;
-  font-size: 28px;
-  font-weight: bold;
-  border-radius: 12px;
-  animation: pop 1.2s ease forwards;
+  top: 50%;
+  font-size: 24px;
+  animation: burst 1.2s ease-out forwards;
   pointer-events: none;
 }
 
-@keyframes pop {
-  0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
-  40% { transform: translateX(-50%) scale(1.2); opacity: 1; }
-  100% { transform: translateX(-50%) scale(1); opacity: 0; }
+@keyframes burst {
+  from {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  to {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2);
+    opacity: 0;
+  }
 }
   </style>
 </head>
@@ -532,12 +531,22 @@ if (a !== 0 && b % a === 0)
        -------------------------------------------------- */
 
     function fireworks() {
-  const badge = document.createElement('div');
-  badge.className = 'correct-badge';
-  badge.textContent = '✔ Correct!';
+  const container = document.querySelector('.container');
 
-  document.querySelector('.container').appendChild(badge);
-  setTimeout(() => badge.remove(), 1200);
+  for (let i = 0; i < 12; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.textContent = '⭐';
+
+    const angle = Math.random() * 2 * Math.PI;
+    const distance = 80 + Math.random() * 40;
+
+    star.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+    star.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+
+    container.appendChild(star);
+    setTimeout(() => star.remove(), 1200);
+  }
 }
 
     /* --------------------------------------------------
