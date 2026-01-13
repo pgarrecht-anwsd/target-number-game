@@ -171,6 +171,30 @@
       text-align:center;
       gap:12px;
     }
+  .star {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-size: 42px;
+  font-weight: bold;
+  animation: burst 1.3s ease-out forwards;
+  pointer-events: none;
+  text-shadow:
+    0 0 8px currentColor,
+    0 0 16px currentColor,
+    0 0 24px currentColor;
+}
+
+@keyframes burst {
+  from {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+  }
+  to {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.4);
+    opacity: 0;
+  }
+}
   </style>
 </head>
 <body>
@@ -512,13 +536,35 @@ if (a !== 0 && b % a === 0)
        -------------------------------------------------- */
 
     function fireworks() {
-      const f = document.createElement('div');
-      f.className = 'fireworks';
-      f.textContent = '🎆🎇✨';
-      document.querySelector('.container').appendChild(f);
-      setTimeout(() => f.remove(), 2000);
-    }
+  const container = document.querySelector('.container');
 
+  const colors = [
+    '#ff5252', // red
+    '#ffeb3b', // yellow
+    '#4caf50', // green
+    '#2196f3', // blue
+    '#e040fb', // purple
+    '#ff9800'  // orange
+  ];
+
+  for (let i = 0; i < 14; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.textContent = '★';
+
+    const angle = Math.random() * 2 * Math.PI;
+    const distance = 90 + Math.random() * 50;
+
+    star.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+    star.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+
+    // 🎨 random bright color
+    star.style.color = colors[Math.floor(Math.random() * colors.length)];
+
+    container.appendChild(star);
+    setTimeout(() => star.remove(), 1300);
+  }
+}
     /* --------------------------------------------------
        Hint logic (first move only)
        -------------------------------------------------- */
