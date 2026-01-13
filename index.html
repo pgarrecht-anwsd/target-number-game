@@ -1,5 +1,3 @@
-<!-- DEPLOY TEST: LEVEL VERSION -->
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -327,7 +325,7 @@
     const nextBtn     = document.getElementById('nextBtn');
 
     const modeSelect  = document.getElementById('modeSelect');
-    const maxSelect   = document.getElementById('maxSelect');
+    const levelSelect = document.getElementById('levelSelect');
     const newGameBtn  = document.getElementById('newGameBtn');
 
     /* --------------------------------------------------
@@ -684,7 +682,7 @@ nums.unshift(r);
 
       state.gameStarted = true;
       modeSelect.disabled = true;
-      maxSelect.disabled = true;
+      levelSelect.disabled = true;
     };
     
 nextBtn.onclick = nextProblem;
@@ -745,7 +743,7 @@ nextBtn.onclick = nextProblem;
       problemsEl.textContent = '0/10';
 
       modeSelect.disabled = false;
-      maxSelect.disabled = false;
+      levelSelect.disabled = false;
 
       generateProblem();
     }
@@ -756,7 +754,7 @@ nextBtn.onclick = nextProblem;
 
     newGameBtn.onclick = resetGame;
     modeSelect.onchange = e => { state.mode = +e.target.value; };
-    maxSelect.onchange  = e => { state.max  = +e.target.value; };
+    levelSelect.onchange = e => { state.level = +e.target.value; };
 
     // Initial problem on load
     generateProblem();
