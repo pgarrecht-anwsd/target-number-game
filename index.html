@@ -270,6 +270,36 @@
     /* --------------------------------------------------
        Utility functions
        -------------------------------------------------- */
+function randFrom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+function buildNumbersForLevel(level, count) {
+  const allowed = factLevels[level];
+
+  const a = randFrom(allowed);
+  let b = randInt(12) + 1;
+
+  if (a === 0) b = randInt(9) + 1;
+
+  const nums = [a, b];
+
+  while (nums.length < count) {
+    nums.push(randInt(9) + 1);
+  }
+
+  return nums;
+}
+function buildTargetFromNumbers(nums) {
+  const [a, b, ...rest] = nums;
+
+  let target = a * b; // guarantees × or ÷
+
+  for (const n of rest) {
+    target += Math.random() < 0.5 ? n : -n;
+  }
+
+  return Math.abs(target);
+}
 
     // Random integer from 0..m
     const randInt = m => Math.floor(Math.random() * (m + 1));
@@ -288,7 +318,6 @@
 
     let state = {
       mode: 4,
-      max: 99,
       numbers: [],
       original: [],
       solution: [],
@@ -390,18 +419,17 @@ if (a !== 0 && b % a === 0)
       state.usedHint = 0;
       state.solutionShown = false;
 
-      let nums = [];
-      for (let i = 0; i < state.mode; i++) nums.push(weightedNumber(nums));
+      let nums, t, sol = null;
 
-      let t, sol = null;
-      for (let tries = 0; tries < 60; tries++) {
-        t = randInt(state.max);
-        if (nums.includes(t)) continue;
-        sol = solve([...nums], t);
-        if (sol) break;
-      }
+for (let tries = 0; tries < 80; tries++) {
+  nums = buildNumbersForLevel(state.level, state.mode);
+  t = buildTargetFromNumbers(nums);
 
-      if (!sol) return generateProblem();
+  sol = solve([...nums], t);
+  if (sol) break;
+}
+
+if (!sol) return generateProblem();
 
       state.numbers  = nums.slice();
       state.original = nums.slice();
