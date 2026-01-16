@@ -284,7 +284,7 @@ function buildNumbersForLevel(level, count) {
   const nums = [a, b];
 
   while (nums.length < count) {
-    nums.push(randInt(9) + 1);
+    nums.push(randomInitialNumber(state.level));
   }
 
   return nums;
@@ -307,10 +307,6 @@ function buildTargetFromNumbers(nums) {
     // Weighted number generation:
     // - Small chance of zero
     // - Avoids multiple zeros
-    const weightedNumber = (existing = []) => {
-      if (existing.includes(0)) return 1 + randInt(10);
-      return Math.random() < 0.05 ? 0 : 1 + randInt(10);
-    };
 
     /* --------------------------------------------------
        Global game state
@@ -416,7 +412,14 @@ if (a !== 0 && b % a === 0)
     /* --------------------------------------------------
        Problem generation
        -------------------------------------------------- */
-
+function allowedNumbersForLevel(level) {
+  if (level === 6) {
+    // Level 6: harder facts
+    return [3,4,5,6,7,8,9,10,11,12];
+  }
+  // Levels 1–5
+  return [0,1,2,3,4,5,6,7,8,9,10];
+}
     function generateProblem() {
       solutionBox.style.display = 'none';
 
@@ -462,6 +465,29 @@ if (!sol) return generateProblem();
     /* --------------------------------------------------
        Rendering helpers
        -------------------------------------------------- */
+function randomInitialNumber(level, existing = []) {
+  let pool;
+
+  if (level === 6) {
+    pool = [3,4,5,6,7,8,9,10,11,12];
+  } else {
+    pool = [0,1,2,3,4,5,6,7,8,9,10];
+  }
+
+  // Optional: avoid duplicates if you want variety
+  const available = pool.filter(n => !existing.includes(n));
+  const source = available.length ? available : pool;
+
+  return source[Math.floor(Math.random() * source.length)];
+}
+
+  // Avoid duplicate zeros
+  if (existing.includes(0)) {
+    pool = pool.filter(n => n !== 0);
+  }
+
+  return pool[randInt(pool.length)];
+}
 
     function renderNumbers(hidden = false) {
       numbersRow.innerHTML = '';
