@@ -270,36 +270,6 @@
     /* --------------------------------------------------
        Utility functions
        -------------------------------------------------- */
-function randFrom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-function buildNumbersForLevel(level, count) {
-  const allowed = factLevels[level];
-
-  const a = randFrom(allowed);
-  let b = randInt(12) + 1;
-
-  if (a === 0) b = randInt(9) + 1;
-
-  const nums = [a, b];
-
-  while (nums.length < count) {
-    nums.push(randomInitialNumber(state.level));
-  }
-
-  return nums;
-}
-function buildTargetFromNumbers(nums) {
-  const [a, b, ...rest] = nums;
-
-  let target = a * b; // guarantees × or ÷
-
-  for (const n of rest) {
-    target += Math.random() < 0.5 ? n : -n;
-  }
-
-  return Math.abs(target);
-}
 
     // Random integer from 0..m
     const randInt = m => Math.floor(Math.random() * (m + 1));
@@ -307,6 +277,10 @@ function buildTargetFromNumbers(nums) {
     // Weighted number generation:
     // - Small chance of zero
     // - Avoids multiple zeros
+    const weightedNumber = (existing = []) => {
+      if (existing.includes(0)) return 1 + randInt(10);
+      return Math.random() < 0.05 ? 0 : 1 + randInt(10);
+    };
 
     /* --------------------------------------------------
        Global game state
@@ -314,6 +288,7 @@ function buildTargetFromNumbers(nums) {
 
     let state = {
       mode: 4,
+      max: 99,
       numbers: [],
       original: [],
       solution: [],
@@ -352,14 +327,7 @@ function buildTargetFromNumbers(nums) {
     const modeSelect  = document.getElementById('modeSelect');
     const levelSelect = document.getElementById('levelSelect');
     const newGameBtn  = document.getElementById('newGameBtn');
-const factLevels = {
-  1: [0, 1, 2, 5],
-  2: [3, 4],
-  3: [6, 7],
-  4: [8, 9],
-  5: [6, 7, 8, 9],
-  6: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-};
+
     /* --------------------------------------------------
        Solver (recursive backtracking)
        Finds *one* valid solution sequence
@@ -412,14 +380,7 @@ if (a !== 0 && b % a === 0)
     /* --------------------------------------------------
        Problem generation
        -------------------------------------------------- */
-function allowedNumbersForLevel(level) {
-  if (level === 6) {
-    // Level 6: harder facts
-    return [3,4,5,6,7,8,9,10,11,12];
-  }
-  // Levels 1–5
-  return [0,1,2,3,4,5,6,7,8,9,10];
-}
+
     function generateProblem() {
       solutionBox.style.display = 'none';
 
@@ -429,17 +390,18 @@ function allowedNumbersForLevel(level) {
       state.usedHint = 0;
       state.solutionShown = false;
 
-      let nums, t, sol = null;
+      let nums = [];
+      for (let i = 0; i < state.mode; i++) nums.push(weightedNumber(nums));
 
-for (let tries = 0; tries < 80; tries++) {
-  nums = buildNumbersForLevel(state.level, state.mode);
-  t = buildTargetFromNumbers(nums);
+      let t, sol = null;
+      for (let tries = 0; tries < 60; tries++) {
+        t = randInt(state.max);
+        if (nums.includes(t)) continue;
+        sol = solve([...nums], t);
+        if (sol) break;
+      }
 
-  sol = solve([...nums], t);
-  if (sol) break;
-}
-
-if (!sol) return generateProblem();
+      if (!sol) return generateProblem();
 
       state.numbers  = nums.slice();
       state.original = nums.slice();
@@ -465,29 +427,6 @@ if (!sol) return generateProblem();
     /* --------------------------------------------------
        Rendering helpers
        -------------------------------------------------- */
-function randomInitialNumber(level, existing = []) {
-  let pool;
-
-  if (level === 6) {
-    pool = [3,4,5,6,7,8,9,10,11,12];
-  } else {
-    pool = [0,1,2,3,4,5,6,7,8,9,10];
-  }
-
-  // Optional: avoid duplicates if you want variety
-  const available = pool.filter(n => !existing.includes(n));
-  const source = available.length ? available : pool;
-
-  return source[Math.floor(Math.random() * source.length)];
-}
-
-  // Avoid duplicate zeros
-  if (existing.includes(0)) {
-    pool = pool.filter(n => n !== 0);
-  }
-
-  return pool[randInt(pool.length)];
-}
 
     function renderNumbers(hidden = false) {
       numbersRow.innerHTML = '';
