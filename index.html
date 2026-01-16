@@ -281,7 +281,23 @@
       if (existing.includes(0)) return 1 + randInt(10);
       return Math.random() < 0.05 ? 0 : 1 + randInt(10);
     };
+    
+function randomInitialNumber(level, existing = []) {
+  let pool;
 
+  if (level === 6) {
+    // Level 6: allow 3–12
+    pool = [3,4,5,6,7,8,9,10,11,12];
+  } else {
+    // Levels 1–5: allow 0–10
+    pool = [0,1,2,3,4,5,6,7,8,9,10];
+  }
+
+  const available = pool.filter(n => !existing.includes(n));
+  const source = available.length ? available : pool;
+
+  return source[Math.floor(Math.random() * source.length)];
+}
     /* --------------------------------------------------
        Global game state
        -------------------------------------------------- */
@@ -391,7 +407,9 @@ if (a !== 0 && b % a === 0)
       state.solutionShown = false;
 
       let nums = [];
-      for (let i = 0; i < state.mode; i++) nums.push(weightedNumber(nums));
+for (let i = 0; i < state.mode; i++) {
+  nums.push(randomInitialNumber(state.level, nums));
+}
 
       let t, sol = null;
       for (let tries = 0; tries < 60; tries++) {
