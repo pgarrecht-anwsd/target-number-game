@@ -747,19 +747,22 @@ nextBtn.onclick = nextProblem;
       summary.className = 'summaryBox';
 
       summary.innerHTML = `
-        <b>Game Over</b><br>
-        Final Score: ${state.score}<br>
-        Hints Used: ${state.hintsUsed}<br>
-        Solutions Used: ${state.solutionsUsed}<br>
-        <button class="btn" id="restartBtn">New Game</button>
-      `;
+  <b>Game Over</b><br><br>
+  Level: ${state.level}<br>
+  Mode: ${state.mode} numbers<br><br>
+  Final Score: ${state.score}<br>
+  Hints Used: ${state.hintsUsed}<br>
+  Solutions Used: ${state.solutionsUsed}<br><br>
+  <button class="btn" id="restartBtn">New Game</button>
+  <button class="btn" id="closeSummaryBtn">Close</button>
+`;
 
       document.querySelector('.container').appendChild(summary);
 
-      document.getElementById('restartBtn').onclick = () => {
-        summary.remove();
-        resetGame();
-      };
+      document.getElementById('closeSummaryBtn').onclick = () => {
+  summary.remove();
+};
+
     }
 
     /* --------------------------------------------------
