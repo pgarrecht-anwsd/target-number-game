@@ -710,6 +710,7 @@ nums.unshift(r);
        -------------------------------------------------- */
 
     startBtn.onclick = () => {
+      if (state.level === undefined) state.level = Number(levelSelect.value);
       nextProblem();
       startBtn.classList.add('disabled');
       targetEl.textContent = state.target;
