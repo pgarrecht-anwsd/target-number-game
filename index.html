@@ -410,10 +410,32 @@ if (a !== 0 && b % a === 0)
 for (let i = 0; i < state.mode; i++) {
   nums.push(randomInitialNumber(state.level, nums));
 }
+function preferredTarget(nums) {
+  let candidates = [];
+
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = i + 1; j < nums.length; j++) {
+      let a = nums[i], b = nums[j];
+
+      // multiplication
+      candidates.push(a * b);
+
+      // clean division
+      if (b !== 0 && a % b === 0) candidates.push(a / b);
+      if (a !== 0 && b % a === 0) candidates.push(b / a);
+    }
+  }
+
+  // keep targets in range
+  candidates = candidates.filter(n => n > 0 && n < state.max);
+
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
 
       let t, sol = null;
       for (let tries = 0; tries < 60; tries++) {
-        t = randInt(state.max);
+        t = Math.random() < 0.6 ? preferredTarget(nums) ?? randInt(state.max) : randInt(state.max);
         if (nums.includes(t)) continue;
         sol = solve([...nums], t);
         if (sol) break;
