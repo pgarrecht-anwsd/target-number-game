@@ -440,7 +440,14 @@ if (a > 1 && b % a === 0) candidates.push(b / a);
         t = Math.random() < 0.6 ? preferredTarget(nums) ?? randInt(state.max) : randInt(state.max);
         if (nums.includes(t)) continue;
         sol = solve([...nums], t);
-        if (sol) break;
+if (sol) {
+  // For higher levels, require at least one × or ÷
+  if (state.level >= 4) {
+    const usesMulOrDiv = sol.some(step => step.op === '*' || step.op === '/');
+    if (!usesMulOrDiv) continue;
+  }
+  break;
+}
       }
 
       if (!sol) return generateProblem();
