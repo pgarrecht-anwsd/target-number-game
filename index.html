@@ -296,7 +296,25 @@ function randomInitialNumber(level, existing = []) {
   const available = pool.filter(n => !existing.includes(n));
   const source = available.length ? available : pool;
 
-  return source[Math.floor(Math.random() * source.length)];
+  let candidates = source;
+
+if (level >= 4) {
+  // Remove 0 and 1 entirely
+  candidates = candidates.filter(n => n !== 0 && n !== 1);
+
+  // Soft-discourage 2 and 10
+  const softened = candidates.filter(n => n !== 2 && n !== 10);
+  if (softened.length && Math.random() < 0.6) {
+    candidates = softened;
+  }
+}
+
+// Safety fallback (should rarely trigger)
+if (!candidates.length) {
+  candidates = source;
+}
+
+return candidates[Math.floor(Math.random() * candidates.length)];
 }
     /* --------------------------------------------------
        Global game state
