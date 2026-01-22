@@ -443,9 +443,12 @@ if (a > 1 && b % a === 0) candidates.push(b / a);
 if (sol) {
   // For higher levels, require at least one × or ÷
   if (state.level >= 4) {
-    const usesMulOrDiv = sol.some(step => step.op === '*' || step.op === '/');
-    if (!usesMulOrDiv) continue;
-  }
+  const usesTargetFact = sol.some(step =>
+    (step.op === '*' || step.op === '/') &&
+    (step.a === 8 || step.b === 8 || step.a === 9 || step.b === 9)
+  );
+  if (!usesTargetFact) continue;
+}
   break;
 }
       }
