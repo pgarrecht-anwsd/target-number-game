@@ -414,6 +414,19 @@ if (a !== 0 && b % a === 0)
     /* --------------------------------------------------
        Problem generation
        -------------------------------------------------- */
+function solutionUsesRequiredFact(solution) {
+  let required = [];
+
+  if (state.level === 2) required = [3,4];
+  if (state.level === 3) required = [6,7];
+  if (state.level === 4) required = [8,9];
+  if (state.level === 5) required = [6,7,8,9];
+
+  return solution.steps.some(step =>
+    (step.op === '×' || step.op === '÷') &&
+    (required.includes(step.a) || required.includes(step.b))
+  );
+}
 
     function generateProblem() {
       solutionBox.style.display = 'none';
@@ -472,17 +485,7 @@ if (a > 1 && b % a === 0) candidates.push(b / a);
         t = Math.random() < 0.6 ? preferredTarget(nums) ?? randInt(state.max) : randInt(state.max);
         if (nums.includes(t)) continue;
         sol = solve([...nums], t);
-if (sol) {
-  // For higher levels, require at least one × or ÷
-  if (state.level >= 4) {
-  const usesTargetFact = sol.some(step =>
-    (step.op === '*' || step.op === '/') &&
-    (step.a === 8 || step.b === 8 || step.a === 9 || step.b === 9)
-  );
-  if (!usesTargetFact) continue;
-}
-  break;
-}
+if (sol && solutionUsesRequiredFact(sol)) break;
       }
 
       if (!sol) return generateProblem();
