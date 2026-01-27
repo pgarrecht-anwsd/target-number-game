@@ -296,7 +296,25 @@ function randomInitialNumber(level, existing = []) {
   const available = pool.filter(n => !existing.includes(n));
   const source = available.length ? available : pool;
 
-  return source[Math.floor(Math.random() * source.length)];
+  let candidates = source;
+
+if (level >= 2) {
+  // Remove 0 and 1 entirely
+  candidates = candidates.filter(n => n !== 0 && n !== 1);
+
+  // Soft-discourage 2 and 10
+  const softened = candidates.filter(n => n !== 2 && n !== 10);
+  if (softened.length && Math.random() < 0.6) {
+    candidates = softened;
+  }
+}
+
+// Safety fallback (should rarely trigger)
+if (!candidates.length) {
+  candidates = source;
+}
+
+return candidates[Math.floor(Math.random() * candidates.length)];
 }
     /* --------------------------------------------------
        Global game state
@@ -396,6 +414,19 @@ if (a !== 0 && b % a === 0)
     /* --------------------------------------------------
        Problem generation
        -------------------------------------------------- */
+function solutionUsesRequiredFact(solution) {
+  let required = [];
+
+  if (state.level === 2) required = [3,4];
+  if (state.level === 3) required = [6,7];
+  if (state.level === 4) required = [8,9];
+  if (state.level === 5) required = [6,7,8,9];
+
+  return solution.steps.some(step =>
+    (step.op === '×' || step.op === '÷') &&
+    (required.includes(step.a) || required.includes(step.b))
+  );
+}
 
     function generateProblem() {
       solutionBox.style.display = 'none';
@@ -407,16 +438,64 @@ if (a !== 0 && b % a === 0)
       state.solutionShown = false;
 
       let nums = [];
-for (let i = 0; i < state.mode; i++) {
+
+// Required anchor numbers by level
+let required = [];
+if (state.level === 2) required = [3,4];     
+if (state.level === 3) required = [6,7];
+if (state.level === 4) required = [8,9];
+if (state.level === 5) required = [6,7,8,9];
+
+// Force one required number
+if (required.length) {
+  nums.push(required[Math.floor(Math.random() * required.length)]);
+}
+
+// Fill remaining slots normally
+while (nums.length < state.mode) {
   nums.push(randomInitialNumber(state.level, nums));
+}
+function preferredTarget(nums) {
+  let candidates = [];
+
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = i + 1; j < nums.length; j++) {
+      let a = nums[i], b = nums[j];
+
+      // multiplication (avoid ×1 and ×0)
+if (a > 1 && b > 1) {
+  candidates.push(a * b);
+}
+
+      // clean division (avoid ÷1)
+if (b > 1 && a % b === 0) candidates.push(a / b);
+if (a > 1 && b % a === 0) candidates.push(b / a);
+    }
+  }
+
+  // keep targets in range
+  candidates = candidates.filter(n => n > 0 && n < state.max);
+
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
       let t, sol = null;
       for (let tries = 0; tries < 60; tries++) {
-        t = randInt(state.max);
+        t = Math.random() < 0.6 ? preferredTarget(nums) ?? randInt(state.max) : randInt(state.max);
         if (nums.includes(t)) continue;
         sol = solve([...nums], t);
-        if (sol) break;
+if (sol) {
+  // For higher levels, require at least one × or ÷
+  if (state.level >= 4) {
+    const usesTargetFact = sol.some(step =>
+      (step.op === '*' || step.op === '/') &&
+      (step.a === 8 || step.b === 8 || step.a === 9 || step.b === 9)
+    );
+    if (!usesTargetFact) continue;
+  }
+  break;
+}
       }
 
       if (!sol) return generateProblem();
@@ -688,6 +767,7 @@ nums.unshift(r);
        -------------------------------------------------- */
 
     startBtn.onclick = () => {
+      if (state.level === undefined) state.level = Number(levelSelect.value);
       nextProblem();
       startBtn.classList.add('disabled');
       targetEl.textContent = state.target;
@@ -725,19 +805,21 @@ nextBtn.onclick = nextProblem;
       summary.className = 'summaryBox';
 
       summary.innerHTML = `
-        <b>Game Over</b><br>
-        Final Score: ${state.score}<br>
-        Hints Used: ${state.hintsUsed}<br>
-        Solutions Used: ${state.solutionsUsed}<br>
-        <button class="btn" id="restartBtn">New Game</button>
-      `;
+  <b>Game Over</b><br><br>
+  Level: ${state.level}<br>
+  Mode: ${state.mode} numbers<br><br>
+  Final Score: ${state.score}<br>
+  Hints Used: ${state.hintsUsed}<br>
+  Solutions Used: ${state.solutionsUsed}<br><br>
+  <button class="btn" id="closeSummaryBtn">Close</button>
+`;
 
       document.querySelector('.container').appendChild(summary);
 
-      document.getElementById('restartBtn').onclick = () => {
-        summary.remove();
-        resetGame();
-      };
+      document.getElementById('closeSummaryBtn').onclick = () => {
+  summary.remove();
+};
+
     }
 
     /* --------------------------------------------------
