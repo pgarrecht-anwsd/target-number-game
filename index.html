@@ -422,8 +422,11 @@ function solutionUsesRequiredFact(solution) {
   if (state.level === 4) required = [8,9];
   if (state.level === 5) required = [6,7,8,9];
 
-  return solution.steps.some(step =>
-    (step.op === '×' || step.op === '÷') &&
+  // No restriction for lower levels
+  if (!required.length) return true;
+
+  return solution.some(step =>
+    (step.op === '*' || step.op === '/') &&
     (required.includes(step.a) || required.includes(step.b))
   );
 }
@@ -496,6 +499,7 @@ if (sol) {
   }
   break;
 }
+    if (sol && solutionUsesRequiredFact(sol)) break;
       }
 
       if (!sol) return generateProblem();
