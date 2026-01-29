@@ -416,33 +416,53 @@ if (a !== 0 && b % a === 0)
        -------------------------------------------------- */
 function solutionUsesRequiredFact(solution) {
   let required = [];
+  let partners = [];
 
-  if (state.level === 2) required = [3,4];
-  if (state.level === 3) required = [6,7];
-  if (state.level === 4) required = [8,9];
-  if (state.level === 5) required = [6,7,8,9];
-
-  // Levels with no targeting
-  if (!required.length) return true;
-
-  let hasValidTargetMultiplication = false;
-
-  for (const step of solution) {
-    if (step.op === '*' || step.op === '/') {
-
-      // Reject large-number fact dodges
-      if (step.a >= 13 || step.b >= 13) {
-        return false;
-      }
-
-      // Check for required fact use
-      if (required.includes(step.a) || required.includes(step.b)) {
-        hasValidTargetMultiplication = true;
-      }
-    }
+  if (state.level === 2) {
+    required = [3,4];
+    partners = [2,3,4,5,6,7,8];
   }
 
-  return hasValidTargetMultiplication;
+  if (state.level === 3) {
+    required = [6,7];
+    partners = [2,3,4,5,6,7,8];
+  }
+
+  if (state.level === 4) {
+    required = [8,9];
+    partners = [2,3,4,5,6,7,8,9];
+  }
+
+  if (state.level === 5) {
+    required = [6,7,8,9];
+    partners = [2,3,4,5,6,7,8,9];
+  }
+
+  return solution.steps.some(step => {
+    const { a, b, op, result } = step;
+
+    // eliminate ×0, ×1, ÷1
+    if (a <= 1 || b <= 1) return false;
+
+    if (op === '×') {
+      return (
+        (required.includes(a) && partners.includes(b)) ||
+        (required.includes(b) && partners.includes(a))
+      );
+    }
+
+    if (op === '÷') {
+      return (
+        // dividend ÷ required = allowed quotient
+        (required.includes(b) && partners.includes(result)) ||
+
+        // dividend ÷ partner = required quotient
+        (required.includes(result) && partners.includes(b))
+      );
+    }
+
+    return false;
+  });
 }
 
     function generateProblem() {
