@@ -454,6 +454,14 @@ if (!hasMultOrDiv) return false;
   if (multDivSteps.length !== 1) return false;
 
   const { a, b, op, result } = multDivSteps[0];
+// the single ×/÷ must involve a required number
+if (
+  !required.includes(a) &&
+  !required.includes(b) &&
+  !required.includes(result)
+) {
+  return false;
+}
 
   // eliminate ×0, ×1, ÷1
   if (a <= 1 || b <= 1) return false;
