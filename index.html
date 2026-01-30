@@ -437,6 +437,14 @@ function solutionUsesRequiredFact(solution) {
     required = [6,7,8,9];
     partners = [2,3,4,5,6,7,8,9];
   }
+// after required / partners are set
+
+const hasMultOrDiv = solution.some(
+  step => step.op === '*' || step.op === '/'
+);
+if (!hasMultOrDiv) return false;
+
+// then the multDivSteps.length === 1 logic
 
     const multDivSteps = solution.filter(
     step => step.op === '*' || step.op === '/'
