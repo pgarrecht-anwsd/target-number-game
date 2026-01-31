@@ -436,15 +436,14 @@ function solutionUsesRequiredFact(solution) {
     required = [6, 7, 8, 9];
     partners = [2, 3, 4, 5, 6, 7, 8, 9];
   } else if (state.level === 6) {
-    // free play, but no identity operations
-    const badOps = solution.some(
+    // Free play, but no identity operations
+    const badIdentity = solution.some(
       step =>
         (step.op === '*' || step.op === '/') &&
         (step.a <= 1 || step.b <= 1)
     );
-    if (badOps) return false;
+    if (badIdentity) return false;
 
-    // must include at least one × or ÷
     return solution.some(
       step => step.op === '*' || step.op === '/'
     );
@@ -457,19 +456,25 @@ function solutionUsesRequiredFact(solution) {
       step => step.op === '*' || step.op === '/'
     );
 
-    // require at least one × or ÷ using 2 or 5
-    const hasTargetFact = multDivSteps.some(
-      step => required.includes(step.a) || required.includes(step.b)
-    );
-    if (!hasTargetFact) return false;
+    // must have at least one × or ÷
+    if (multDivSteps.length === 0) return false;
 
-    // allow at most one ×/÷ involving 0 or 1
-    const zeroOneOps = multDivSteps.filter(
-      step => step.a <= 1 || step.b <= 1
-    );
-    if (zeroOneOps.length > 1) return false;
+    // must have at least one *meaningful* fact with 2 or 5
+    const hasTargetFact = multDivSteps.some(step => {
+      const { a, b } = step;
 
-    return true;
+      // exclude identity-only steps
+      if (a <= 1 || b <= 1) return false;
+
+      const aIsRequired = required.includes(a);
+      const bIsRequired = required.includes(b);
+      if (aIsRequired === bIsRequired) return false;
+
+      const other = aIsRequired ? b : a;
+      return partners.includes(other);
+    });
+
+    return hasTargetFact;
   }
 
   /* ---------- LEVELS 2–5 RULES ---------- */
@@ -491,7 +496,7 @@ function solutionUsesRequiredFact(solution) {
   const bIsRequired = required.includes(b);
   if (aIsRequired === bIsRequired) return false;
 
-  // the other operand must be a valid partner
+  // partner must be valid
   const other = aIsRequired ? b : a;
   if (!partners.includes(other)) return false;
 
