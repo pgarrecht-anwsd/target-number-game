@@ -418,99 +418,84 @@ function solutionUsesRequiredFact(solution) {
   let required = [];
   let partners = [];
 
-  if (state.level === 2) {
-    required = [3,4];
-    partners = [2,3,4,5];
+  /* ---------- LEVEL SETUP ---------- */
+
+  if (state.level === 1) {
+    required = [2, 5];
+    partners = [2, 3, 4, 5];
+  } else if (state.level === 2) {
+    required = [3, 4];
+    partners = [2, 3, 4, 5];
+  } else if (state.level === 3) {
+    required = [6, 7];
+    partners = [2, 3, 4, 5, 6, 7];
+  } else if (state.level === 4) {
+    required = [8, 9];
+    partners = [2, 3, 4, 5, 6, 7, 8, 9];
+  } else if (state.level === 5) {
+    required = [6, 7, 8, 9];
+    partners = [2, 3, 4, 5, 6, 7, 8, 9];
+  } else if (state.level === 6) {
+    // free play, but no identity operations
+    const badOps = solution.some(
+      step =>
+        (step.op === '*' || step.op === '/') &&
+        (step.a <= 1 || step.b <= 1)
+    );
+    if (badOps) return false;
+
+    // must include at least one × or ÷
+    return solution.some(
+      step => step.op === '*' || step.op === '/'
+    );
   }
 
-  if (state.level === 3) {
-    required = [6,7];
-    partners = [2,3,4,5,6,7];
+  /* ---------- LEVEL 1 RULES ---------- */
+
+  if (state.level === 1) {
+    const multDivSteps = solution.filter(
+      step => step.op === '*' || step.op === '/'
+    );
+
+    // require at least one × or ÷ using 2 or 5
+    const hasTargetFact = multDivSteps.some(
+      step => required.includes(step.a) || required.includes(step.b)
+    );
+    if (!hasTargetFact) return false;
+
+    // allow at most one ×/÷ involving 0 or 1
+    const zeroOneOps = multDivSteps.filter(
+      step => step.a <= 1 || step.b <= 1
+    );
+    if (zeroOneOps.length > 1) return false;
+
+    return true;
   }
 
-  if (state.level === 4) {
-    required = [8,9];
-    partners = [2,3,4,5,6,7,8,9];
-  }
+  /* ---------- LEVELS 2–5 RULES ---------- */
 
-  if (state.level === 5) {
-    required = [6,7,8,9];
-    partners = [2,3,4,5,6,7,8,9];
-  }
-// after required / partners are set
-// Level 2 must have exactly one × or ÷ total
-if (state.level === 2) {
   const multDivSteps = solution.filter(
     step => step.op === '*' || step.op === '/'
   );
-  if (multDivSteps.length !== 1) return false;
-}
-const multDivSteps = solution.filter(
-  step => step.op === '*' || step.op === '/'
-);
 
-// already enforced earlier
-if (multDivSteps.length !== 1) return false;
-
-const step = multDivSteps[0];
-
-// operands used in the fact
-const a = step.a;
-const b = step.b;
-
-// must use a required number
-const usesRequired =
-  required.includes(a) || required.includes(b);
-
-if (!usesRequired) return false;
-
-// the *other* number must be a valid partner
-const other = required.includes(a) ? b : a;
-
-if (!partners.includes(other)) return false;
-
-const hasMultOrDiv = solution.some(
-  step => step.op === '*' || step.op === '/'
-);
-if (!hasMultOrDiv) return false;
-
-// then the multDivSteps.length === 1 logic
-
-    const multDivSteps = solution.filter(
-    step => step.op === '*' || step.op === '/'
-  );
-
-  // require exactly one × or ÷
+  // exactly one × or ÷
   if (multDivSteps.length !== 1) return false;
 
-  const { a, b, op, result } = multDivSteps[0];
-// the single ×/÷ must involve a required number
-if (
-  !required.includes(a) &&
-  !required.includes(b) &&
-  !required.includes(result)
-) {
-  return false;
-}
+  const { a, b } = multDivSteps[0];
 
   // eliminate ×0, ×1, ÷1
   if (a <= 1 || b <= 1) return false;
 
-  if (op === '*') {
-    return (
-      (required.includes(a) && partners.includes(b)) ||
-      (required.includes(b) && partners.includes(a))
-    );
-  }
+  // must use exactly one required number
+  const aIsRequired = required.includes(a);
+  const bIsRequired = required.includes(b);
+  if (aIsRequired === bIsRequired) return false;
 
-  if (op === '/') {
-    return (
-      (required.includes(b) && partners.includes(result)) ||
-      (required.includes(result) && partners.includes(b))
-    );
-  }
+  // the other operand must be a valid partner
+  const other = aIsRequired ? b : a;
+  if (!partners.includes(other)) return false;
 
-  return false;
+  return true;
 }
 
     function generateProblem() {
