@@ -438,6 +438,13 @@ function solutionUsesRequiredFact(solution) {
     partners = [2,3,4,5,6,7,8,9];
   }
 // after required / partners are set
+// Level 2 must have exactly one × or ÷ total
+if (state.level === 2) {
+  const multDivSteps = solution.filter(
+    step => step.op === '*' || step.op === '/'
+  );
+  if (multDivSteps.length !== 1) return false;
+}
 
 const hasMultOrDiv = solution.some(
   step => step.op === '*' || step.op === '/'
