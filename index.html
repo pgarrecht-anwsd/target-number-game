@@ -463,7 +463,8 @@ function stepMagnitude(step) {
 }
 
 const dominant = meaningfulSteps.reduce((max, step) =>
-  stepMagnitude(step) > stepMagnitude(max) ? step : max
+  stepMagnitude(step) > stepMagnitude(max) ? step : max,
+  meaningfulSteps[0]
 );
 
 const hasCompeting = meaningfulSteps.some(step =>
