@@ -482,6 +482,14 @@ if (state.level === 1) {
   if (multDivSteps.length === 0) return false;
 
   const { a, b } = dominant;
+// required number must not be newly created earlier
+const requiredUsedAsResultEarlier = solution.some(step =>
+  (step.op === '+' || step.op === '-') &&
+  required.includes(step.result) &&
+  step !== dominant
+);
+
+if (requiredUsedAsResultEarlier) return false;
 
   // dominant step must use exactly one required number (2 or 5)
   const aIsRequired = required.includes(a);
