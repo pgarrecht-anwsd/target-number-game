@@ -448,59 +448,74 @@ function solutionUsesRequiredFact(solution) {
       step => step.op === '*' || step.op === '/'
     );
   }
+const multDivSteps = solution.filter(
+  step => step.op === '*' || step.op === '/'
+);
+// remove identity steps (×0, ×1, ÷1)
+const meaningfulSteps = multDivSteps.filter(
+  step => step.a > 1 && step.b > 1
+);
+
+if (meaningfulSteps.length === 0) return false;
+
+function stepMagnitude(step) {
+  return Math.max(step.a, step.b, step.result ?? 0);
+}
+
+const dominant = meaningfulSteps.reduce((max, step) =>
+  stepMagnitude(step) > stepMagnitude(max) ? step : max
+);
+
+const hasCompeting = meaningfulSteps.some(step =>
+  step !== dominant &&
+  stepMagnitude(step) >= stepMagnitude(dominant)
+);
+
+if (hasCompeting) return false;
 
   /* ---------- LEVEL 1 RULES ---------- */
 
-  if (state.level === 1) {
-    const multDivSteps = solution.filter(
-      step => step.op === '*' || step.op === '/'
-    );
+// Level 1 rules
+if (state.level === 1) {
+  // must have at least one × or ÷
+  if (multDivSteps.length === 0) return false;
 
-    // must have at least one × or ÷
-    if (multDivSteps.length === 0) return false;
+  const { a, b } = dominant;
 
-    // must have at least one *meaningful* fact with 2 or 5
-    const hasTargetFact = multDivSteps.some(step => {
-      const { a, b } = step;
-
-      // exclude identity-only steps
-      if (a <= 1 || b <= 1) return false;
-
-      const aIsRequired = required.includes(a);
-      const bIsRequired = required.includes(b);
-      if (aIsRequired === bIsRequired) return false;
-
-      const other = aIsRequired ? b : a;
-      return partners.includes(other);
-    });
-
-    return hasTargetFact;
-  }
-
-  /* ---------- LEVELS 2–5 RULES ---------- */
-
-  const multDivSteps = solution.filter(
-    step => step.op === '*' || step.op === '/'
-  );
-
-  // exactly one × or ÷
-  if (multDivSteps.length !== 1) return false;
-
-  const { a, b } = multDivSteps[0];
-
-  // eliminate ×0, ×1, ÷1
-  if (a <= 1 || b <= 1) return false;
-
-  // must use exactly one required number
+  // dominant step must use exactly one required number (2 or 5)
   const aIsRequired = required.includes(a);
   const bIsRequired = required.includes(b);
   if (aIsRequired === bIsRequired) return false;
 
-  // partner must be valid
+  // the other number must be a valid partner
   const other = aIsRequired ? b : a;
   if (!partners.includes(other)) return false;
 
   return true;
+}
+
+  /* ---------- LEVELS 2–5 RULES ---------- */
+
+// Levels 2–5 rules
+
+// exactly one × or ÷
+if (multDivSteps.length !== 1) return false;
+
+const { a, b } = dominant;
+
+// eliminate ×0, ×1, ÷1
+if (a <= 1 || b <= 1) return false;
+
+// must use exactly one required number
+const aIsRequired = required.includes(a);
+const bIsRequired = required.includes(b);
+if (aIsRequired === bIsRequired) return false;
+
+// partner must be valid
+const other = aIsRequired ? b : a;
+if (!partners.includes(other)) return false;
+
+return true;
 }
 
     function generateProblem() {
