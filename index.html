@@ -416,6 +416,7 @@ if (a !== 0 && b % a === 0)
        -------------------------------------------------- */
 
     function solutionUsesRequiredFact(solution) {
+if (state.level === 1) return false;
 
   let required = [];
   let partners = [];
