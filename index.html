@@ -570,27 +570,20 @@ if (a > 1 && b % a === 0) candidates.push(b / a);
 }
 
       let t, sol = null;
-      for (let tries = 0; tries < 60; tries++) {
-        t = Math.random() < 0.6 ? preferredTarget(nums) ?? randInt(state.max) : randInt(state.max);
-        if (nums.includes(t)) continue;
-        let sol = null;
-let attempts = 0;
 
-do {
+for (let tries = 0; tries < 60; tries++) {
+  t = Math.random() < 0.6
+    ? preferredTarget(nums) ?? randInt(state.max)
+    : randInt(state.max);
+
+  if (nums.includes(t)) continue;
+
   sol = solve([...nums], t);
-  attempts++;
-} while (
-  sol &&
-  !solutionUsesRequiredFact(sol) &&
-  attempts < 100
-);
+  if (!sol) continue;
+  if (!solutionUsesRequiredFact(sol)) continue;
 
-if (!sol) continue;
-if (!solutionUsesRequiredFact(sol)) continue;
-break;
-
-    if (sol && solutionUsesRequiredFact(sol)) break;
-      }
+  break;
+}
 
       if (!sol) return generateProblem();
 
