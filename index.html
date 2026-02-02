@@ -415,6 +415,15 @@ if (a !== 0 && b % a === 0)
        Problem generation
        -------------------------------------------------- */
 function solutionUsesRequiredFact(solution) {
+  console.log('--- VALIDATE ---');
+console.log('level:', state.level);
+console.log('solution:', solution.map(
+  s => `${s.a} ${s.op} ${s.b} = ${s.result}`
+));
+console.log('multDivSteps:', multDivSteps.map(
+  s => `${s.a} ${s.op} ${s.b}`
+));
+
   let required = [];
   let partners = [];
 
