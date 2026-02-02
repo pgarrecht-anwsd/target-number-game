@@ -450,18 +450,11 @@ if (state.level === 1) return false;
 
   /* ---------- COLLECT × ÷ STEPS ---------- */
 
-  const multDivSteps = solution.filter(
-    step => step.op === '*' || step.op === '/'
-  );
+const multDivSteps = solution.filter(
+  step => step.op === '*' || step.op === '/'
+);
 
-  if (multDivSteps.length === 0) return false;
-
-  // meaningful = no ×0, ×1, ÷1
-  const meaningful = multDivSteps.filter(
-    step => step.a > 1 && step.b > 1
-  );
-
-  if (meaningful.length === 0) return false;
+// DO NOT return false here (except for level 6 handled earlier)
 
   /* ---------- FIND DOMINANT STEP ---------- */
 
@@ -492,11 +485,6 @@ const bReq = required.includes(b);
 if (aReq === bReq) return false;
 
 /* ---------- LEVEL-SPECIFIC RULES ---------- */
-
-// Levels 1–5: exactly one × or ÷ total
-if (state.level >= 1 && state.level <= 5) {
-  if (multDivSteps.length !== 1) return false;
-}
 
 // must use exactly one required number
 const aReq = required.includes(a);
