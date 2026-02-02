@@ -436,95 +436,78 @@ function solutionUsesRequiredFact(solution) {
     required = [6, 7, 8, 9];
     partners = [2, 3, 4, 5, 6, 7, 8, 9];
   } else if (state.level === 6) {
-    // Free play, but no identity operations
-    const badIdentity = solution.some(
+    // Free play: require at least one × or ÷, but forbid identity
+    return solution.some(
       step =>
         (step.op === '*' || step.op === '/') &&
-        (step.a <= 1 || step.b <= 1)
-    );
-    if (badIdentity) return false;
-
-    return solution.some(
-      step => step.op === '*' || step.op === '/'
+        step.a > 1 &&
+        step.b > 1
     );
   }
-const multDivSteps = solution.filter(
-  step => step.op === '*' || step.op === '/'
-);
-// remove identity steps (×0, ×1, ÷1)
-const meaningfulSteps = multDivSteps.filter(
-  step => step.a > 1 && step.b > 1
-);
 
-if (meaningfulSteps.length === 0) return false;
+  /* ---------- COLLECT × ÷ STEPS ---------- */
 
-function stepMagnitude(step) {
-  return Math.max(step.a, step.b, step.result ?? 0);
-}
+  const multDivSteps = solution.filter(
+    step => step.op === '*' || step.op === '/'
+  );
 
-const dominant = meaningfulSteps.reduce((max, step) =>
-  stepMagnitude(step) > stepMagnitude(max) ? step : max,
-  meaningfulSteps[0]
-);
-
-const hasCompeting = meaningfulSteps.some(step =>
-  step !== dominant &&
-  stepMagnitude(step) >= stepMagnitude(dominant)
-);
-
-if (hasCompeting) return false;
-
-  /* ---------- LEVEL 1 RULES ---------- */
-
-// Level 1 rules
-if (state.level === 1) {
-  // must have at least one × or ÷
   if (multDivSteps.length === 0) return false;
 
+  // meaningful = no ×0, ×1, ÷1
+  const meaningful = multDivSteps.filter(
+    step => step.a > 1 && step.b > 1
+  );
+
+  if (meaningful.length === 0) return false;
+
+  /* ---------- FIND DOMINANT STEP ---------- */
+
+  function magnitude(step) {
+    return Math.max(step.a, step.b, step.result ?? 0);
+  }
+
+  const dominant = meaningful.reduce((max, step) =>
+    magnitude(step) > magnitude(max) ? step : max,
+    meaningful[0]
+  );
+
+  // dominant must be strictly larger than all others
+  if (
+    meaningful.some(
+      step => step !== dominant && magnitude(step) >= magnitude(dominant)
+    )
+  ) {
+    return false;
+  }
+
   const { a, b } = dominant;
-// required number must not be newly created earlier
-const requiredUsedAsResultEarlier = solution.some(step =>
-  (step.op === '+' || step.op === '-') &&
-  required.includes(step.result) &&
-  step !== dominant
-);
 
-if (requiredUsedAsResultEarlier) return false;
+  /* ---------- LEVEL-SPECIFIC RULES ---------- */
 
-  // dominant step must use exactly one required number (2 or 5)
-  const aIsRequired = required.includes(a);
-  const bIsRequired = required.includes(b);
-  if (aIsRequired === bIsRequired) return false;
+  if (state.level >= 2 && state.level <= 5) {
+    // exactly one × or ÷ total
+    if (multDivSteps.length !== 1) return false;
+  }
 
-  // the other number must be a valid partner
-  const other = aIsRequired ? b : a;
+  // must use exactly one required number
+  const aReq = required.includes(a);
+  const bReq = required.includes(b);
+  if (aReq === bReq) return false;
+
+  const other = aReq ? b : a;
   if (!partners.includes(other)) return false;
 
+  // Level 1: required number cannot be "manufactured" earlier
+  if (state.level === 1) {
+    const manufactured = solution.some(
+      step =>
+        (step.op === '+' || step.op === '-') &&
+        required.includes(step.result)
+    );
+    if (manufactured) return false;
+  }
+
   return true;
-}
-
-  /* ---------- LEVELS 2–5 RULES ---------- */
-
-// Levels 2–5 rules
-
-// exactly one × or ÷
-if (multDivSteps.length !== 1) return false;
-
-const { a, b } = dominant;
-
-// eliminate ×0, ×1, ÷1
-if (a <= 1 || b <= 1) return false;
-
-// must use exactly one required number
-const aIsRequired = required.includes(a);
-const bIsRequired = required.includes(b);
-if (aIsRequired === bIsRequired) return false;
-
-// partner must be valid
-const other = aIsRequired ? b : a;
-if (!partners.includes(other)) return false;
-
-return true;
 }
 
     function generateProblem() {
