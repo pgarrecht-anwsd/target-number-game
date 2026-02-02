@@ -453,6 +453,10 @@ if (state.level === 1) return false;
   const multDivSteps = solution.filter(
     step => step.op === '*' || step.op === '/'
   );
+// Level 1 must include at least one × or ÷
+if (state.level === 1 && multDivSteps.length === 0) {
+  return false;
+}
 
   if (multDivSteps.length === 0) return false;
 
@@ -484,6 +488,12 @@ if (state.level === 1) return false;
   }
 
   const { a, b } = dominant;
+// dominant step MUST use 2 or 5
+const aReq = required.includes(a);
+const bReq = required.includes(b);
+
+// must use exactly one required number
+if (aReq === bReq) return false;
 
 /* ---------- LEVEL-SPECIFIC RULES ---------- */
 
