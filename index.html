@@ -453,10 +453,6 @@ if (state.level === 1) return false;
   const multDivSteps = solution.filter(
     step => step.op === '*' || step.op === '/'
   );
-// Level 1 must include at least one × or ÷
-if (state.level === 1 && multDivSteps.length === 0) {
-  return false;
-}
 
   if (multDivSteps.length === 0) return false;
 
