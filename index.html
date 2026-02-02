@@ -482,32 +482,36 @@ function solutionUsesRequiredFact(solution) {
 
   const { a, b } = dominant;
 
-  /* ---------- LEVEL-SPECIFIC RULES ---------- */
+/* ---------- LEVEL-SPECIFIC RULES ---------- */
 
-  if (state.level >= 2 && state.level <= 5) {
-    // exactly one × or ÷ total
-    if (multDivSteps.length !== 1) return false;
-  }
+if (state.level >= 2 && state.level <= 5) {
+  // exactly one × or ÷ total
+  if (multDivSteps.length !== 1) return false;
+}
 
-  // must use exactly one required number
-  const aReq = required.includes(a);
-  const bReq = required.includes(b);
-  if (aReq === bReq) return false;
+// must use exactly one required number
+const aReq = required.includes(a);
+const bReq = required.includes(b);
+if (aReq === bReq) return false;
 
-  const other = aReq ? b : a;
-  if (!partners.includes(other)) return false;
+const other = aReq ? b : a;
+if (!partners.includes(other)) return false;
 
-  // Level 1: required number cannot be "manufactured" earlier
-  if (state.level === 1) {
-    const manufactured = solution.some(
-      step =>
-        (step.op === '+' || step.op === '-') &&
-        required.includes(step.result)
-    );
-    if (manufactured) return false;
-  }
+// Level 1 rules
+if (state.level === 1) {
+  // dominant step must involve 2 or 5
+  if (!aReq && !bReq) return false;
 
-  return true;
+  // required number cannot be manufactured earlier
+  const manufactured = solution.some(
+    step =>
+      (step.op === '+' || step.op === '-') &&
+      required.includes(step.result)
+  );
+  if (manufactured) return false;
+}
+
+return true;
 }
 
     function generateProblem() {
