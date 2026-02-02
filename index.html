@@ -573,7 +573,18 @@ if (a > 1 && b % a === 0) candidates.push(b / a);
       for (let tries = 0; tries < 60; tries++) {
         t = Math.random() < 0.6 ? preferredTarget(nums) ?? randInt(state.max) : randInt(state.max);
         if (nums.includes(t)) continue;
-        sol = solve([...nums], t);
+        let sol = null;
+let attempts = 0;
+
+do {
+  sol = solve([...nums], t);
+  attempts++;
+} while (
+  sol &&
+  !solutionUsesRequiredFact(sol) &&
+  attempts < 100
+);
+
 if (!sol) continue;
 if (!solutionUsesRequiredFact(sol)) continue;
 break;
