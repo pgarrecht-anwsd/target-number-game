@@ -484,8 +484,8 @@ function solutionUsesRequiredFact(solution) {
 
 /* ---------- LEVEL-SPECIFIC RULES ---------- */
 
-if (state.level >= 2 && state.level <= 5) {
-  // exactly one × or ÷ total
+// Levels 1–5: exactly one × or ÷ total
+if (state.level >= 1 && state.level <= 5) {
   if (multDivSteps.length !== 1) return false;
 }
 
