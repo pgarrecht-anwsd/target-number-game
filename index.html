@@ -415,15 +415,23 @@ if (a !== 0 && b % a === 0)
        Problem generation
        -------------------------------------------------- */
 
-    function solutionUsesRequiredFact(solution) {
-if (state.level === 1) return false;
+function solutionUsesRequiredFact(solution) {
+  // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
+  if (state.level === 6) {
+    return solution.some(
+      step =>
+        (step.op === '*' || step.op === '/') &&
+        step.a > 1 &&
+        step.b > 1
+    );
+  }
 
+  // Define level-specific required bases and partner sets (fact families)
   let required = [];
   let partners = [];
 
-  /* ---------- LEVEL SETUP ---------- */
-
   if (state.level === 1) {
+    // Focus on 2x and 5x families
     required = [2, 5];
     partners = [2, 3, 4, 5];
   } else if (state.level === 2) {
@@ -438,79 +446,59 @@ if (state.level === 1) return false;
   } else if (state.level === 5) {
     required = [6, 7, 8, 9];
     partners = [2, 3, 4, 5, 6, 7, 8, 9];
-  } else if (state.level === 6) {
-    // Free play: require at least one × or ÷, but forbid identity
-    return solution.some(
-      step =>
-        (step.op === '*' || step.op === '/') &&
-        step.a > 1 &&
-        step.b > 1
-    );
-  }
-/* ---------- COLLECT × ÷ STEPS ---------- */
-
-const multDivSteps = solution.filter(
-  step => step.op === '*' || step.op === '/'
-);
-
-// Level 1 must include at least one × or ÷
-if (state.level === 1 && multDivSteps.length === 0) return false;
-
-// Remove identity operations (×0, ×1, ÷1)
-const meaningfulSteps = multDivSteps.filter(
-  step => step.a > 1 && step.b > 1
-);
-
-if (meaningfulSteps.length === 0) return false;
-
-// DO NOT return false here (except for level 6 handled earlier)
-
-  /* ---------- FIND DOMINANT STEP ---------- */
-
-  function magnitude(step) {
-    return Math.max(step.a, step.b, step.result ?? 0);
+  } else {
+    // Unknown level: be permissive
+    return true;
   }
 
-  const dominant = meaningfulSteps.reduce((max, step) =>
-  magnitude(step) > magnitude(max) ? step : max,
-  meaningfulSteps[0]
-);
-
-// dominant must be strictly larger than all others
-if (
-  meaningfulSteps.some(
-    step => step !== dominant && magnitude(step) >= magnitude(dominant)
-  )
-) {
-  return false;
-}
-
-  const { a, b } = dominant;
-// dominant step MUST use 2 or 5
-const aReq = required.includes(a);
-const bReq = required.includes(b);
-
-// must use exactly one required number
-if (aReq === bReq) return false;
-
-const other = aReq ? b : a;
-if (!partners.includes(other)) return false;
-
-// Level 1 rules
-if (state.level === 1) {
-  // dominant step must involve 2 or 5
-  if (!aReq && !bReq) return false;
-
-  // required number cannot be manufactured earlier
-  const manufactured = solution.some(
+  // Collect meaningful multiplication/division steps (ignore ×0, ×1, ÷1 and results < 0)
+  const multDivSteps = solution.filter(
     step =>
-      (step.op === '+' || step.op === '-') &&
-      required.includes(step.result)
+      (step.op === '*' || step.op === '/') &&
+      step.a > 1 &&
+      step.b > 1 &&
+      Number.isInteger(step.result) &&
+      step.result >= 0
   );
-  if (manufactured) return false;
-}
 
-return true;
+  // Must include at least one meaningful mult/div
+  if (multDivSteps.length === 0) return false;
+
+  // Choose dominant as the step with largest magnitude (max(a,b,result))
+  const magnitude = s => Math.max(s.a, s.b, s.result ?? 0);
+  const dominant = multDivSteps.reduce((max, s) =>
+    magnitude(s) > magnitude(max) ? s : max,
+    multDivSteps[0]
+  );
+
+  // Dominant must be strictly larger than all other meaningful mult/div steps
+  if (multDivSteps.some(s => s !== dominant && magnitude(s) >= magnitude(dominant))) {
+    return false;
+  }
+
+  // Dominant must use exactly one required operand (e.g. one of [2,5] for level 1)
+  const aReq = required.includes(dominant.a);
+  const bReq = required.includes(dominant.b);
+  if (aReq === bReq) return false; // either both or neither => reject
+
+  // The other operand must be in the allowed partner set
+  const other = aReq ? dominant.b : dominant.a;
+  if (!partners.includes(other)) return false;
+
+  // The required operand must come from the original numbers, not be manufactured earlier.
+  // Find the index of the dominant step in the solution sequence
+  const domIndex = solution.indexOf(dominant);
+  if (domIndex === -1) return false; // should not happen, but fail-safe
+
+  // If any earlier step produced a required number, reject (that means required was manufactured)
+  for (let k = 0; k < domIndex; k++) {
+    const s = solution[k];
+    if ((s.op === '+' || s.op === '-') && required.includes(s.result)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
     function generateProblem() {
