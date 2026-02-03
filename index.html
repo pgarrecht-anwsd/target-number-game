@@ -447,12 +447,21 @@ if (state.level === 1) return false;
         step.b > 1
     );
   }
-
-  /* ---------- COLLECT × ÷ STEPS ---------- */
+/* ---------- COLLECT × ÷ STEPS ---------- */
 
 const multDivSteps = solution.filter(
   step => step.op === '*' || step.op === '/'
 );
+
+// Level 1 must include at least one × or ÷
+if (state.level === 1 && multDivSteps.length === 0) return false;
+
+// Remove identity operations (×0, ×1, ÷1)
+const meaningfulSteps = multDivSteps.filter(
+  step => step.a > 1 && step.b > 1
+);
+
+if (meaningfulSteps.length === 0) return false;
 
 // DO NOT return false here (except for level 6 handled earlier)
 
