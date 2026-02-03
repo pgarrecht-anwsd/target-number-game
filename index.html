@@ -415,7 +415,7 @@ if (a !== 0 && b % a === 0)
        Problem generation
        -------------------------------------------------- */
 
-function solutionUsesRequiredFact(solution) {
+function solutionUsesRequiredFact(solution, nums) {
   // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
   if (state.level === 6) {
     return solution.some(
@@ -464,7 +464,7 @@ function solutionUsesRequiredFact(solution) {
   // Must include at least one meaningful mult/div
   if (multDivSteps.length === 0) return false;
 
-  // For Levels 1-5 we require exactly one meaningful mult/div step (the dominant fact)
+  // For Levels 1-5 require exactly one meaningful mult/div step (the dominant fact)
   if (multDivSteps.length !== 1) return false;
 
   const dominant = multDivSteps[0];
@@ -478,9 +478,9 @@ function solutionUsesRequiredFact(solution) {
   const other = aReq ? dominant.b : dominant.a;
   if (!partners.includes(other)) return false;
 
-  // The required operand must come from the original numbers, not be manufactured earlier.
+  // The required operand must come from the original numbers (nums), not be manufactured earlier.
   const requiredValue = aReq ? dominant.a : dominant.b;
-  if (!state.original.includes(requiredValue)) return false;
+  if (!nums.includes(requiredValue)) return false;
 
   // Also ensure required wasn't manufactured earlier (no earlier + or - produced the required value)
   const domIndex = solution.indexOf(dominant);
@@ -585,9 +585,7 @@ for (let tries = 0; tries < 60; tries++) {
 
   if (nums.includes(t)) continue;
 
-  sol = solve([...nums], t);
-  if (!sol) continue;
-  if (!solutionUsesRequiredFact(sol)) continue;
+  sol = solve([...nums], t); if (!sol) continue; if (!solutionUsesRequiredFact(sol, nums)) continue;
 
   break;
 }
