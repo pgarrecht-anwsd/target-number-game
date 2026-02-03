@@ -454,6 +454,10 @@ function solutionUsesRequiredFact(solution, nums) {
   // Helper to count occurrences in an array
   const countIn = (arr, v) => arr.reduce((c, x) => c + (x === v ? 1 : 0), 0);
 
+  // Choose a conservative partner-size limit per level.
+  // For Level 1 we enforce partners <= 10 (you can relax this if needed).
+  const partnerMax = state.level === 1 ? 10 : 12;
+
   // Collect meaningful multiplication/division steps (ignore ×0, ×1, ÷1 and results < 0)
   const multDivSteps = solution.filter(
     step =>
@@ -481,6 +485,9 @@ function solutionUsesRequiredFact(solution, nums) {
   const other = aReq ? dominant.b : dominant.a;
   if (!partners.includes(other)) return false;
 
+  // Enforce partner-size limit: both operands used in the dominant step must be reasonable
+  if (dominant.a > partnerMax || dominant.b > partnerMax) return false;
+
   // Both operands used in the dominant step must come from the original numbers (nums).
   // Check multiplicity: if a === b we need at least two occurrences in nums.
   const needA = dominant.a;
@@ -506,10 +513,25 @@ function solutionUsesRequiredFact(solution, nums) {
     }
   }
 
+  // Prevent mult/div chaining: no other mult/div step should use the result of any other
+  // mult/div step as an operand unless that earlier step is the dominant.
+  for (let i = 0; i < solution.length; i++) {
+    const s = solution[i];
+    if (s.op !== '*' && s.op !== '/') continue;
+    for (let j = 0; j < solution.length; j++) {
+      if (i === j) continue;
+      const t = solution[j];
+      if (t.op !== '*' && t.op !== '/') continue;
+      // If s.result is used as an operand in t, then s must be the dominant
+      if ((t.a === s.result || t.b === s.result) && s !== dominant) {
+        return false;
+      }
+    }
+  }
+
   // Passed all checks
   return true;
 }
-
     function generateProblem() {
       solutionBox.style.display = 'none';
 
