@@ -462,19 +462,19 @@ const multDivSteps = solution.filter(
     return Math.max(step.a, step.b, step.result ?? 0);
   }
 
-  const dominant = meaningful.reduce((max, step) =>
-    magnitude(step) > magnitude(max) ? step : max,
-    meaningful[0]
-  );
+  const dominant = meaningfulSteps.reduce((max, step) =>
+  magnitude(step) > magnitude(max) ? step : max,
+  meaningfulSteps[0]
+);
 
-  // dominant must be strictly larger than all others
-  if (
-    meaningful.some(
-      step => step !== dominant && magnitude(step) >= magnitude(dominant)
-    )
-  ) {
-    return false;
-  }
+// dominant must be strictly larger than all others
+if (
+  meaningfulSteps.some(
+    step => step !== dominant && magnitude(step) >= magnitude(dominant)
+  )
+) {
+  return false;
+}
 
   const { a, b } = dominant;
 // dominant step MUST use 2 or 5
