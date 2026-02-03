@@ -484,13 +484,6 @@ const bReq = required.includes(b);
 // must use exactly one required number
 if (aReq === bReq) return false;
 
-/* ---------- LEVEL-SPECIFIC RULES ---------- */
-
-// must use exactly one required number
-const aReq = required.includes(a);
-const bReq = required.includes(b);
-if (aReq === bReq) return false;
-
 const other = aReq ? b : a;
 if (!partners.includes(other)) return false;
 
