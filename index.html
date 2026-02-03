@@ -433,7 +433,7 @@ function solutionUsesRequiredFact(solution, nums) {
   if (state.level === 1) {
     // Focus on 2x and 5x families
     required = [2, 5];
-    partners = [2, 3, 4, 5];
+    partners = [2, 3, 4, 5]; // partner factors allowed for level 1
   } else if (state.level === 2) {
     required = [3, 4];
     partners = [2, 3, 4, 5];
@@ -450,6 +450,9 @@ function solutionUsesRequiredFact(solution, nums) {
     // Unknown level: be permissive
     return true;
   }
+
+  // Helper to count occurrences in an array
+  const countIn = (arr, v) => arr.reduce((c, x) => c + (x === v ? 1 : 0), 0);
 
   // Collect meaningful multiplication/division steps (ignore ×0, ×1, ÷1 and results < 0)
   const multDivSteps = solution.filter(
@@ -478,7 +481,17 @@ function solutionUsesRequiredFact(solution, nums) {
   const other = aReq ? dominant.b : dominant.a;
   if (!partners.includes(other)) return false;
 
-  // The required operand must come from the original numbers (nums), not be manufactured earlier.
+  // Both operands used in the dominant step must come from the original numbers (nums).
+  // Check multiplicity: if a === b we need at least two occurrences in nums.
+  const needA = dominant.a;
+  const needB = dominant.b;
+  if (needA === needB) {
+    if (countIn(nums, needA) < 2) return false;
+  } else {
+    if (countIn(nums, needA) < 1 || countIn(nums, needB) < 1) return false;
+  }
+
+  // The required operand must be present in the original numbers (nums) and not manufactured earlier.
   const requiredValue = aReq ? dominant.a : dominant.b;
   if (!nums.includes(requiredValue)) return false;
 
@@ -493,6 +506,7 @@ function solutionUsesRequiredFact(solution, nums) {
     }
   }
 
+  // Passed all checks
   return true;
 }
 
