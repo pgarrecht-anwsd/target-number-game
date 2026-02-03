@@ -529,28 +529,56 @@ while (nums.length < state.mode) {
   nums.push(randomInitialNumber(state.level, nums));
 }
 function preferredTarget(nums) {
-  let candidates = [];
+  // Build a list of candidate targets that respect the level's fact families first.
+  // We reuse the same required/partners mapping as solutionUsesRequiredFact.
+  let required = [];
+  let partners = [];
+  if (state.level === 1) { required = [2,5]; partners = [2,3,4,5]; }
+  else if (state.level === 2) { required = [3,4]; partners = [2,3,4,5]; }
+  else if (state.level === 3) { required = [6,7]; partners = [2,3,4,5,6,7]; }
+  else if (state.level === 4) { required = [8,9]; partners = [2,3,4,5,6,7,8,9]; }
+  else if (state.level === 5) { required = [6,7,8,9]; partners = [2,3,4,5,6,7,8,9]; }
+  else { /* level 6 or undefined: permissive */ }
+
+  const candidates = [];
 
   for (let i = 0; i < nums.length; i++) {
     for (let j = i + 1; j < nums.length; j++) {
       let a = nums[i], b = nums[j];
 
-      // multiplication (avoid ×1 and ×0)
-if (a > 1 && b > 1) {
-  candidates.push(a * b);
-}
+      // Prefer product/division where one operand is in required and the other in partners
+      if (a > 1 && b > 1) {
+        if (required.includes(a) && partners.includes(b)) candidates.push(a * b);
+        if (required.includes(b) && partners.includes(a)) candidates.push(a * b);
+      }
 
-      // clean division (avoid ÷1)
-if (b > 1 && a % b === 0) candidates.push(a / b);
-if (a > 1 && b % a === 0) candidates.push(b / a);
+      // Also allow clean division results when they fall into a level family
+      if (b > 1 && a % b === 0) {
+        const res = a / b;
+        if (required.includes(a) && partners.includes(b)) candidates.push(res);
+        if (required.includes(b) && partners.includes(a)) candidates.push(res);
+      }
+      if (a > 1 && b % a === 0) {
+        const res = b / a;
+        if (required.includes(a) && partners.includes(b)) candidates.push(res);
+        if (required.includes(b) && partners.includes(a)) candidates.push(res);
+      }
+
+      // Fallback: keep general meaningful products (avoid ×1 and ×0)
+      if (a > 1 && b > 1) {
+        candidates.push(a * b);
+      }
+      // Also include clean divisions as general candidates
+      if (b > 1 && a % b === 0) candidates.push(a / b);
+      if (a > 1 && b % a === 0) candidates.push(b / a);
     }
   }
 
   // keep targets in range
-  candidates = candidates.filter(n => n > 0 && n < state.max);
+  const filtered = candidates.filter(n => Number.isFinite(n) && n > 0 && n < state.max);
 
-  if (candidates.length === 0) return null;
-  return candidates[Math.floor(Math.random() * candidates.length)];
+  if (filtered.length === 0) return null;
+  return filtered[Math.floor(Math.random() * filtered.length)];
 }
 
       let t, sol = null;
