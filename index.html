@@ -298,38 +298,39 @@ function randomInitialNumber(level, existing = []) {
 
   let candidates = source;
 
-  // Existing behavior for level >= 2: remove 0/1, soft-discourage 2 and 10
-  if (level >= 2) {
-    candidates = candidates.filter(n => n !== 0 && n !== 1);
+if (level >= 2) {
+  // Remove 0 and 1 entirely
+  candidates = candidates.filter(n => n !== 0 && n !== 1);
 
-    const softened = candidates.filter(n => n !== 2 && n !== 10);
-    if (softened.length && Math.random() < 0.6) {
-      candidates = softened;
-    }
+  // Soft-discourage 2 and 10
+  const softened = candidates.filter(n => n !== 2 && n !== 10);
+  if (softened.length && Math.random() < 0.6) {
+    candidates = softened;
+  }
+}
+
+// Special biasing for Level 1:
+// - Prefer 2 or 5 (target family) if not already present.
+// - Strongly discourage 10 (so it doesn't dominate) but still allow it as a partner.
+if (level === 1) {
+  const preferred = [2, 5].filter(n => !existing.includes(n));
+  if (preferred.length && Math.random() < 0.5) {
+    return preferred[Math.floor(Math.random() * preferred.length)];
   }
 
-  // Special biasing for Level 1:
-  // - Prefer 2 or 5 (target family) if not already present.
-  // - Strongly discourage 10 (so it doesn't dominate) but still allow it as a partner.
-  if (level === 1) {
-    const preferred = [2, 5].filter(n => !existing.includes(n));
-    if (preferred.length && Math.random() < 0.5) {
-      return preferred[Math.floor(Math.random() * preferred.length)];
-    }
-
-    // Disfavor 10 strongly for random picks unless it's the only choice
-    const without10 = candidates.filter(n => n !== 10);
-    if (without10.length && Math.random() < 0.75) {
-      candidates = without10;
-    }
+  // Disfavor 10 strongly for random picks unless it's the only choice
+  const without10 = candidates.filter(n => n !== 10);
+  if (without10.length && Math.random() < 0.75) {
+    candidates = without10;
   }
+}
 
-  // Safety fallback (should rarely trigger)
-  if (!candidates.length) {
-    candidates = source;
-  }
+// Safety fallback (should rarely trigger)
+if (!candidates.length) {
+  candidates = source;
+}
 
-  return candidates[Math.floor(Math.random() * candidates.length)];
+return candidates[Math.floor(Math.random() * candidates.length)];
 }
     /* --------------------------------------------------
        Global game state
@@ -430,7 +431,7 @@ if (a !== 0 && b % a === 0)
        Problem generation
        -------------------------------------------------- */
 
-function solutionUsesRequiredFact(solution, nums) {
+    function solutionUsesRequiredFact(solution, nums) {
   // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
   if (state.level === 6) {
     return solution.some(
@@ -551,98 +552,138 @@ function solutionUsesRequiredFact(solution, nums) {
   // Passed all checks
   return true;
 }
-function generateProblem() {
-  solutionBox.style.display = 'none';
 
-  state.numbers = [];
-  state.selection = { first: null, op: null };
-  state.moveCount = 0;
-  state.usedHint = 0;
-  state.solutionShown = false;
+    function generateProblem() {
+      solutionBox.style.display = 'none';
 
-  let nums = [];
+      state.numbers = [];
+      state.selection = { first: null, op: null };
+      state.moveCount = 0;
+      state.usedHint = 0;
+      state.solutionShown = false;
 
-  // Required anchor numbers by level — include Level 1 (2 or 5)
-  let required = [];
-  if (state.level === 1) required = [2, 5];
-  if (state.level === 2) required = [3, 4];
-  if (state.level === 3) required = [6, 7];
-  if (state.level === 4) required = [8, 9];
-  if (state.level === 5) required = [6, 7, 8, 9];
+      let nums = [];
 
-  // Force one required number if the level has a family
-  if (required.length) {
-    nums.push(required[Math.floor(Math.random() * required.length)]);
-  }
+// Required anchor numbers by level
+let required = [];
+if (state.level === 2) required = [3,4];     
+if (state.level === 3) required = [6,7];
+if (state.level === 4) required = [8,9];
+if (state.level === 5) required = [6,7,8,9];
 
-  // Fill remaining slots normally
-  while (nums.length < state.mode) {
-    nums.push(randomInitialNumber(state.level, nums));
-  }
+// Force one required number
+if (required.length) {
+  nums.push(required[Math.floor(Math.random() * required.length)]);
+}
 
-  function preferredTarget(nums) {
-    let candidates = [];
+// Fill remaining slots normally
+while (nums.length < state.mode) {
+  nums.push(randomInitialNumber(state.level, nums));
+}
+function preferredTarget(nums) {
+  let candidates = [];
 
-    for (let i = 0; i < nums.length; i++) {
-      for (let j = i + 1; j < nums.length; j++) {
-        let a = nums[i], b = nums[j];
+  // First: strongly prefer required×partner (or partner×required) if possible
+  const preferred = [];
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = i + 1; j < nums.length; j++) {
+      const a = nums[i], b = nums[j];
+      if (a > 1 && b > 1) {
+        // Check if one is required for current level and the other is an allowed partner
+        const reqSet = (state.level === 1) ? [2,5] :
+          (state.level === 2) ? [3,4] :
+          (state.level === 3) ? [6,7] :
+          (state.level === 4) ? [8,9] :
+          (state.level === 5) ? [6,7,8,9] : [];
+        const partnerSet = (state.level === 1) ? [2,3,4,5,6,7,8,9,10] :
+          (state.level === 2) ? [2,3,4,5] :
+          (state.level === 3) ? [2,3,4,5,6,7] :
+          (state.level === 4) ? [2,3,4,5,6,7,8,9] :
+          (state.level === 5) ? [2,3,4,5,6,7,8,9] : [];
 
-        // multiplication (avoid ×1 and ×0)
-        if (a > 1 && b > 1) {
-          candidates.push(a * b);
+        const aReq = reqSet.includes(a) && partnerSet.includes(b);
+        const bReq = reqSet.includes(b) && partnerSet.includes(a);
+        if (aReq || bReq) {
+          preferred.push(a * b);
+          // Also include clean divisions if applicable
+          if (b > 1 && a % b === 0) preferred.push(a / b);
+          if (a > 1 && b % a === 0) preferred.push(b / a);
         }
-
-        // clean division (avoid ÷1)
-        if (b > 1 && a % b === 0) candidates.push(a / b);
-        if (a > 1 && b % a === 0) candidates.push(b / a);
       }
     }
-
-    // keep targets in range
-    candidates = candidates.filter(n => n > 0 && n < state.max);
-
-    if (candidates.length === 0) return null;
-    return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  let t, sol = null;
-
-  for (let tries = 0; tries < 60; tries++) {
-    t = Math.random() < 0.6
-      ? preferredTarget(nums) ?? randInt(state.max)
-      : randInt(state.max);
-
-    if (nums.includes(t)) continue;
-
-    sol = solve([...nums], t);
-    if (!sol) continue;
-    if (!solutionUsesRequiredFact(sol, nums)) continue;
-
-    break;
+  if (preferred.length) {
+    // pick a preferred candidate with high probability
+    if (Math.random() < 0.9) return preferred[Math.floor(Math.random() * preferred.length)];
   }
 
-  if (!sol) return generateProblem();
+  // Second: general multiplication/division candidates
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = i + 1; j < nums.length; j++) {
+      let a = nums[i], b = nums[j];
 
-  state.numbers  = nums.slice();
-  state.original = nums.slice();
-  state.target   = t;
-  state.solution = sol;
-
-  if (state.gameStarted) {
-    targetEl.textContent = state.target;
-    renderNumbers();
-    hintBtn.classList.remove('disabled');
-    resetBtn.classList.remove('disabled');
-    solutionBtn.classList.remove('disabled');
-  } else {
-    targetEl.textContent = '--';
-    renderNumbers(true);
-    hintBtn.classList.add('disabled');
-    resetBtn.classList.add('disabled');
-    solutionBtn.classList.add('disabled');
-    startBtn.classList.remove('disabled');
-  }
+      // multiplication (avoid ×1 and ×0)
+if (a > 1 && b > 1) {
+  candidates.push(a * b);
 }
+
+      // clean division (avoid ÷1)
+if (b > 1 && a % b === 0) candidates.push(a / b);
+if (a > 1 && b % a === 0) candidates.push(b / a);
+    }
+  }
+
+  // keep targets in range
+  candidates = candidates.filter(n => n > 0 && n < state.max);
+
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+      let t, sol = null;
+
+for (let tries = 0; tries < 200; tries++) {
+  t = Math.random() < 0.6
+    ? preferredTarget(nums) ?? randInt(state.max)
+    : randInt(state.max);
+
+  if (nums.includes(t)) continue;
+
+  sol = solve([...nums], t);
+  if (!sol) continue;
+
+  // NEW: reject solutions that use only addition/subtraction
+  // (i.e., require at least one multiplication or division step)
+  if (!sol.some(step => step.op === '*' || step.op === '/')) continue;
+
+  if (!solutionUsesRequiredFact(sol, nums)) continue;
+
+  break;
+}
+
+      if (!sol) return generateProblem();
+
+      state.numbers  = nums.slice();
+      state.original = nums.slice();
+      state.target   = t;
+      state.solution = sol;
+
+      if (state.gameStarted) {
+        targetEl.textContent = state.target;
+        renderNumbers();
+        hintBtn.classList.remove('disabled');
+        resetBtn.classList.remove('disabled');
+        solutionBtn.classList.remove('disabled');
+      } else {
+        targetEl.textContent = '--';
+        renderNumbers(true);
+        hintBtn.classList.add('disabled');
+        resetBtn.classList.add('disabled');
+        solutionBtn.classList.add('disabled');
+        startBtn.classList.remove('disabled');
+      }
+    }
 
     /* --------------------------------------------------
        Rendering helpers
@@ -915,7 +956,8 @@ nextBtn.onclick = nextProblem;
   }
 
   state.problems++;
-  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
+  problemsEl.textContent = \
+`${state.problems}/${state.totalProblems}`;
   generateProblem();
 }
 
