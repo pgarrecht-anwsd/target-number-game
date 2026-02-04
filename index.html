@@ -956,8 +956,7 @@ nextBtn.onclick = nextProblem;
   }
 
   state.problems++;
-  problemsEl.textContent = \
-`${state.problems}/${state.totalProblems}`;
+  problemsEl.textContent = ${state.problems}/${state.totalProblems};
   generateProblem();
 }
 
