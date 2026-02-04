@@ -622,7 +622,43 @@ for (let tries = 0; tries < 200; tries++) {
   break;
 }
 
-      if (!sol) return generateProblem();
+      if (!sol) {
+  console.warn('generateProblem: failed to find valid solution after tries', { nums });
+
+  // Relaxed fallback: accept any solvable target (ignore solutionUsesRequiredFact)
+  for (let extra = 0; extra < 500 && !sol; extra++) {
+    const t2 = randInt(state.max);
+    if (nums.includes(t2)) continue;
+    const s2 = solve([...nums], t2);
+    if (s2) {
+      sol = s2;
+      t = t2;
+      console.warn('generateProblem: falling back to relaxed solution', { nums, t });
+      break;
+    }
+  }
+
+  // If still no solution, render the starting numbers and abort gracefully
+  if (!sol) {
+    console.error('generateProblem: giving up - no solution found', { nums });
+
+    state.numbers = nums.slice();
+    state.original = nums.slice();
+    state.target = '--';
+    state.solution = [];
+
+    targetEl.textContent = '--';
+    renderNumbers(true);
+
+    // ensure controls are in a sane state
+    hintBtn.classList.add('disabled');
+    resetBtn.classList.add('disabled');
+    solutionBtn.classList.add('disabled');
+    startBtn.classList.remove('disabled');
+
+    return;
+  }
+}
 
       state.numbers  = nums.slice();
       state.original = nums.slice();
