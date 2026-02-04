@@ -949,14 +949,14 @@ nums.unshift(r);
     
 nextBtn.onclick = nextProblem;
 
-    function nextProblem() {
+  function nextProblem() {
   if (state.problems >= state.totalProblems) {
     showSummary();
     return;
   }
 
   state.problems++;
-  problemsEl.textContent = ${state.problems}/${state.totalProblems};
+  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
   generateProblem();
 }
 
