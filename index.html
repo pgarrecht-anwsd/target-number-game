@@ -442,101 +442,42 @@ if (a !== 0 && b % a === 0)
        Problem generation
        -------------------------------------------------- */
 
-    function solutionUsesRequiredFact(solution, nums) {
-  // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
-  if (state.level === 6) {
-    return solution.some(
-      step =>
-        (step.op === '*' || step.op === '/') &&
-        step.a > 1 &&
-        step.b > 1
-    );
-  }
+  if (!sol) {
+  console.warn('generateProblem: failed to find valid solution after tries', { nums });
 
-  const data = LEVEL_DATA[state.level] || { required: [], partners: [], partnerMax: 12 };
-  const required = data.required;
-  const partners = data.partners;
-  const partnerMax = data.partnerMax;
-
-  // Helper to count occurrences in an array
-  const countIn = (arr, v) => arr.reduce((c, x) => c + (x === v ? 1 : 0), 0);
-
-  // Collect meaningful multiplication/division steps (ignore ×0, ×1, ÷1 and results < 0)
-  const multDivSteps = solution.filter(
-    step =>
-      (step.op === '*' || step.op === '/') &&
-      step.a > 1 &&
-      step.b > 1 &&
-      Number.isInteger(step.result) &&
-      step.result >= 0
-  );
-
-  // Must include at least one meaningful mult/div
-  if (multDivSteps.length === 0) return false;
-
-  // For Levels 1-5 require exactly one meaningful mult/div step (the dominant fact)
-  if (multDivSteps.length !== 1) return false;
-
-  const dominant = multDivSteps[0];
-
-  // Dominant must use exactly one required operand (e.g. a 2 or 5 for level 1)
-  const aReq = required.includes(dominant.a);
-  const bReq = required.includes(dominant.b);
-  if (aReq === bReq) return false; // either both or neither => reject
-
-  // The other operand must be in the allowed partner set
-  const other = aReq ? dominant.b : dominant.a;
-  if (!partners.includes(other)) return false;
-
-  // Enforce partner-size limit: both operands used in the dominant step must be reasonable
-  if (dominant.a > partnerMax || dominant.b > partnerMax) return false;
-
-  // Both operands used in the dominant step must come from the original numbers (nums).
-  // Check multiplicity: if a === b we need at least two occurrences in nums.
-  const needA = dominant.a;
-  const needB = dominant.b;
-  if (needA === needB) {
-    if (countIn(nums, needA) < 2) return false;
-  } else {
-    if (countIn(nums, needA) < 1 || countIn(nums, needB) < 1) return false;
-  }
-
-  // The required operand must be present in the original numbers (nums) and not manufactured earlier.
-  const requiredValue = aReq ? dominant.a : dominant.b;
-  if (!nums.includes(requiredValue)) return false;
-
-  // Also ensure required wasn't manufactured earlier (no earlier + or - produced the required value)
-  const domIndex = solution.indexOf(dominant);
-  if (domIndex === -1) return false; // fail-safe
-
-  for (let k = 0; k < domIndex; k++) {
-    const s = solution[k];
-    if ((s.op === '+' || s.op === '-') && s.result === requiredValue) {
-      return false;
+  // Relaxed fallback: accept any solvable target (ignore solutionUsesRequiredFact)
+  for (let extra = 0; extra < 500 && !sol; extra++) {
+    const t2 = randInt(state.max);
+    if (nums.includes(t2)) continue;
+    const s2 = solve([...nums], t2);
+    if (s2) {
+      sol = s2;
+      t = t2;
+      console.warn('generateProblem: falling back to relaxed solution', { nums, t });
+      break;
     }
   }
 
-  // Prevent mult/div chaining: no other mult/div step should use the result of any other
-  // mult/div step as an operand unless that earlier step is the dominant.
-  for (let i = 0; i < solution.length; i++) {
-    const s = solution[i];
-    if (s.op !== '*' && s.op !== '/') continue;
-    for (let j = 0; j < solution.length; j++) {
-      if (i === j) continue;
-      const t = solution[j];
-      if (t.op !== '*' && t.op !== '/') continue;
-      // If s.result is used as an operand in t, then s must be the dominant
-      if ((t.a === s.result || t.b === s.result) && s !== dominant) {
-        return false;
-      }
-    }
+  // If still no solution, render the starting numbers and abort gracefully
+  if (!sol) {
+    console.error('generateProblem: giving up - no solution found', { nums });
+
+    state.numbers = nums.slice();
+    state.original = nums.slice();
+    state.target = '--';
+    state.solution = [];
+
+    targetEl.textContent = '--';
+    renderNumbers(true);
+
+    // ensure controls are in a sane state
+    hintBtn.classList.add('disabled');
+    resetBtn.classList.add('disabled');
+    solutionBtn.classList.add('disabled');
+    startBtn.classList.remove('disabled');
+
+    return;
   }
-
-  // 0 and 1 are allowed but only as secondary/identity factors; they cannot be the dominant step because
-  // we collected only meaningful steps with operands > 1. (This preserves your "0/1 secondary" rule.)
-
-  // Passed all checks
-  return true;
 }
 
     function generateProblem() {
