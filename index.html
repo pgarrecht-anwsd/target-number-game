@@ -608,18 +608,25 @@ function generateProblem() {
   let t, sol = null;
 
   for (let tries = 0; tries < 60; tries++) {
-    t = Math.random() < 0.6
-      ? preferredTarget(nums) ?? randInt(state.max)
-      : randInt(state.max);
+  t = Math.random() < 0.6
+    ? preferredTarget(nums) ?? randInt(state.max)
+    : randInt(state.max);
 
-    if (nums.includes(t)) continue;
+  if (nums.includes(t)) continue;
 
-    sol = solve([...nums], t);
-    if (!sol) continue;
-    if (!solutionUsesRequiredFact(sol, nums)) continue;
+  sol = solve([...nums], t);
+  if (!sol) continue;
 
-    break;
+  // NEW: reject solutions that use only addition/subtraction for non-free-play levels
+  // (i.e., require at least one meaningful multiplication or division step)
+  if (state.level !== 6 && !sol.some(step => step.op === '*' || step.op === '/')) {
+    continue;
   }
+
+  if (!solutionUsesRequiredFact(sol, nums)) continue;
+
+  break;
+}
 
   if (!sol) return generateProblem();
 
