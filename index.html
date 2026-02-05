@@ -487,9 +487,8 @@ function solutionUsesRequiredFact(solution, nums) {
   if (multDivSteps.length === 0) return false;
 
   // For Levels 1-5 require exactly one meaningful mult/div step (the dominant fact)
-  if (multDivSteps.length !== 1) return false;
-
-  const dominant = multDivSteps[0];
+ const dominant = findDominantMultDiv(solution);
+if (!dominant) return false;
 
   // Dominant must use exactly one required operand (e.g. a 2 or 5 for level 1)
   const aReq = required.includes(dominant.a);
@@ -523,10 +522,29 @@ function solutionUsesRequiredFact(solution, nums) {
 
   for (let k = 0; k < domIndex; k++) {
     const s = solution[k];
-    if ((s.op === '+' || s.op === '-') && s.result === requiredValue) {
-      return false;
-    }
+    if (
+  (s.op === '+' || s.op === '-' || s.op === '*' || s.op === '/') &&
+  s.result === requiredValue &&
+  !(s.op === '*' && (s.a === 1 || s.b === 1))
+) {
+  return false;
+}
+
   }
+  // Find which mult/div feeds the final result
+function findDominantMultDiv(solution) {
+  const final = solution[solution.length - 1];
+
+  // If final step is itself × or ÷, that's the dominant one
+  if (final.op === '*' || final.op === '/') return final;
+
+  // Otherwise, find a mult/div whose result is used as an operand in the final step
+  return solution.find(
+    s =>
+      (s.op === '*' || s.op === '/') &&
+      (final.a === s.result || final.b === s.result)
+  ) || null;
+}
 
   // Prevent mult/div chaining: no other mult/div step should use the result of any other
   // mult/div step as an operand unless that earlier step is the dominant.
