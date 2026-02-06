@@ -439,6 +439,13 @@ function solutionUsesRequiredFact(solution, nums) {
         step.b > 1
     );
   }
+// Levels 1–5 must include at least one multiplication or division
+if (state.level <= 5) {
+  const hasMultDiv = solution.some(
+    s => s.op === '*' || s.op === '/'
+  );
+  if (!hasMultDiv) return false;
+}
 
   // Define level-specific required bases and partner sets (fact families)
   let required = [];
@@ -465,6 +472,36 @@ function solutionUsesRequiredFact(solution, nums) {
     // Unknown level: be permissive
     return true;
   }
+ 
+  // cap level 6 intermediate values
+  if (state.level === 6) {
+  const MAX_INTERMEDIATE = 150; // or 100
+
+  for (const step of solution) {
+    if (Math.abs(step.result) > MAX_INTERMEDIATE) {
+      return false;
+    }
+  }
+
+  return solution.some(
+    step =>
+      (step.op === '*' || step.op === '/') &&
+      step.a > 1 &&
+      step.b > 1
+  );
+}
+
+  // second × or ÷ is allowed only if it is a trivial or scaffold fact
+function isScaffoldFact(step) {
+  if (step.op !== '*' && step.op !== '/') return false;
+  const a = step.a;
+  const b = step.b;
+  return (
+    a <= 10 &&
+    b <= 10 &&
+    (a === 2 || a === 5 || a === 10 || b === 2 || b === 5 || b === 10)
+  );
+}
 
   // Helper to count occurrences in an array
   const countIn = (arr, v) => arr.reduce((c, x) => c + (x === v ? 1 : 0), 0);
@@ -489,6 +526,21 @@ function solutionUsesRequiredFact(solution, nums) {
   // For Levels 1-5 require exactly one meaningful mult/div step (the dominant fact)
  const dominant = findDominantMultDiv(solution);
 if (!dominant) return false;
+
+  // contributing mult div facts
+  const contributingMultDiv = solution.filter(
+  s =>
+    (s.op === '*' || s.op === '/') &&
+    usedValues.has(s.result)
+);
+
+// Must have exactly one dominant fact,
+// any others must be scaffold facts
+const nonScaffold = contributingMultDiv.filter(
+  s => s !== dominant && !isScaffoldFact(s)
+);
+
+if (nonScaffold.length > 0) return false;
 
   // Dominant must use exactly one required operand (e.g. a 2 or 5 for level 1)
   const aReq = required.includes(dominant.a);
