@@ -430,8 +430,73 @@ if (a !== 0 && b % a === 0)
        Problem generation
        -------------------------------------------------- */
 function solutionUsesRequiredFact(solution, nums) {
-  // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
+
+  /* ---------- helpers ---------- */
+
+  function countIn(arr, v) {
+    return arr.reduce((c, x) => c + (x === v ? 1 : 0), 0);
+  }
+
+  function findDominantMultDiv(solution) {
+    const final = solution[solution.length - 1];
+
+    if (final.op === '*' || final.op === '/') return final;
+
+    return solution.find(
+      s =>
+        (s.op === '*' || s.op === '/') &&
+        (final.a === s.result || final.b === s.result)
+    ) || null;
+  }
+
+  function getValuesContributingToTarget(solution) {
+    const used = new Set();
+    const final = solution[solution.length - 1];
+
+    used.add(final.a);
+    used.add(final.b);
+
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const step of solution) {
+        if (used.has(step.result)) {
+          if (!used.has(step.a)) {
+            used.add(step.a);
+            changed = true;
+          }
+          if (!used.has(step.b)) {
+            used.add(step.b);
+            changed = true;
+          }
+        }
+      }
+    }
+    return used;
+  }
+
+  function isScaffoldFact(step) {
+    if (step.op !== '*' && step.op !== '/') return false;
+    const a = step.a;
+    const b = step.b;
+    return (
+      a <= 10 &&
+      b <= 10 &&
+      (a === 2 || a === 5 || a === 10 || b === 2 || b === 5 || b === 10)
+    );
+  }
+
+  /* ---------- level 6: free play ---------- */
+
   if (state.level === 6) {
+    const MAX_INTERMEDIATE = 150;
+
+    for (const step of solution) {
+      if (Math.abs(step.result) > MAX_INTERMEDIATE) {
+        return false;
+      }
+    }
+
     return solution.some(
       step =>
         (step.op === '*' || step.op === '/') &&
@@ -439,185 +504,87 @@ function solutionUsesRequiredFact(solution, nums) {
         step.b > 1
     );
   }
-// Levels 1–5 must include at least one multiplication or division
-if (state.level <= 5) {
+
+  /* ---------- levels 1–5: must include × or ÷ ---------- */
+
   const hasMultDiv = solution.some(
     s => s.op === '*' || s.op === '/'
   );
   if (!hasMultDiv) return false;
-}
 
-  // Define level-specific required bases and partner sets (fact families)
+  /* ---------- level configuration ---------- */
+
   let required = [];
   let partners = [];
 
   if (state.level === 1) {
-    // Focus on 2x and 5x families
     required = [2, 5];
-    // Allow partner factors up to 10 for Level 1, but we'll bias against 10 in generation
     partners = [2,3,4,5,6,7,8,9,10];
   } else if (state.level === 2) {
     required = [3, 4];
-    partners = [2, 3, 4, 5];
+    partners = [2,3,4,5];
   } else if (state.level === 3) {
     required = [6, 7];
-    partners = [2, 3, 4, 5, 6, 7];
+    partners = [2,3,4,5,6,7];
   } else if (state.level === 4) {
     required = [8, 9];
-    partners = [2, 3, 4, 5, 6, 7, 8, 9];
+    partners = [2,3,4,5,6,7,8,9];
   } else if (state.level === 5) {
-    required = [6, 7, 8, 9];
-    partners = [2, 3, 4, 5, 6, 7, 8, 9];
+    required = [6,7,8,9];
+    partners = [2,3,4,5,6,7,8,9];
   } else {
-    // Unknown level: be permissive
     return true;
   }
- 
-  // cap level 6 intermediate values
-  if (state.level === 6) {
-  const MAX_INTERMEDIATE = 150; // or 100
 
-  for (const step of solution) {
-    if (Math.abs(step.result) > MAX_INTERMEDIATE) {
-      return false;
-    }
-  }
+  /* ---------- dominance + dependency ---------- */
 
-  return solution.some(
-    step =>
-      (step.op === '*' || step.op === '/') &&
-      step.a > 1 &&
-      step.b > 1
-  );
-}
+  const dominant = findDominantMultDiv(solution);
+  if (!dominant) return false;
 
-  // second × or ÷ is allowed only if it is a trivial or scaffold fact
-function isScaffoldFact(step) {
-  if (step.op !== '*' && step.op !== '/') return false;
-  const a = step.a;
-  const b = step.b;
-  return (
-    a <= 10 &&
-    b <= 10 &&
-    (a === 2 || a === 5 || a === 10 || b === 2 || b === 5 || b === 10)
-  );
-}
+  const usedValues = getValuesContributingToTarget(solution);
 
-  // Helper to count occurrences in an array
-  const countIn = (arr, v) => arr.reduce((c, x) => c + (x === v ? 1 : 0), 0);
-
-  // Choose a conservative partner-size limit per level.
-  // For Level 1 we enforce partners <= 10 (you can relax this if needed).
-  const partnerMax = state.level === 1 ? 10 : 12;
-
-  // Collect meaningful multiplication/division steps (ignore ×0, ×1, ÷1 and results < 0)
-  const multDivSteps = solution.filter(
-    step =>
-      (step.op === '*' || step.op === '/') &&
-      step.a > 1 &&
-      step.b > 1 &&
-      Number.isInteger(step.result) &&
-      step.result >= 0
-  );
-
-  // Must include at least one meaningful mult/div
-  if (multDivSteps.length === 0) return false;
-
-  // For Levels 1-5 require exactly one meaningful mult/div step (the dominant fact)
- const dominant = findDominantMultDiv(solution);
-if (!dominant) return false;
-
-  // contributing mult div facts
   const contributingMultDiv = solution.filter(
-  s =>
-    (s.op === '*' || s.op === '/') &&
-    usedValues.has(s.result)
-);
+    s =>
+      (s.op === '*' || s.op === '/') &&
+      usedValues.has(s.result)
+  );
 
-// Must have exactly one dominant fact,
-// any others must be scaffold facts
-const nonScaffold = contributingMultDiv.filter(
-  s => s !== dominant && !isScaffoldFact(s)
-);
+  const nonScaffold = contributingMultDiv.filter(
+    s => s !== dominant && !isScaffoldFact(s)
+  );
 
-if (nonScaffold.length > 0) return false;
+  if (nonScaffold.length > 0) return false;
 
-  // Dominant must use exactly one required operand (e.g. a 2 or 5 for level 1)
+  /* ---------- required fact enforcement ---------- */
+
   const aReq = required.includes(dominant.a);
   const bReq = required.includes(dominant.b);
-  if (aReq === bReq) return false; // either both or neither => reject
+  if (aReq === bReq) return false;
 
-  // The other operand must be in the allowed partner set
   const other = aReq ? dominant.b : dominant.a;
   if (!partners.includes(other)) return false;
 
-  // Enforce partner-size limit: both operands used in the dominant step must be reasonable
+  const partnerMax = state.level === 1 ? 10 : 12;
   if (dominant.a > partnerMax || dominant.b > partnerMax) return false;
 
-  // Both operands used in the dominant step must come from the original numbers (nums).
-  // Check multiplicity: if a === b we need at least two occurrences in nums.
-  const needA = dominant.a;
-  const needB = dominant.b;
-  if (needA === needB) {
-    if (countIn(nums, needA) < 2) return false;
+  if (dominant.a === dominant.b) {
+    if (countIn(nums, dominant.a) < 2) return false;
   } else {
-    if (countIn(nums, needA) < 1 || countIn(nums, needB) < 1) return false;
+    if (
+      countIn(nums, dominant.a) < 1 ||
+      countIn(nums, dominant.b) < 1
+    ) return false;
   }
 
-  // The required operand must be present in the original numbers (nums) and not manufactured earlier.
   const requiredValue = aReq ? dominant.a : dominant.b;
   if (!nums.includes(requiredValue)) return false;
 
-  // Also ensure required wasn't manufactured earlier (no earlier + or - produced the required value)
   const domIndex = solution.indexOf(dominant);
-  if (domIndex === -1) return false; // fail-safe
-
-  for (let k = 0; k < domIndex; k++) {
-    const s = solution[k];
-    if (
-  (s.op === '+' || s.op === '-' || s.op === '*' || s.op === '/') &&
-  s.result === requiredValue &&
-  !(s.op === '*' && (s.a === 1 || s.b === 1))
-) {
-  return false;
-}
-
-  }
-  // Find which mult/div feeds the final result
-function findDominantMultDiv(solution) {
-  const final = solution[solution.length - 1];
-
-  // If final step is itself × or ÷, that's the dominant one
-  if (final.op === '*' || final.op === '/') return final;
-
-  // Otherwise, find a mult/div whose result is used as an operand in the final step
-  return solution.find(
-    s =>
-      (s.op === '*' || s.op === '/') &&
-      (final.a === s.result || final.b === s.result)
-  ) || null;
-}
-
-  // Prevent mult/div chaining: no other mult/div step should use the result of any other
-  // mult/div step as an operand unless that earlier step is the dominant.
-  for (let i = 0; i < solution.length; i++) {
+  for (let i = 0; i < domIndex; i++) {
     const s = solution[i];
-    if (s.op !== '*' && s.op !== '/') continue;
-    for (let j = 0; j < solution.length; j++) {
-      if (i === j) continue;
-      const t = solution[j];
-      if (t.op !== '*' && t.op !== '/') continue;
-      // If s.result is used as an operand in t, then s must be the dominant
-      if ((t.a === s.result || t.b === s.result) && s !== dominant) {
-        return false;
-      }
-    }
+    if (s.result === requiredValue) return false;
   }
 
-  // 0 and 1 are allowed but only as secondary/identity factors; they cannot be the dominant step because
-  // we collected only meaningful steps with operands > 1. (This preserves your "0/1 secondary" rule.)
-
-  // Passed all checks
   return true;
 }
 
