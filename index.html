@@ -527,6 +527,14 @@ function solutionUsesRequiredFact(solution, nums) {
   );
   if (!hasMultDiv) return false;
 
+  if (state.level === 1) {
+  const multDivCount = solution.filter(
+    step => step.op === '*' || step.op === '/'
+  ).length;
+
+  if (multDivCount > 1) return false;
+}
+
   /* ---------- level configuration ---------- */
 
   let required = [];
