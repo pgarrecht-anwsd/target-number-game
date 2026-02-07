@@ -546,6 +546,18 @@ function solutionUsesRequiredFact(solution, nums) {
 
   if (multDivCount > 1) return false;
 }
+if (state.level === 1) {
+  // Any mult/div must either be dominant or feed into it
+  const final = solution[solution.length - 1];
+  const contributing = solution.filter(
+    s =>
+      (s.op === '*' || s.op === '/') &&
+      (final.a === s.result || final.b === s.result)
+  );
+
+  if (contributing.length === 0)
+    return reject("Level 1: mult/div does not contribute to target");
+}
 
   /* ---------- level configuration ---------- */
 
