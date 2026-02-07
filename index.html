@@ -483,6 +483,28 @@ if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
         continue;
     }
 }
+// --- Dominant must feed final result ---
+// Place this **after** the previous scaffold/dominant checks, still inside the "for (const o of ops)" loop
+
+if (state.level >= 1 && state.level <= 5 && (o.op === '*' || o.op === '/')) {
+    // Determine if there is already a real dominant mult/div in stepsSoFar
+    const dominantStep = stepsSoFar.find(
+        s => (s.op === '*' || s.op === '/') && s.a > 1 && s.b > 1
+    );
+
+    if (dominantStep) {
+        // Check if the dominant result is actually used as an operand in the final step
+        // For the current partial solution, final operand is o.v if this is the last step
+        const feedsFinal = rest.includes(dominantStep.a) || rest.includes(dominantStep.b) || rest.includes(dominantStep.v);
+
+        if (!feedsFinal) {
+            if (DEBUG) {
+                console.log(`[REJECT L${state.level}] dominant ×/÷ does not feed the final result`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+            }
+            continue; // prune branch
+        }
+    }
+}
 
             const r = solve([o.v, ...rest], target);
            if (r) {
