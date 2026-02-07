@@ -270,7 +270,7 @@
     /* --------------------------------------------------
        Utility functions
        -------------------------------------------------- */
-const DEBUG_SOLVER = true; // set to false to silence
+const DEBUG_SOLVER_SOLVER = true; // set to false to silence
 
     // Random integer from 0..m
     const randInt = m => Math.floor(Math.random() * (m + 1));
@@ -415,9 +415,9 @@ if (a !== 0 && b % a === 0)
             // --- Insert this inside your "for (const o of ops)" loop, before "const r = solve(...)" ---
 if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
 
-    // DEBUG logging
-    if (DEBUG) {
-        console.log(`[DEBUG] Considering operation: ${o.a} ${o.op} ${o.b} = ${o.v}`);
+    // DEBUG_SOLVER logging
+    if (DEBUG_SOLVER) {
+        console.log(`[DEBUG_SOLVER] Considering operation: ${o.a} ${o.op} ${o.b} = ${o.v}`);
     }
 
     // Determine if this is a "real" multiplication/division (>1 operands)
@@ -434,7 +434,7 @@ if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
             // Only allow scaffold facts: 2, 5, 10, occasionally 1
             const allowedScaffold = [1, 2, 5, 10];
             if (!allowedScaffold.includes(o.a) && !allowedScaffold.includes(o.b)) {
-                if (DEBUG) {
+                if (DEBUG_SOLVER) {
                     console.log(`[REJECT L${state.level}] non-scaffold secondary ×/÷ present`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
                 }
                 continue; // prune branch
@@ -458,7 +458,7 @@ if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
 
         // Reject if both or neither operands are required (dominant must have exactly one)
         if (aReq === bReq && isRealMultDiv) {
-            if (DEBUG) {
+            if (DEBUG_SOLVER) {
                 console.log(`[REJECT L${state.level}] dominant must use exactly one required operand`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
             }
             continue; // prune branch
@@ -468,7 +468,7 @@ if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
     // Max intermediate value check (Level 6 or optional limit for other levels)
     const MAX_INTERMEDIATE = 150;
     if (Math.abs(o.v) > MAX_INTERMEDIATE) {
-        if (DEBUG) {
+        if (DEBUG_SOLVER) {
             console.log(`[REJECT L${state.level}] intermediate value too large: ${o.v}`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
         }
         continue; // prune branch
@@ -477,7 +477,7 @@ if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
     // Optional: partner size / allowed range (to avoid huge products)
     const partnerMax = state.level === 1 ? 10 : 12;
     if (o.a > partnerMax || o.b > partnerMax) {
-        if (DEBUG) {
+        if (DEBUG_SOLVER) {
             console.log(`[REJECT L${state.level}] operand exceeds partnerMax`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
         }
         continue;
@@ -498,7 +498,7 @@ if (state.level >= 1 && state.level <= 5 && (o.op === '*' || o.op === '/')) {
         const feedsFinal = rest.includes(dominantStep.a) || rest.includes(dominantStep.b) || rest.includes(dominantStep.v);
 
         if (!feedsFinal) {
-            if (DEBUG) {
+            if (DEBUG_SOLVER) {
                 console.log(`[REJECT L${state.level}] dominant ×/÷ does not feed the final result`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
             }
             continue; // prune branch
@@ -527,7 +527,7 @@ if (state.level >= 1 && state.level <= 5 && (o.op === '*' || o.op === '/')) {
 function solutionUsesRequiredFact(solution, nums) {
 
   const reject = (reason) => {
-    if (DEBUG_SOLVER) {
+    if (DEBUG_SOLVER_SOLVER) {
       console.warn(
         `[REJECT L${state.level}]`,
         reason,
