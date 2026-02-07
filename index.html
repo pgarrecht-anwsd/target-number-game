@@ -412,6 +412,78 @@ if (a !== 0 && b % a === 0)
           for (const o of ops) {
             if (!Number.isInteger(o.v)) continue;
             if (o.v < 0) continue;
+            // --- Insert this inside your "for (const o of ops)" loop, before "const r = solve(...)" ---
+if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
+
+    // DEBUG logging
+    if (DEBUG) {
+        console.log(`[DEBUG] Considering operation: ${o.a} ${o.op} ${o.b} = ${o.v}`);
+    }
+
+    // Determine if this is a "real" multiplication/division (>1 operands)
+    const isRealMultDiv = o.a > 1 && o.b > 1;
+
+    // Track previously used "real" mult/div in this partial solution
+    const usedRealMultDiv = stepsSoFar.some(
+        s => (s.op === '*' || s.op === '/') && s.a > 1 && s.b > 1
+    );
+
+    // Level 1–5: allow only one dominant "real" mult/div; others must be scaffold
+    if (state.level >= 1 && state.level <= 5) {
+        if (usedRealMultDiv && isRealMultDiv) {
+            // Only allow scaffold facts: 2, 5, 10, occasionally 1
+            const allowedScaffold = [1, 2, 5, 10];
+            if (!allowedScaffold.includes(o.a) && !allowedScaffold.includes(o.b)) {
+                if (DEBUG) {
+                    console.log(`[REJECT L${state.level}] non-scaffold secondary ×/÷ present`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+                }
+                continue; // prune branch
+            }
+        }
+    }
+
+    // Level-specific operand enforcement (required factor)
+    const levelRequired = {
+        1: [2, 5],
+        2: [3, 4],
+        3: [6, 7],
+        4: [8, 9],
+        5: [6, 7, 8, 9],
+        6: [] // free play
+    }[state.level];
+
+    if (levelRequired.length > 0) {
+        const aReq = levelRequired.includes(o.a);
+        const bReq = levelRequired.includes(o.b);
+
+        // Reject if both or neither operands are required (dominant must have exactly one)
+        if (aReq === bReq && isRealMultDiv) {
+            if (DEBUG) {
+                console.log(`[REJECT L${state.level}] dominant must use exactly one required operand`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+            }
+            continue; // prune branch
+        }
+    }
+
+    // Max intermediate value check (Level 6 or optional limit for other levels)
+    const MAX_INTERMEDIATE = 150;
+    if (Math.abs(o.v) > MAX_INTERMEDIATE) {
+        if (DEBUG) {
+            console.log(`[REJECT L${state.level}] intermediate value too large: ${o.v}`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+        }
+        continue; // prune branch
+    }
+
+    // Optional: partner size / allowed range (to avoid huge products)
+    const partnerMax = state.level === 1 ? 10 : 12;
+    if (o.a > partnerMax || o.b > partnerMax) {
+        if (DEBUG) {
+            console.log(`[REJECT L${state.level}] operand exceeds partnerMax`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+        }
+        continue;
+    }
+}
+
             const r = solve([o.v, ...rest], target);
            if (r) {
   return [{
