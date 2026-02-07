@@ -270,6 +270,7 @@
     /* --------------------------------------------------
        Utility functions
        -------------------------------------------------- */
+const DEBUG_SOLVER = true; // set to false to silence
 
     // Random integer from 0..m
     const randInt = m => Math.floor(Math.random() * (m + 1));
@@ -431,6 +432,17 @@ if (a !== 0 && b % a === 0)
        -------------------------------------------------- */
 function solutionUsesRequiredFact(solution, nums) {
 
+  const reject = (reason) => {
+    if (DEBUG_SOLVER) {
+      console.warn(
+        `[REJECT L${state.level}]`,
+        reason,
+        solution.map(s => `${s.a} ${s.op} ${s.b} = ${s.result}`)
+      );
+    }
+    return false;
+  };
+
   /* ---------- helpers ---------- */
 
   function countIn(arr, v) {
@@ -562,7 +574,8 @@ function solutionUsesRequiredFact(solution, nums) {
   /* ---------- dominance + dependency ---------- */
 
   const dominant = findDominantMultDiv(solution);
-  if (!dominant) return false;
+  if (!dominant) 
+return reject("no dominant ×/÷ feeds the final result");
 
   const usedValues = getValuesContributingToTarget(solution);
 
@@ -576,36 +589,44 @@ function solutionUsesRequiredFact(solution, nums) {
     s => s !== dominant && !isScaffoldFact(s)
   );
 
-  if (nonScaffold.length > 0) return false;
+  if (nonScaffold.length > 0) 
+return reject("non-scaffold secondary ×/÷ present");
 
   /* ---------- required fact enforcement ---------- */
 
   const aReq = required.includes(dominant.a);
   const bReq = required.includes(dominant.b);
-  if (aReq === bReq) return false;
+  if (aReq === bReq) 
+ return reject("dominant must use exactly one required operand");
 
   const other = aReq ? dominant.b : dominant.a;
-  if (!partners.includes(other)) return false;
+  if (!partners.includes(other)) 
+ return reject(`invalid partner for dominant fact: ${other}`);
 
   const partnerMax = state.level === 1 ? 10 : 12;
-  if (dominant.a > partnerMax || dominant.b > partnerMax) return false;
+  if (dominant.a > partnerMax || dominant.b > partnerMax) 
+ return reject("dominant operands exceed partner size limit");
 
   if (dominant.a === dominant.b) {
-    if (countIn(nums, dominant.a) < 2) return false;
+    if (countIn(nums, dominant.a) < 2) 
+   return reject("dominant requires two identical operands not in nums");
   } else {
     if (
       countIn(nums, dominant.a) < 1 ||
       countIn(nums, dominant.b) < 1
-    ) return false;
+    ) 
+   return reject("dominant operands not both present in original numbers");
   }
 
   const requiredValue = aReq ? dominant.a : dominant.b;
-  if (!nums.includes(requiredValue)) return false;
-
+  if (!nums.includes(requiredValue)) 
+ return reject("required operand was not in original numbers");
+  
   const domIndex = solution.indexOf(dominant);
   for (let i = 0; i < domIndex; i++) {
     const s = solution[i];
-    if (s.result === requiredValue) return false;
+    if (s.result === requiredValue) 
+   return reject("required operand manufactured before dominant step");
   }
 
   return true;
