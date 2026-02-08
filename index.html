@@ -527,7 +527,7 @@ if (state.level >= 1 && state.level <= 5 && (o.op === '*' || o.op === '/')) {
 function solutionUsesRequiredFact(solution, nums) {
 
   const reject = (reason) => {
-    if (DEBUG_SOLVER_SOLVER) {
+    if (DEBUG_SOLVER) {
       console.warn(
         `[REJECT L${state.level}]`,
         reason,
