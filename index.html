@@ -424,9 +424,9 @@ if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
     const isRealMultDiv = o.a > 1 && o.b > 1;
 
     // Track previously used "real" mult/div in this partial solution
-    const usedRealMultDiv = stepsSoFar.some(
-        s => (s.op === '*' || s.op === '/') && s.a > 1 && s.b > 1
-    );
+    // const usedRealMultDiv = stepsSoFar.some(
+    //    s => (s.op === '*' || s.op === '/') && s.a > 1 && s.b > 1
+  //  );
 
     // Level 1–5: allow only one dominant "real" mult/div; others must be scaffold
     if (state.level >= 1 && state.level <= 5) {
@@ -434,9 +434,9 @@ if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
             // Only allow scaffold facts: 2, 5, 10, occasionally 1
             const allowedScaffold = [1, 2, 5, 10];
             if (!allowedScaffold.includes(o.a) && !allowedScaffold.includes(o.b)) {
-                if (DEBUG_SOLVER) {
-                    console.log(`[REJECT L${state.level}] non-scaffold secondary ×/÷ present`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
-                }
+     //           if (DEBUG_SOLVER) {
+     //               console.log(`[REJECT L${state.level}] non-scaffold secondary ×/÷ present`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+     //           }
                 continue; // prune branch
             }
         }
@@ -468,29 +468,29 @@ if (state.level >= 1 && state.level <= 6 && (o.op === '*' || o.op === '/')) {
     // Max intermediate value check (Level 6 or optional limit for other levels)
     const MAX_INTERMEDIATE = 150;
     if (Math.abs(o.v) > MAX_INTERMEDIATE) {
-        if (DEBUG_SOLVER) {
-            console.log(`[REJECT L${state.level}] intermediate value too large: ${o.v}`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
-        }
+    //    if (DEBUG_SOLVER) {
+    //        console.log(`[REJECT L${state.level}] intermediate value too large: ${o.v}`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+    //    }
         continue; // prune branch
     }
 
     // Optional: partner size / allowed range (to avoid huge products)
     const partnerMax = state.level === 1 ? 10 : 12;
     if (o.a > partnerMax || o.b > partnerMax) {
-        if (DEBUG_SOLVER) {
-            console.log(`[REJECT L${state.level}] operand exceeds partnerMax`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
-        }
+     //   if (DEBUG_SOLVER) {
+     //       console.log(`[REJECT L${state.level}] operand exceeds partnerMax`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+     //   }
         continue;
     }
 }
 // --- Dominant must feed final result ---
 // Place this **after** the previous scaffold/dominant checks, still inside the "for (const o of ops)" loop
 
-if (state.level >= 1 && state.level <= 5 && (o.op === '*' || o.op === '/')) {
+//if (state.level >= 1 && state.level <= 5 && (o.op === '*' || o.op === '/')) {
     // Determine if there is already a real dominant mult/div in stepsSoFar
-    const dominantStep = stepsSoFar.find(
-        s => (s.op === '*' || s.op === '/') && s.a > 1 && s.b > 1
-    );
+ //   const dominantStep = stepsSoFar.find(
+ //       s => (s.op === '*' || s.op === '/') && s.a > 1 && s.b > 1
+ //   );
 
     if (dominantStep) {
         // Check if the dominant result is actually used as an operand in the final step
@@ -498,9 +498,9 @@ if (state.level >= 1 && state.level <= 5 && (o.op === '*' || o.op === '/')) {
         const feedsFinal = rest.includes(dominantStep.a) || rest.includes(dominantStep.b) || rest.includes(dominantStep.v);
 
         if (!feedsFinal) {
-            if (DEBUG_SOLVER) {
-                console.log(`[REJECT L${state.level}] dominant ×/÷ does not feed the final result`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
-            }
+        //    if (DEBUG_SOLVER) {
+        //        console.log(`[REJECT L${state.level}] dominant ×/÷ does not feed the final result`, stepsSoFar.concat([`${o.a} ${o.op} ${o.b} = ${o.v}`]));
+        //    }
             continue; // prune branch
         }
     }
