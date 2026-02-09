@@ -430,6 +430,11 @@ if (a !== 0 && b % a === 0)
        Problem generation
        -------------------------------------------------- */
 function solutionUsesRequiredFact(solution, nums) {
+   // Universal rule: reject add/sub-only solutions
+  const hasAnyMultDiv = solution.some(
+    step => step.op === '*' || step.op === '/'
+  );
+  if (!hasAnyMultDiv) return false;
   // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
   if (state.level === 6) {
     return solution.some(
