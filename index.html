@@ -626,7 +626,9 @@ function generateProblem() {
     break;
   }
 
-  if (!sol) return generateProblem();
+  if (!sol || !solutionUsesRequiredFact(sol, nums)) {
+  return generateProblem();
+}
 
   state.numbers  = nums.slice();
   state.original = nums.slice();
