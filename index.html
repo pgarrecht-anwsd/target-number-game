@@ -479,14 +479,26 @@ function solutionUsesRequiredFact(solution, nums) {
   const partnerMax = state.level === 1 ? 10 : 12;
 
   // Collect meaningful multiplication/division steps (ignore ×0, ×1, ÷1 and results < 0)
-  const multDivSteps = solution.filter(
-    step =>
-      (step.op === '*' || step.op === '/') &&
-      step.a > 1 &&
-      step.b > 1 &&
-      Number.isInteger(step.result) &&
-      step.result >= 0
-  );
+ const multDivSteps = solution.filter(
+  step =>
+    (step.op === '*' || step.op === '/') &&
+    step.a > 1 &&
+    step.b > 1 &&
+    Number.isInteger(step.result) &&
+    step.result > 1 &&                  // eliminate ÷ producing 1
+    !(step.op === '/' && step.a === step.b)  // eliminate 3÷3, 4÷4, etc.
+);
+const squareMultSteps = solution.filter(
+  step => step.op === '*' && step.a === step.b && step.a > 1
+);
+
+const squareDivSteps = solution.filter(
+  step => step.op === '/' && step.a === step.b * step.b
+);
+
+const hasSquareFact =
+  squareMultSteps.length > 0 || squareDivSteps.length > 0;
+
 // Prefer division sometimes to increase variety
 if (multDivSteps.length === 1) {
   const d = multDivSteps[0];
@@ -516,6 +528,19 @@ if (aReq === bReq) {
 if (dominant.op === '/' && dominant.a === dominant.b * dominant.b) {
   // allowed as long as divisor is valid
 }
+  // --- Occasional square requirement (all levels) ---
+const squareSteps = solution.filter(
+  step =>
+    step.op === '*' &&
+    step.a === step.b &&
+    step.a > 1
+);
+
+// 10% chance to require a square fact
+if (Math.random() < 0.10 && !hasSquareFact) {
+  return false;
+}
+
   // The other operand must be in the allowed partner set
   const other = aReq ? dominant.b : dominant.a;
   // Level 2: softly discourage ×5 dominance
@@ -617,9 +642,12 @@ if (Math.random() < 0.25) {
         let a = nums[i], b = nums[j];
 
         // multiplication (avoid ×1 and ×0)
-        if (a > 1 && b > 1) {
-          candidates.push(a * b);
-        }
+      if (a > 1 && b > 1) {
+  // Slightly reduce multiplication dominance
+  if (Math.random() < 0.6) {
+    candidates.push(a * b);
+  }
+}
 
         // clean division (avoid ÷1)
         if (b > 1 && a % b === 0) candidates.push(a / b);
