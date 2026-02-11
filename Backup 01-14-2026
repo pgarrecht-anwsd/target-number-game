@@ -430,6 +430,11 @@ if (a !== 0 && b % a === 0)
        Problem generation
        -------------------------------------------------- */
 function solutionUsesRequiredFact(solution, nums) {
+   // Universal rule: reject add/sub-only solutions
+  const hasAnyMultDiv = solution.some(
+    step => step.op === '*' || step.op === '/'
+  );
+  if (!hasAnyMultDiv) return false;
   // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
   if (state.level === 6) {
     return solution.some(
@@ -451,7 +456,7 @@ function solutionUsesRequiredFact(solution, nums) {
     partners = [2,3,4,5,6,7,8,9,10];
   } else if (state.level === 2) {
     required = [3, 4];
-    partners = [2, 3, 4, 5];
+    partners = [2, 3, 4, 5, 6];
   } else if (state.level === 3) {
     required = [6, 7];
     partners = [2, 3, 4, 5, 6, 7];
@@ -494,10 +499,18 @@ function solutionUsesRequiredFact(solution, nums) {
   // Dominant must use exactly one required operand (e.g. a 2 or 5 for level 1)
   const aReq = required.includes(dominant.a);
   const bReq = required.includes(dominant.b);
-  if (aReq === bReq) return false; // either both or neither => reject
+  // Allow square facts like 4×4 and 5×5
+if (aReq === bReq) {
+  // allow if it's a square fact (a === b)
+  if (dominant.a !== dominant.b) return false;
+}
 
   // The other operand must be in the allowed partner set
   const other = aReq ? dominant.b : dominant.a;
+  // Level 2: softly discourage ×5 dominance
+if (state.level === 2 && other === 5) {
+  return Math.random() < 0.6 ? false : true;
+}
   if (!partners.includes(other)) return false;
 
   // Enforce partner-size limit: both operands used in the dominant step must be reasonable
@@ -621,7 +634,9 @@ function generateProblem() {
     break;
   }
 
-  if (!sol) return generateProblem();
+  if (!sol || !solutionUsesRequiredFact(sol, nums)) {
+  return generateProblem();
+}
 
   state.numbers  = nums.slice();
   state.original = nums.slice();
