@@ -631,7 +631,7 @@ function generateProblem() {
 
   let nums = [];
 
-  // Required anchor numbers by level — include Level 1 (2 or 5)
+  // Required anchor numbers by level
   let required = [];
   if (state.level === 1) required = [2, 5];
   if (state.level === 2) required = [3, 4];
@@ -646,13 +646,13 @@ function generateProblem() {
 
   // Fill remaining slots normally
   while (nums.length < state.mode) {
-    nums.push(randomInitialNumber(state.level, nums));
+    let n = randomInitialNumber(state.level, nums);
+
+    // --- FIX: prevent 0 as a starting number for Level 1 ---
+    if (state.level === 1 && n === 0) continue;
+
+    nums.push(n);
   }
-// Occasionally inject a duplicate to allow square facts (e.g., 4×4, 5×5)
-if (Math.random() < 0.25) {
-  const i = Math.floor(Math.random() * nums.length);
-  nums[Math.floor(Math.random() * nums.length)] = nums[i];
-}
 
   function preferredTarget(nums) {
     let candidates = [];
@@ -662,16 +662,19 @@ if (Math.random() < 0.25) {
         let a = nums[i], b = nums[j];
 
         // multiplication (avoid ×1 and ×0)
-      if (a > 1 && b > 1) {
-  // Slightly reduce multiplication dominance
-  if (Math.random() < 0.6) {
-    candidates.push(a * b);
-  }
-}
+        if (a > 1 && b > 1) {
+          candidates.push(a * b);
+        }
 
         // clean division (avoid ÷1)
         if (b > 1 && a % b === 0) candidates.push(a / b);
         if (a > 1 && b % a === 0) candidates.push(b / a);
+
+        // --- BOOST: occasional non-2 division targets (~10%) ---
+        if (Math.random() < 0.1) {
+          if (b > 1 && a % b !== 0 && a / b <= state.max) candidates.push(a / b);
+          if (a > 1 && b % a !== 0 && b / a <= state.max) candidates.push(b / a);
+        }
       }
     }
 
