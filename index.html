@@ -513,8 +513,8 @@ if (multDivSteps.length === 1) {
   // Must include at least one meaningful mult/div
   if (multDivSteps.length === 0) return false;
 
-  // For Levels 1-5 require exactly one meaningful mult/div step (the dominant fact)
-  if (multDivSteps.length !== 1) return false;
+  // For Levels 1-5 require at least one meaningful mult/div step
+  if (multDivSteps.length < 1) return false;
 
   const dominant = multDivSteps[0];
 
