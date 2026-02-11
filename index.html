@@ -487,6 +487,14 @@ function solutionUsesRequiredFact(solution, nums) {
       Number.isInteger(step.result) &&
       step.result >= 0
   );
+// Prefer division sometimes to increase variety
+if (multDivSteps.length === 1) {
+  const d = multDivSteps[0];
+  if (d.op === '*') {
+    // 40% chance: reject multiplication to let division through
+    if (Math.random() < 0.4) return false;
+  }
+}
 
   // Must include at least one meaningful mult/div
   if (multDivSteps.length === 0) return false;
@@ -504,7 +512,10 @@ if (aReq === bReq) {
   // allow if it's a square fact (a === b)
   if (dominant.a !== dominant.b) return false;
 }
-
+// Allow square-division facts like 16 ÷ 4 or 25 ÷ 5
+if (dominant.op === '/' && dominant.a === dominant.b * dominant.b) {
+  // allowed as long as divisor is valid
+}
   // The other operand must be in the allowed partner set
   const other = aReq ? dominant.b : dominant.a;
   // Level 2: softly discourage ×5 dominance
@@ -592,6 +603,11 @@ function generateProblem() {
   while (nums.length < state.mode) {
     nums.push(randomInitialNumber(state.level, nums));
   }
+// Occasionally inject a duplicate to allow square facts (e.g., 4×4, 5×5)
+if (Math.random() < 0.25) {
+  const i = Math.floor(Math.random() * nums.length);
+  nums[Math.floor(Math.random() * nums.length)] = nums[i];
+}
 
   function preferredTarget(nums) {
     let candidates = [];
