@@ -438,14 +438,25 @@ function solutionUsesRequiredFact(solution, nums) {
   );
   if (!hasAnyMultDiv) return false;
   // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
-  if (state.level === 6) {
-    return solution.some(
-      step =>
-        (step.op === '*' || step.op === '/') &&
-        step.a > 1 &&
-        step.b > 1
-    );
+if (state.level === 6) {
+  const meaningfulSteps = solution.filter(
+    step =>
+      (step.op === '*' || step.op === '/') &&
+      step.a > 1 &&
+      step.b > 1
+  );
+
+  // Require at least TWO meaningful × or ÷
+  if (meaningfulSteps.length < 2) return false;
+
+  // Prevent runaway ballooning
+  const maxIntermediate = 120;
+  if (solution.some(step => step.result > maxIntermediate)) {
+    return false;
   }
+
+  return true;
+}
 
   // Define level-specific required bases and partner sets (fact families)
   let required = [];
