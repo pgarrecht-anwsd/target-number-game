@@ -490,6 +490,24 @@ function solutionUsesRequiredFact(solution, nums) {
     step.result > 1 &&                  // eliminate ÷ producing 1
     !(step.op === '/' && step.a === step.b)  // eliminate 3÷3, 4÷4, etc.
 );
+  // Validate all meaningful mult/div steps
+for (const step of multDivSteps) {
+
+  const aReq = required.includes(step.a);
+  const bReq = required.includes(step.b);
+
+  // Must involve at least one required family number
+  if (!aReq && !bReq) return false;
+
+  const other = aReq ? step.b : step.a;
+
+  // Other factor must be in partner set
+  if (!partners.includes(other)) return false;
+
+  // Keep operand sizes reasonable
+  if (step.a > partnerMax || step.b > partnerMax) return false;
+}
+
 const squareMultSteps = solution.filter(
   step => step.op === '*' && step.a === step.b && step.a > 1
 );
