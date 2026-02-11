@@ -407,6 +407,8 @@ function randomInitialNumber(level, existing = []) {
 
 if (a !== 0 && b % a === 0)
   ops.push({ v: b / a, op: '/', ai: j, bi: i });
+// Slightly randomize operation order to reduce solver bias
+ops.sort(() => Math.random() - 0.5);
 
           for (const o of ops) {
             if (!Number.isInteger(o.v)) continue;
