@@ -205,28 +205,55 @@
   <div class="container">
 
     <!-- Header / Settings -->
-    <div class="header">
-      <div class="title">Target Number Game</div>
-      <div class="settings">
-        <button id="newGameBtn" class="btn">New Game</button>
-        Mode:
-        <select id="modeSelect">
-          <option value="4">4 numbers</option>
-          <option value="3">3 numbers</option>
-        </select>
-        
-        <select id="levelSelect">
-  <option value="1">Level 1 (0,1,2,5)</option>
-  <option value="2">Level 2 (3,4)</option>
-  <option value="3">Level 3 (6,7)</option>
-  <option value="4">Level 4 (8,9)</option>
-  <option value="5">Level 5 (6–9)</option>
-  <option value="6">Level 6 (0–12)</option>
-</select>
+<div class="header">
 
-        <button id="startBtn" class="btn">Start Game</button>
+  <div class="title">Target Number Game</div>
+
+  <!-- Primary Controls Row -->
+  <div class="settings-row">
+
+    <button id="newGameBtn" class="btn">New Game</button>
+
+    <!-- Difficulty -->
+    <div class="control-group">
+      <div class="control-label">Difficulty</div>
+      <div class="button-group" id="difficultyGroup">
+        <button class="btn difficulty-btn" data-difficulty="warmup">Warm-Up</button>
+        <button class="btn difficulty-btn" data-difficulty="workout">Workout</button>
+        <button class="btn difficulty-btn" data-difficulty="challenge">Challenge</button>
       </div>
     </div>
+
+    <!-- Mode -->
+    <div class="control-group">
+      <div class="control-label">Numbers</div>
+      <div class="button-group" id="modeGroup">
+        <button class="btn mode-btn active" data-mode="4">4 Numbers</button>
+        <button class="btn mode-btn" data-mode="3">3 Numbers</button>
+      </div>
+    </div>
+
+    <button id="startBtn" class="btn primary">Start Game</button>
+
+  </div>
+
+  <!-- Fact Focus (conditionally shown later via JS) -->
+  <div class="settings-row hidden" id="factFocusSection">
+
+    <div class="control-group">
+      <div class="control-label">Fact Focus</div>
+      <div class="button-group" id="factGroup">
+        <button class="btn fact-btn" data-level="1">2s & 5s</button>
+        <button class="btn fact-btn" data-level="2">3s & 4s</button>
+        <button class="btn fact-btn" data-level="3">6s & 7s</button>
+        <button class="btn fact-btn" data-level="4">8s & 9s</button>
+        <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
 
     <!-- Score / Target Display -->
     <div class="row">
