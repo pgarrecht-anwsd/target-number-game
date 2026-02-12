@@ -438,14 +438,25 @@ function solutionUsesRequiredFact(solution, nums) {
   );
   if (!hasAnyMultDiv) return false;
   // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
-  if (state.level === 6) {
-    return solution.some(
-      step =>
-        (step.op === '*' || step.op === '/') &&
-        step.a > 1 &&
-        step.b > 1
-    );
+if (state.level === 6) {
+  const meaningfulSteps = solution.filter(
+    step =>
+      (step.op === '*' || step.op === '/') &&
+      step.a > 1 &&
+      step.b > 1
+  );
+
+  // Require at least TWO meaningful × or ÷
+  if (meaningfulSteps.length < 2) return false;
+
+  // Prevent runaway ballooning
+  const maxIntermediate = 120;
+  if (solution.some(step => step.result > maxIntermediate)) {
+    return false;
   }
+
+  return true;
+}
 
   // Define level-specific required bases and partner sets (fact families)
   let required = [];
@@ -631,7 +642,7 @@ function generateProblem() {
 
   let nums = [];
 
-  // Required anchor numbers by level — include Level 1 (2 or 5)
+  // Required anchor numbers by level
   let required = [];
   if (state.level === 1) required = [2, 5];
   if (state.level === 2) required = [3, 4];
@@ -646,13 +657,13 @@ function generateProblem() {
 
   // Fill remaining slots normally
   while (nums.length < state.mode) {
-    nums.push(randomInitialNumber(state.level, nums));
+    let n = randomInitialNumber(state.level, nums);
+
+    // --- FIX: prevent 0 as a starting number for Level 1 ---
+    if (state.level === 1 && n === 0) continue;
+
+    nums.push(n);
   }
-// Occasionally inject a duplicate to allow square facts (e.g., 4×4, 5×5)
-if (Math.random() < 0.25) {
-  const i = Math.floor(Math.random() * nums.length);
-  nums[Math.floor(Math.random() * nums.length)] = nums[i];
-}
 
   function preferredTarget(nums) {
     let candidates = [];
@@ -662,16 +673,19 @@ if (Math.random() < 0.25) {
         let a = nums[i], b = nums[j];
 
         // multiplication (avoid ×1 and ×0)
-      if (a > 1 && b > 1) {
-  // Slightly reduce multiplication dominance
-  if (Math.random() < 0.6) {
-    candidates.push(a * b);
-  }
-}
+        if (a > 1 && b > 1) {
+          candidates.push(a * b);
+        }
 
         // clean division (avoid ÷1)
         if (b > 1 && a % b === 0) candidates.push(a / b);
         if (a > 1 && b % a === 0) candidates.push(b / a);
+
+        // --- BOOST: occasional non-2 division targets (~10%) ---
+        if (Math.random() < 0.1) {
+          if (b > 1 && a % b !== 0 && a / b <= state.max) candidates.push(a / b);
+          if (a > 1 && b % a !== 0 && b / a <= state.max) candidates.push(b / a);
+        }
       }
     }
 
