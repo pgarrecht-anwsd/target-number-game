@@ -411,6 +411,7 @@ function randomInitialNumber(level, existing = []) {
 
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
+    
     /* --------------------------------------------------
        Global game state
        -------------------------------------------------- */
@@ -436,6 +437,46 @@ function randomInitialNumber(level, existing = []) {
       hintsUsed: 0,
       solutionsUsed: 0
     };
+    // Configuration
+    
+    const DIFFICULTY_SETTINGS = {
+  warmup:  { numbers: 3 },
+  workout: { numbers: 4 },
+  challenge: { numbers: 4 }
+};
+const difficultyButtons = document.querySelectorAll(".difficulty-btn");
+
+difficultyButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    difficultyButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    gameState.difficulty = btn.dataset.difficulty;
+
+    const factSection = document.getElementById("factFocusSection");
+
+    if (gameState.difficulty === "challenge") {
+      factSection.classList.add("hidden");
+      gameState.factFocusLevel = null;
+    } else {
+      factSection.classList.remove("hidden");
+    }
+
+  });
+});
+const factButtons = document.querySelectorAll(".fact-btn");
+
+factButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    factButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    gameState.factFocusLevel = parseInt(btn.dataset.level);
+
+  });
+});
 
     /* --------------------------------------------------
        DOM references
@@ -453,8 +494,6 @@ function randomInitialNumber(level, existing = []) {
     const startBtn    = document.getElementById('startBtn');
     const nextBtn     = document.getElementById('nextBtn');
 
-    const modeSelect  = document.getElementById('modeSelect');
-    const levelSelect = document.getElementById('levelSelect');
     const newGameBtn  = document.getElementById('newGameBtn');
 
     /* --------------------------------------------------
@@ -1062,11 +1101,32 @@ nums.unshift(r);
        Start / progression
        -------------------------------------------------- */
 
-    startBtn.onclick = () => {
-      if (state.level === undefined) state.level = Number(levelSelect.value);
-      nextProblem();
-      startBtn.classList.add('disabled');
-      targetEl.textContent = state.target;
+   startBtn.onclick = () => {
+
+  if (!state.difficulty) {
+    alert("Choose a difficulty first.");
+    return;
+  }
+
+  if (state.difficulty === "challenge") {
+    state.level = 6;
+    state.numberCount = 4;
+  } else {
+
+    if (!state.factFocusLevel) {
+      alert("Choose a fact focus.");
+      return;
+    }
+
+    state.level = state.factFocusLevel;
+    state.numberCount =
+      state.difficulty === "warmup" ? 3 : 4;
+  }
+
+  nextProblem();
+  startBtn.classList.add('disabled');
+  targetEl.textContent = state.target;
+};
 
       renderNumbers();
 
@@ -1075,9 +1135,7 @@ nums.unshift(r);
       solutionBtn.classList.remove('disabled');
 
       state.gameStarted = true;
-      modeSelect.disabled = true;
-      levelSelect.disabled = true;
-    };
+  };
     
 nextBtn.onclick = nextProblem;
 
@@ -1138,9 +1196,6 @@ nextBtn.onclick = nextProblem;
       scoreEl.textContent = '0';
       problemsEl.textContent = '0/10';
 
-      modeSelect.disabled = false;
-      levelSelect.disabled = false;
-
       generateProblem();
     }
 
@@ -1149,9 +1204,7 @@ nextBtn.onclick = nextProblem;
        -------------------------------------------------- */
 
     newGameBtn.onclick = resetGame;
-    modeSelect.onchange = e => { state.mode = +e.target.value; };
-    levelSelect.onchange = e => { state.level = +e.target.value; };
-
+   
     // Initial problem on load
     generateProblem();
 
