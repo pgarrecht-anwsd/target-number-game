@@ -277,16 +277,7 @@
       </div>
     </div>
 
-    <!-- Mode -->
-    <div class="control-group">
-      <div class="control-label">Numbers</div>
-      <div class="button-group" id="modeGroup">
-        <button class="btn mode-btn active" data-mode="4">4 Numbers</button>
-        <button class="btn mode-btn" data-mode="3">3 Numbers</button>
-      </div>
-    </div>
-
-    <button id="startBtn" class="btn primary">Start Game</button>
+  <button id="startBtn" class="btn primary">Start Game</button>
 
   </div>
 
@@ -439,12 +430,24 @@ function randomInitialNumber(level, existing = []) {
     };
     // Configuration
     
-    const DIFFICULTY_SETTINGS = {
-  warmup:  { numbers: 3 },
-  workout: { numbers: 4 },
-  challenge: { numbers: 4 }
+const DIFFICULTY_SETTINGS = {
+  warmup: {
+    numbers: 3,
+    usesFactFocus: true
+  },
+  workout: {
+    numbers: 4,
+    usesFactFocus: true
+  },
+  challenge: {
+    numbers: 4,
+    usesFactFocus: false,
+    fixedLevel: 6
+  }
 };
+
 const difficultyButtons = document.querySelectorAll(".difficulty-btn");
+const factSection = document.getElementById("factFocusSection");
 
 difficultyButtons.forEach(btn => {
   btn.addEventListener("click", () => {
@@ -452,19 +455,24 @@ difficultyButtons.forEach(btn => {
     difficultyButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
 
-    gameState.difficulty = btn.dataset.difficulty;
+    const difficulty = btn.dataset.difficulty;
+    const config = DIFFICULTY_SETTINGS[difficulty];
 
-    const factSection = document.getElementById("factFocusSection");
+    state.difficulty = difficulty;
+    state.numberCount = config.numbers;
 
-    if (gameState.difficulty === "challenge") {
-      factSection.classList.add("hidden");
-      gameState.factFocusLevel = null;
-    } else {
+    if (config.usesFactFocus) {
       factSection.classList.remove("hidden");
+      state.level = undefined;
+    } else {
+      factSection.classList.add("hidden");
+      state.factFocusLevel = null;
+      state.level = config.fixedLevel;
     }
 
   });
 });
+
 const factButtons = document.querySelectorAll(".fact-btn");
 
 factButtons.forEach(btn => {
@@ -473,7 +481,8 @@ factButtons.forEach(btn => {
     factButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
 
-    gameState.factFocusLevel = parseInt(btn.dataset.level);
+    state.factFocusLevel = parseInt(btn.dataset.level);
+    state.level = state.factFocusLevel;
 
   });
 });
@@ -1101,26 +1110,18 @@ nums.unshift(r);
        Start / progression
        -------------------------------------------------- */
 
-   startBtn.onclick = () => {
+ startBtn.onclick = () => {
 
   if (!state.difficulty) {
     alert("Choose a difficulty first.");
     return;
   }
 
-  if (state.difficulty === "challenge") {
-    state.level = 6;
-    state.numberCount = 4;
-  } else {
+  const config = DIFFICULTY_SETTINGS[state.difficulty];
 
-    if (!state.factFocusLevel) {
-      alert("Choose a fact focus.");
-      return;
-    }
-
-    state.level = state.factFocusLevel;
-    state.numberCount =
-      state.difficulty === "warmup" ? 3 : 4;
+  if (config.usesFactFocus && !state.factFocusLevel) {
+    alert("Choose a fact focus.");
+    return;
   }
 
   nextProblem();
