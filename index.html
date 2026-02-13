@@ -1111,7 +1111,7 @@ nums.unshift(r);
        Start / progression
        -------------------------------------------------- */
 
- startBtn.onclick = () => {
+startBtn.onclick = () => {
 
   if (!state.difficulty) {
     alert("Choose a difficulty first.");
@@ -1125,19 +1125,17 @@ nums.unshift(r);
     return;
   }
 
+  state.gameStarted = true;   // ✅ MOVE THIS HERE
+
   nextProblem();
+
   startBtn.classList.add('disabled');
-  targetEl.textContent = state.target;
+
+  hintBtn.classList.remove('disabled');
+  resetBtn.classList.remove('disabled');
+  solutionBtn.classList.remove('disabled');
 };
 
-      renderNumbers();
-
-      hintBtn.classList.remove('disabled');
-      resetBtn.classList.remove('disabled');
-      solutionBtn.classList.remove('disabled');
-
-      state.gameStarted = true;
-     
 nextBtn.onclick = nextProblem;
 
     function nextProblem() {
