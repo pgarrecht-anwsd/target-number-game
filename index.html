@@ -792,8 +792,6 @@ function generateProblem() {
 
     nums.push(n);
   }
-state.numbers = nums;
-renderNumbers();
 
   function preferredTarget(nums) {
     let candidates = [];
@@ -825,7 +823,8 @@ renderNumbers();
     if (candidates.length === 0) return null;
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
-
+state.numbers = nums;
+renderNumbers();
   let t, sol = null;
 
   for (let tries = 0; tries < 60; tries++) {
