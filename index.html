@@ -784,7 +784,7 @@ function generateProblem() {
   }
 
   // Fill remaining slots normally
-  while (nums.length < state.mode) {
+  while (nums.length < state.numberCount) {
     let n = randomInitialNumber(state.level, nums);
 
     // --- FIX: prevent 0 as a starting number for Level 1 ---
