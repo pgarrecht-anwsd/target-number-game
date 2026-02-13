@@ -123,18 +123,30 @@
 }
 
 .fact-focus-container {
-  height: 50px;              /* reserves space even when hidden */
+  height: 70px;
+  display: flex;
   justify-content: center;
   align-items: center;
-}
-
-#factFocusSection.hidden {
-  visibility: hidden;        /* hidden but still takes up space */
+  margin-top: 8px;      /* optional polish */
+  margin-bottom: 8px;   /* optional polish */
 }
 
 #factFocusSection {
-  visibility: visible;
-  transition: visibility 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+#factFocusSection.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fact-label {
+  font-weight: bold;
+  margin-right: 10px;
 }
 
     select{
@@ -309,20 +321,18 @@
     </div> <!-- end settings-row / top-controls -->
 
     <!-- Fact Focus Section -->
-    <div class="fact-focus-container">
-      <div class="settings-row hidden" id="factFocusSection">
-        <div class="control-group">
-          <div class="control-label">Fact Focus</div>
-          <div class="button-group" id="factGroup">
-            <button class="btn fact-btn" data-level="1">2s & 5s</button>
-            <button class="btn fact-btn" data-level="2">3s & 4s</button>
-            <button class="btn fact-btn" data-level="3">6s & 7s</button>
-            <button class="btn fact-btn" data-level="4">8s & 9s</button>
-            <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
-          </div>
-        </div>
-      </div>
-    </div> <!-- end fact-focus-container -->
+  <div class="fact-focus-container">
+  <div id="factFocusSection" class="hidden">
+    <div class="fact-label">Fact Focus</div>
+    <div class="button-group" id="factGroup">
+      <button class="btn fact-btn" data-level="1">2s & 5s</button>
+      <button class="btn fact-btn" data-level="2">3s & 4s</button>
+      <button class="btn fact-btn" data-level="3">6s & 7s</button>
+      <button class="btn fact-btn" data-level="4">8s & 9s</button>
+      <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
+    </div>
+  </div>
+</div>
 
   </div> <!-- end header -->
 
