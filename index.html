@@ -255,49 +255,49 @@
   <!-- ==============================
        MAIN GAME LAYOUT
        ============================== -->
-  <div class="container">
+<div class="container">
 
-    <!-- Header / Settings -->
-<div class="header">
+  <!-- Header / Settings -->
+  <div class="header">
 
-  <div class="title">Target Number Game</div>
+    <div class="title">Target Number Game</div>
 
-  <!-- Primary Controls Row -->
-  <div class="settings-row">
+    <!-- Primary Controls Row (keep this, remove the duplicate top-controls section) -->
+    <div class="settings-row top-controls">
 
-    <button id="newGameBtn" class="btn">New Game</button>
+      <button id="newGameBtn" class="btn">New Game</button>
 
-    <!-- Difficulty -->
-    <div class="control-group">
-      <div class="control-label">Difficulty</div>
-      <div class="button-group" id="difficultyGroup">
-        <button class="btn difficulty-btn" data-difficulty="warmup">Warm-Up</button>
-        <button class="btn difficulty-btn" data-difficulty="workout">Workout</button>
-        <button class="btn difficulty-btn" data-difficulty="challenge">Challenge</button>
+      <!-- Difficulty -->
+      <div class="control-group">
+        <div class="control-label">Difficulty</div>
+        <div class="button-group" id="difficultyGroup">
+          <button class="btn difficulty-btn" data-difficulty="warmup">Warm-Up</button>
+          <button class="btn difficulty-btn" data-difficulty="workout">Workout</button>
+          <button class="btn difficulty-btn" data-difficulty="challenge">Challenge</button>
+        </div>
       </div>
-    </div>
 
-  <button id="startBtn" class="btn primary">Start Game</button>
+      <button id="startBtn" class="btn primary">Start Game</button>
 
-  </div>
+    </div> <!-- end settings-row / top-controls -->
 
-  <!-- Fact Focus (conditionally shown later via JS) -->
-  <div class="settings-row hidden" id="factFocusSection">
-
-    <div class="control-group">
-      <div class="control-label">Fact Focus</div>
-      <div class="button-group" id="factGroup">
-        <button class="btn fact-btn" data-level="1">2s & 5s</button>
-        <button class="btn fact-btn" data-level="2">3s & 4s</button>
-        <button class="btn fact-btn" data-level="3">6s & 7s</button>
-        <button class="btn fact-btn" data-level="4">8s & 9s</button>
-        <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
+    <!-- Fact Focus Section -->
+    <div class="fact-focus-container">
+      <div class="settings-row hidden" id="factFocusSection">
+        <div class="control-group">
+          <div class="control-label">Fact Focus</div>
+          <div class="button-group" id="factGroup">
+            <button class="btn fact-btn" data-level="1">2s & 5s</button>
+            <button class="btn fact-btn" data-level="2">3s & 4s</button>
+            <button class="btn fact-btn" data-level="3">6s & 7s</button>
+            <button class="btn fact-btn" data-level="4">8s & 9s</button>
+            <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
+          </div>
+        </div>
       </div>
-    </div>
+    </div> <!-- end fact-focus-container -->
 
-  </div>
-
-</div>
+  </div> <!-- end header -->
 
     <!-- Score / Target Display -->
     <div class="row">
