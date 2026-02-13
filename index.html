@@ -79,7 +79,7 @@
 .control-label {
   font-size: 0.9rem;
   font-weight: bold;
-  text-align: center;
+  text-align: right;
 }
 
 .button-group {
@@ -139,15 +139,14 @@
 #factFocusSection {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-end;   /* ← was center */
+  margin-top: 2px;        /* slightly tighter spacing */
 }
 
 .fact-row {
   display: flex;
-  justify-content: center;
-  gap: 14px;
-  flex-wrap: nowrap;  /* no wrapping */
+  justify-content: flex-end;  /* ← was center */
+  gap: 12px;
 }
 
 #factFocusSection.hidden {
