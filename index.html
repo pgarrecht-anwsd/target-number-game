@@ -111,30 +111,29 @@
 }
 .top-controls {
   display: flex;
-  justify-content: center;  /* center buttons horizontally */
   align-items: center;
-  gap: 12px;                /* spacing between buttons */
-  margin-bottom: 10px;      /* space below for fact focus */
+  gap: 20px;
+  justify-content: center;
 }
 
-.difficulty-buttons, .fact-focus-container {
+.difficulty-block {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  align-items: center;
 }
 
 .fact-focus-container {
-  height: 70px;
+  height: 90px;  /* reserves space */
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 8px;      /* optional polish */
-  margin-bottom: 8px;   /* optional polish */
 }
 
 #factFocusSection {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   opacity: 1;
   transition: opacity 0.2s ease;
 }
@@ -144,9 +143,13 @@
   pointer-events: none;
 }
 
-.fact-label {
-  font-weight: bold;
-  margin-right: 10px;
+.fact-row {
+  display: flex;
+  gap: 12px;
+}
+.fact-btn {
+  padding: 8px 14px;   /* smaller height */
+  font-size: 0.9rem;
 }
 
     select{
@@ -296,45 +299,48 @@
        ============================== -->
 <div class="container">
 
-  <!-- Header / Settings -->
-  <div class="header">
+<div class="header">
 
-    <div class="title">Target Number Game</div>
+  <div class="title">Target Number Game</div>
 
-    <!-- Primary Controls Row (keep this, remove the duplicate top-controls section) -->
-    <div class="settings-row top-controls">
+  <!-- Row 1: Main Controls -->
+  <div class="top-controls">
 
-      <button id="newGameBtn" class="btn">New Game</button>
+    <button id="newGameBtn" class="btn">New Game</button>
 
-      <!-- Difficulty -->
-      <div class="control-group">
-        <div class="control-label">Difficulty</div>
-        <div class="button-group" id="difficultyGroup">
-          <button class="btn difficulty-btn" data-difficulty="warmup">Warm-Up</button>
-          <button class="btn difficulty-btn" data-difficulty="workout">Workout</button>
-          <button class="btn difficulty-btn" data-difficulty="challenge">Challenge</button>
-        </div>
+    <div class="difficulty-block">
+      <div class="control-label">Choose a Difficulty Level</div>
+      <div class="button-group" id="difficultyGroup">
+        <button class="btn difficulty-btn" data-difficulty="warmup">Warm-Up</button>
+        <button class="btn difficulty-btn" data-difficulty="workout">Workout</button>
+        <button class="btn difficulty-btn" data-difficulty="challenge">Challenge</button>
+      </div>
+    </div>
+
+    <button id="startBtn" class="btn primary">Start Game</button>
+
+  </div>
+
+  <!-- Row 2: Fact Focus -->
+  <div class="fact-focus-container">
+
+    <div id="factFocusSection" class="hidden">
+
+      <div class="control-label">Choose a Fact Focus</div>
+
+      <div class="button-group fact-row" id="factGroup">
+        <button class="btn fact-btn" data-level="1">2s & 5s</button>
+        <button class="btn fact-btn" data-level="2">3s & 4s</button>
+        <button class="btn fact-btn" data-level="3">6s & 7s</button>
+        <button class="btn fact-btn" data-level="4">8s & 9s</button>
+        <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
       </div>
 
-      <button id="startBtn" class="btn primary">Start Game</button>
-
-    </div> <!-- end settings-row / top-controls -->
-
-    <!-- Fact Focus Section -->
-  <div class="fact-focus-container">
-  <div id="factFocusSection" class="hidden">
-    <div class="fact-label">Fact Focus</div>
-    <div class="button-group" id="factGroup">
-      <button class="btn fact-btn" data-level="1">2s & 5s</button>
-      <button class="btn fact-btn" data-level="2">3s & 4s</button>
-      <button class="btn fact-btn" data-level="3">6s & 7s</button>
-      <button class="btn fact-btn" data-level="4">8s & 9s</button>
-      <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
     </div>
-  </div>
-</div>
 
-  </div> <!-- end header -->
+  </div>
+
+</div>
 
     <!-- Score / Target Display -->
     <div class="row">
