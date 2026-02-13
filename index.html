@@ -42,13 +42,18 @@
       position:relative;
     }
 
-    .header {
+.header {
   display: flex;
-  flex-direction: column;   /* STACK children vertically */
-  align-items: center;
+  justify-content: space-between; /* pushes title left, controls right */
+  align-items: flex-start;
+  width: 100%;
 }
 
-    .title{font-size:22px;font-weight:800;}
+.title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-top: 10px;
+}
 
     .settings{
       display:flex;
@@ -151,6 +156,12 @@
 .fact-btn {
   padding: 8px 16px;
   font-size: 0.9rem;
+}
+.controls-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;  /* aligns controls to right side */
+  gap: 10px;
 }
 
 .btn {
@@ -309,6 +320,7 @@
   <div class="title">Target Number Game</div>
 
   <!-- Row 1: Main Controls -->
+<div class="controls-area">
   <div class="top-controls">
 
     <button id="newGameBtn" class="btn">New Game</button>
@@ -339,14 +351,11 @@
         <button class="btn fact-btn" data-level="3">6s & 7s</button>
         <button class="btn fact-btn" data-level="4">8s & 9s</button>
         <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
+        </div>
       </div>
-
     </div>
-
   </div>
-
 </div>
-
     <!-- Score / Target Display -->
     <div class="row">
       Target <div class="target" id="targetValue">--</div>
