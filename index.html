@@ -109,6 +109,33 @@
 .hidden {
   display: none;
 }
+.top-controls {
+  display: flex;
+  justify-content: center;  /* center buttons horizontally */
+  align-items: center;
+  gap: 12px;                /* spacing between buttons */
+  margin-bottom: 10px;      /* space below for fact focus */
+}
+
+.difficulty-buttons, .fact-focus-container {
+  display: flex;
+  gap: 8px;
+}
+
+.fact-focus-container {
+  height: 50px;              /* reserves space even when hidden */
+  justify-content: center;
+  align-items: center;
+}
+
+#factFocusSection.hidden {
+  visibility: hidden;        /* hidden but still takes up space */
+}
+
+#factFocusSection {
+  visibility: visible;
+  transition: visibility 0.2s ease;
+}
 
     select{
       padding:6px 8px;
