@@ -64,24 +64,6 @@
       background:#224a7c;
       color:white;
     }
-.menu-btn {
-  padding: 6px 12px;
-  margin: 2px;
-  border: 1px solid #333;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.menu-btn:hover {
-  background-color: #ddd;
-}
-
-.menu-btn.active {
-  background-color: #444;
-  color: white;
-}
 
     select option{background:#224a7c;color:white;}
 
@@ -225,55 +207,25 @@
     <!-- Header / Settings -->
     <div class="header">
       <div class="title">Target Number Game</div>
-<div class="settings">
+      <div class="settings">
+        <button id="newGameBtn" class="btn">New Game</button>
+        Mode:
+        <select id="modeSelect">
+          <option value="4">4 numbers</option>
+          <option value="3">3 numbers</option>
+        </select>
+        
+        <select id="levelSelect">
+  <option value="1">Level 1 (0,1,2,5)</option>
+  <option value="2">Level 2 (3,4)</option>
+  <option value="3">Level 3 (6,7)</option>
+  <option value="4">Level 4 (8,9)</option>
+  <option value="5">Level 5 (6–9)</option>
+  <option value="6">Level 6 (0–12)</option>
+</select>
 
-  <!-- Hidden selects for engine compatibility -->
-  <select id="modeSelect" style="display:none">
-    <option value="4">4 numbers</option>
-    <option value="3">3 numbers</option>
-  </select>
-
-  <select id="levelSelect" style="display:none">
-    <option value="1">Level 1</option>
-    <option value="2">Level 2</option>
-    <option value="3">Level 3</option>
-    <option value="4">Level 4</option>
-    <option value="5">Level 5</option>
-    <option value="6">Level 6</option>
-  </select>
-
-  <!-- ---------- ROW 1: New Game + Difficulty + Start Game ---------- -->
-  <div class="menu-row">
-    <button id="newGameBtn" class="menu-btn">New Game</button>
-
-    <div class="menu-group">
-      <div class="menu-label">Choose Difficulty</div>
-      <div class="button-row">
-        <button class="menu-btn difficulty-btn" data-difficulty="warmup">Warm-Up</button>
-        <button class="menu-btn difficulty-btn" data-difficulty="workout">Workout</button>
-        <button class="menu-btn difficulty-btn" data-difficulty="challenge">Challenge</button>
+        <button id="startBtn" class="btn">Start Game</button>
       </div>
-    </div>
-
-    <button id="startBtn" class="menu-btn primary">Start Game</button>
-  </div>
-
-  <!-- ---------- ROW 2: Fact Focus ---------- -->
-  <div class="menu-row" id="focusRow">
-    <div class="menu-group">
-      <div class="menu-label">Choose Focus Facts</div>
-      <div class="button-row">
-        <button class="menu-btn focus-btn" data-level="1">2s & 5s</button>
-        <button class="menu-btn focus-btn" data-level="2">3s & 4s</button>
-        <button class="menu-btn focus-btn" data-level="3">6s & 7s</button>
-        <button class="menu-btn focus-btn" data-level="4">8s & 9s</button>
-        <button class="menu-btn focus-btn" data-level="5">Mixed 6–9</button>
-      </div>
-    </div>
-  </div>
-
-</div>
-
     </div>
 
     <!-- Score / Target Display -->
@@ -408,7 +360,7 @@ function randomInitialNumber(level, existing = []) {
     /* --------------------------------------------------
        DOM references
        -------------------------------------------------- */
-document.addEventListener("DOMContentLoaded", () => {
+
     const numbersRow  = document.getElementById('numbersRow');
     const targetEl    = document.getElementById('targetValue');
     const scoreEl     = document.getElementById('score');
@@ -424,49 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const modeSelect  = document.getElementById('modeSelect');
     const levelSelect = document.getElementById('levelSelect');
     const newGameBtn  = document.getElementById('newGameBtn');
-const focusRow = document.getElementById("focusRow");
-const difficultyButtons = document.querySelectorAll(".difficulty-btn");
-const focusButtons = document.querySelectorAll(".focus-btn");
 
-// Hide Focus row initially if desired
-focusRow.classList.remove("hidden"); // show by default, or use .hidden
-
-// Difficulty buttons
-difficultyButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    const difficulty = btn.dataset.difficulty;
-
-    if (difficulty === "warmup") {
-      modeSelect.value = "3";
-      state.mode = 3;
-      focusRow.classList.remove("hidden");
-    }
-
-    if (difficulty === "workout") {
-      modeSelect.value = "4";
-      state.mode = 4;
-      focusRow.classList.remove("hidden");
-    }
-
-    if (difficulty === "challenge") {
-      modeSelect.value = "4";
-      state.mode = 4;
-      levelSelect.value = "6";
-      state.level = 6;
-      focusRow.classList.add("hidden"); // hide focus when challenge is active
-    }
-  });
-});
-
-// Focus buttons
-focusButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    const level = Number(btn.dataset.level);
-    levelSelect.value = level;
-    state.level = level;
-  });
-});
-});
     /* --------------------------------------------------
        Solver (recursive backtracking)
        Finds *one* valid solution sequence
@@ -1072,26 +982,23 @@ nums.unshift(r);
        Start / progression
        -------------------------------------------------- */
 
-  startBtn.onclick = () => {
+    startBtn.onclick = () => {
+      if (state.level === undefined) state.level = Number(levelSelect.value);
+      nextProblem();
+      startBtn.classList.add('disabled');
+      targetEl.textContent = state.target;
 
-  state.level = Number(levelSelect.value);
-  state.mode = Number(modeSelect.value);
+      renderNumbers();
 
-  nextProblem();
-  startBtn.classList.add('disabled');
-  targetEl.textContent = state.target;
+      hintBtn.classList.remove('disabled');
+      resetBtn.classList.remove('disabled');
+      solutionBtn.classList.remove('disabled');
 
-  renderNumbers();
-
-  hintBtn.classList.remove('disabled');
-  resetBtn.classList.remove('disabled');
-  solutionBtn.classList.remove('disabled');
-
-  state.gameStarted = true;
-  modeSelect.disabled = true;
-  levelSelect.disabled = true;
-};
-
+      state.gameStarted = true;
+      modeSelect.disabled = true;
+      levelSelect.disabled = true;
+    };
+    
 nextBtn.onclick = nextProblem;
 
     function nextProblem() {
