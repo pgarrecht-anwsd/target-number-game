@@ -64,6 +64,24 @@
       background:#224a7c;
       color:white;
     }
+.menu-btn {
+  padding: 6px 12px;
+  margin: 2px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.menu-btn:hover {
+  background-color: #ddd;
+}
+
+.menu-btn.active {
+  background-color: #444;
+  color: white;
+}
 
     select option{background:#224a7c;color:white;}
 
@@ -390,7 +408,7 @@ function randomInitialNumber(level, existing = []) {
     /* --------------------------------------------------
        DOM references
        -------------------------------------------------- */
-
+document.addEventListener("DOMContentLoaded", () => {
     const numbersRow  = document.getElementById('numbersRow');
     const targetEl    = document.getElementById('targetValue');
     const scoreEl     = document.getElementById('score');
@@ -448,7 +466,7 @@ focusButtons.forEach(btn => {
     state.level = level;
   });
 });
-
+});
     /* --------------------------------------------------
        Solver (recursive backtracking)
        Finds *one* valid solution sequence
