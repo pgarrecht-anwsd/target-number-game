@@ -42,92 +42,20 @@
       position:relative;
     }
 
-.header {
-  display: flex;
-  justify-content: space-between; /* pushes title left, controls right */
-  align-items: flex-start;
-  width: 100%;
-}
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
 
-.title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-top: 10px;
-}
+    .title{font-size:22px;font-weight:800;}
 
-.control-label {
-  font-size: 0.9rem;
-  font-weight: bold;
-  text-align: center;
-}
-
-.button-group {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.btn {
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: 2px solid #444;
-  background: var(--btn);
-  box-shadow: 0 6px var(--btnShadow);
-  cursor: pointer;
-  font-size: 0.95rem;
-  white-space: nowrap;
-}
-
-.btn:hover {
-  background: #f2f2f2;
-}
-
-.btn.active {
-  background: #333;
-  color: white;
-}
-
-.btn.primary {
-  background: #2b6cb0;
-  color: white;
-  border-color: #2b6cb0;
-}
-
-.hidden {
-  display: none;
-}
-.top-controls {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.difficulty-block,
-.fact-focus-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.controls-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-#factFocusSection {
-  display: flex;
-  flex-direction: column;
-}
-
-.fact-row {
-  display: flex;
-  gap: 12px;
-}
-
-.fact-btn {
-  padding: 8px 16px;
-  font-size: 0.9rem;
-}
+    .settings{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-size:14px;
+    }
 
     select{
       padding:6px 8px;
@@ -187,6 +115,12 @@
     .op.sub{background:var(--opSub);}    
     .op.mul{background:var(--opMul);}    
     .op.div{background:var(--opDiv);}    
+
+    .btn{
+      background:var(--btn);
+      padding:10px 16px;
+      box-shadow:0 6px var(--btnShadow);
+    }
 
     .num:active,.op:active,.btn:active{
       transform:translateY(4px);
@@ -268,51 +202,65 @@
   <!-- ==============================
        MAIN GAME LAYOUT
        ============================== -->
-<div class="header">
+  <div class="container">
 
-  <!-- Title -->
-  <div class="title">Target Number Game</div>
+    <!-- Header / Settings -->
+    <div class="header">
+      <div class="title">Target Number Game</div>
+      <div class="settings">
+        <button id="newGameBtn" class="btn">New Game</button>
+        Mode:
+        <select id="modeSelect">
+          <option value="4">4 numbers</option>
+          <option value="3">3 numbers</option>
+        </select>
+        
+        <select id="levelSelect">
+  <option value="1">Level 1 (0,1,2,5)</option>
+  <option value="2">Level 2 (3,4)</option>
+  <option value="3">Level 3 (6,7)</option>
+  <option value="4">Level 4 (8,9)</option>
+  <option value="5">Level 5 (6–9)</option>
+  <option value="6">Level 6 (0–12)</option>
+</select>
 
-  <!-- All Controls Wrapper -->
-  <div class="controls-wrapper">
-
-    <!-- Top Controls Row -->
-    <div class="top-controls">
-
-      <button id="newGameBtn" class="btn">New Game</button>
-
-      <div class="difficulty-block">
-        <div class="control-label">Choose a Difficulty Level</div>
-        <div class="button-group" id="difficultyGroup">
-          <button class="btn difficulty-btn" data-difficulty="warmup">Warm-Up</button>
-          <button class="btn difficulty-btn" data-difficulty="workout">Workout</button>
-          <button class="btn difficulty-btn" data-difficulty="challenge">Challenge</button>
-        </div>
+        <button id="startBtn" class="btn">Start Game</button>
       </div>
-
-      <button id="startBtn" class="btn primary">Start Game</button>
-
     </div>
 
-    <!-- Fact Focus Row -->
-    <div id="factFocusSection" class="hidden">
-
-      <div class="fact-focus-block">
-        <div class="control-label">Choose a Fact Focus</div>
-        <div class="fact-row" id="factGroup">
-          <button class="btn fact-btn" data-level="1">2s & 5s</button>
-          <button class="btn fact-btn" data-level="2">3s & 4s</button>
-          <button class="btn fact-btn" data-level="3">6s & 7s</button>
-          <button class="btn fact-btn" data-level="4">8s & 9s</button>
-          <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
-        </div>
-      </div>
-
+    <!-- Score / Target Display -->
+    <div class="row">
+      Target <div class="target" id="targetValue">--</div>
+      Score <span id="score">0</span>
+      Problem <span id="problems">0/10</span>
     </div>
 
+    <!-- Operator Buttons -->
+    <div class="row">
+      <button class="op add" data-op="+">+</button>
+      <button class="op sub" data-op="-">−</button>
+      <button class="op mul" data-op="*">×</button>
+      <button class="op div" data-op="/">÷</button>
+    </div>
+
+    <!-- Number Buttons -->
+    <div class="row" id="numbersRow"></div>
+
+    <!-- Control Buttons -->
+    <div class="row">
+      <button id="hintBtn" class="btn disabled">Hint (1st Move)</button>
+      <button id="solutionBtn" class="btn disabled">Show Solution</button>
+      <button id="resetBtn" class="btn disabled">Reset Problem</button>
+      <button id="nextBtn" class="btn disabled">Next Problem</button>
+    </div>
+
+    <!-- Solution Display -->
+    <div id="solutionBox" class="solutionBox" style="display:none"></div>
+
+    <div class="footer">
+      Use each number once per step. Intermediate results must be integers.
+    </div>
   </div>
-
-</div>
 
   <!-- ==============================
        GAME LOGIC (JavaScript)
@@ -383,7 +331,6 @@ function randomInitialNumber(level, existing = []) {
 
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
-    
     /* --------------------------------------------------
        Global game state
        -------------------------------------------------- */
@@ -409,64 +356,6 @@ function randomInitialNumber(level, existing = []) {
       hintsUsed: 0,
       solutionsUsed: 0
     };
-    // Configuration
-    
-const DIFFICULTY_SETTINGS = {
-  warmup: {
-    numbers: 3,
-    usesFactFocus: true
-  },
-  workout: {
-    numbers: 4,
-    usesFactFocus: true
-  },
-  challenge: {
-    numbers: 4,
-    usesFactFocus: false,
-    fixedLevel: 6
-  }
-};
-
-const difficultyButtons = document.querySelectorAll(".difficulty-btn");
-const factSection = document.getElementById("factFocusSection");
-
-difficultyButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    difficultyButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    const difficulty = btn.dataset.difficulty;
-    const config = DIFFICULTY_SETTINGS[difficulty];
-
-    state.difficulty = difficulty;
-    state.numberCount = config.numbers;
-
-    if (config.usesFactFocus) {
-      factSection.classList.remove("hidden");
-      state.level = undefined;
-    } else {
-      factSection.classList.add("hidden");
-      state.factFocusLevel = null;
-      state.level = config.fixedLevel;
-    }
-
-  });
-});
-
-const factButtons = document.querySelectorAll(".fact-btn");
-
-factButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    factButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    state.factFocusLevel = parseInt(btn.dataset.level);
-    state.level = state.factFocusLevel;
-
-  });
-});
 
     /* --------------------------------------------------
        DOM references
@@ -484,6 +373,8 @@ factButtons.forEach(btn => {
     const startBtn    = document.getElementById('startBtn');
     const nextBtn     = document.getElementById('nextBtn');
 
+    const modeSelect  = document.getElementById('modeSelect');
+    const levelSelect = document.getElementById('levelSelect');
     const newGameBtn  = document.getElementById('newGameBtn');
 
     /* --------------------------------------------------
@@ -765,7 +656,7 @@ function generateProblem() {
   }
 
   // Fill remaining slots normally
-  while (nums.length < state.numberCount) {
+  while (nums.length < state.mode) {
     let n = randomInitialNumber(state.level, nums);
 
     // --- FIX: prevent 0 as a starting number for Level 1 ---
@@ -804,8 +695,7 @@ function generateProblem() {
     if (candidates.length === 0) return null;
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
-state.numbers = nums;
-renderNumbers();
+
   let t, sol = null;
 
   for (let tries = 0; tries < 60; tries++) {
@@ -1092,31 +982,23 @@ nums.unshift(r);
        Start / progression
        -------------------------------------------------- */
 
-startBtn.onclick = () => {
+    startBtn.onclick = () => {
+      if (state.level === undefined) state.level = Number(levelSelect.value);
+      nextProblem();
+      startBtn.classList.add('disabled');
+      targetEl.textContent = state.target;
 
-  if (!state.difficulty) {
-    alert("Choose a difficulty first.");
-    return;
-  }
+      renderNumbers();
 
-  const config = DIFFICULTY_SETTINGS[state.difficulty];
+      hintBtn.classList.remove('disabled');
+      resetBtn.classList.remove('disabled');
+      solutionBtn.classList.remove('disabled');
 
-  if (config.usesFactFocus && !state.factFocusLevel) {
-    alert("Choose a fact focus.");
-    return;
-  }
-
-  state.gameStarted = true;   // ✅ MOVE THIS HERE
-
-  nextProblem();
-
-  startBtn.classList.add('disabled');
-
-  hintBtn.classList.remove('disabled');
-  resetBtn.classList.remove('disabled');
-  solutionBtn.classList.remove('disabled');
-};
-
+      state.gameStarted = true;
+      modeSelect.disabled = true;
+      levelSelect.disabled = true;
+    };
+    
 nextBtn.onclick = nextProblem;
 
     function nextProblem() {
@@ -1176,6 +1058,9 @@ nextBtn.onclick = nextProblem;
       scoreEl.textContent = '0';
       problemsEl.textContent = '0/10';
 
+      modeSelect.disabled = false;
+      levelSelect.disabled = false;
+
       generateProblem();
     }
 
@@ -1184,7 +1069,9 @@ nextBtn.onclick = nextProblem;
        -------------------------------------------------- */
 
     newGameBtn.onclick = resetGame;
-   
+    modeSelect.onchange = e => { state.mode = +e.target.value; };
+    levelSelect.onchange = e => { state.level = +e.target.value; };
+
     // Initial problem on load
     generateProblem();
 
