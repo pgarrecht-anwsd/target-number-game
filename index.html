@@ -209,19 +209,19 @@
       <div class="title">Target Number Game</div>
       <div class="settings">
         <button id="newGameBtn" class="btn">New Game</button>
-        Mode:
-        <select id="modeSelect">
-          <option value="4">4 numbers</option>
-          <option value="3">3 numbers</option>
-        </select>
-        
-        <select id="levelSelect">
-  <option value="1">Level 1 (0,1,2,5)</option>
-  <option value="2">Level 2 (3,4)</option>
-  <option value="3">Level 3 (6,7)</option>
-  <option value="4">Level 4 (8,9)</option>
-  <option value="5">Level 5 (6–9)</option>
-  <option value="6">Level 6 (0–12)</option>
+ 
+<select id="modeSelect" style="display:none">
+  <option value="4">4 numbers</option>
+  <option value="3">3 numbers</option>
+</select>
+
+<select id="levelSelect" style="display:none">
+  <option value="1">Level 1</option>
+  <option value="2">Level 2</option>
+  <option value="3">Level 3</option>
+  <option value="4">Level 4</option>
+  <option value="5">Level 5</option>
+  <option value="6">Level 6</option>
 </select>
 
         <button id="startBtn" class="btn">Start Game</button>
@@ -982,23 +982,63 @@ nums.unshift(r);
        Start / progression
        -------------------------------------------------- */
 
-    startBtn.onclick = () => {
-      if (state.level === undefined) state.level = Number(levelSelect.value);
-      nextProblem();
-      startBtn.classList.add('disabled');
-      targetEl.textContent = state.target;
+  startBtn.onclick = () => {
 
-      renderNumbers();
+  state.level = Number(levelSelect.value);
+  state.mode = Number(modeSelect.value);
 
-      hintBtn.classList.remove('disabled');
-      resetBtn.classList.remove('disabled');
-      solutionBtn.classList.remove('disabled');
+  nextProblem();
+  startBtn.classList.add('disabled');
+  targetEl.textContent = state.target;
 
-      state.gameStarted = true;
-      modeSelect.disabled = true;
-      levelSelect.disabled = true;
-    };
+  renderNumbers();
+
+  hintBtn.classList.remove('disabled');
+  resetBtn.classList.remove('disabled');
+  solutionBtn.classList.remove('disabled');
+
+  state.gameStarted = true;
+  modeSelect.disabled = true;
+  levelSelect.disabled = true;
+};
+
+    /Difficulty and Focus buttons control
     
+    difficultyButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    const difficulty = btn.dataset.difficulty;
+
+    if (difficulty === "warmup") {
+      modeSelect.value = "3";
+      state.mode = 3;
+    }
+
+    if (difficulty === "workout") {
+      modeSelect.value = "4";
+      state.mode = 4;
+    }
+
+    if (difficulty === "challenge") {
+      modeSelect.value = "4";
+      state.mode = 4;
+      levelSelect.value = "6";
+      state.level = 6;
+    }
+  });
+});
+focusButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    if (state.mode === 4 && state.level === 6) return; // Challenge active
+
+    const level = Number(btn.dataset.level);
+
+    levelSelect.value = level;
+    state.level = level;
+  });
+});
+
 nextBtn.onclick = nextProblem;
 
     function nextProblem() {
