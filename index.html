@@ -45,7 +45,7 @@
     .header{
       display:flex;
       justify-content:space-between;
-      align-items:center;
+      align-items:flex-start;
     }
 
     .title{font-size:22px;font-weight:800;}
@@ -56,6 +56,25 @@
       align-items:center;
       font-size:14px;
     }
+    
+.controls-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+    
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+}
 
     select{
       padding:6px 8px;
@@ -205,28 +224,46 @@
   <div class="container">
 
     <!-- Header / Settings -->
-    <div class="header">
-      <div class="title">Target Number Game</div>
-      <div class="settings">
-        <button id="newGameBtn" class="btn">New Game</button>
-        Mode:
-        <select id="modeSelect">
-          <option value="4">4 numbers</option>
-          <option value="3">3 numbers</option>
-        </select>
-        
-        <select id="levelSelect">
-  <option value="1">Level 1 (0,1,2,5)</option>
-  <option value="2">Level 2 (3,4)</option>
-  <option value="3">Level 3 (6,7)</option>
-  <option value="4">Level 4 (8,9)</option>
-  <option value="5">Level 5 (6–9)</option>
-  <option value="6">Level 6 (0–12)</option>
-</select>
+   <div class="header">
+  <div class="title">Target Number Game</div>
 
-        <button id="startBtn" class="btn">Start Game</button>
+  <div class="controls-area">
+
+    <div class="settings">
+
+      <button id="newGameBtn" class="btn">New Game</button>
+
+      <div class="control-group">
+        <div class="control-label">Mode</div>
+        <div class="button-group" id="modeGroup">
+          <button class="btn mode-btn" data-mode="4">4 Numbers</button>
+          <button class="btn mode-btn" data-mode="3">3 Numbers</button>
+        </div>
       </div>
+
+      <div class="control-group">
+        <div class="control-label">Level</div>
+        <div class="button-group" id="levelGroup">
+          <button class="btn level-btn" data-level="1">Level 1</button>
+          <button class="btn level-btn" data-level="2">Level 2</button>
+          <button class="btn level-btn" data-level="3">Level 3</button>
+          <button class="btn level-btn" data-level="4">Level 4</button>
+          <button class="btn level-btn" data-level="5">Level 5</button>
+          <button class="btn level-btn" data-level="6">Level 6</button>
+        </div>
+      </div>
+
+      <button id="startBtn" class="btn">Start Game</button>
+
     </div>
+
+    <!-- Reserved space for Fact Focus -->
+    <div id="factFocusSection" class="hidden">
+      <!-- Fact Focus buttons will go here later -->
+    </div>
+
+  </div>
+</div>
 
     <!-- Score / Target Display -->
     <div class="row">
