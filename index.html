@@ -1092,43 +1092,6 @@ nums.unshift(r);
   levelSelect.disabled = true;
 };
 
-   // Difficulty and Focus buttons control
-    
-    difficultyButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    const difficulty = btn.dataset.difficulty;
-
-    if (difficulty === "warmup") {
-      modeSelect.value = "3";
-      state.mode = 3;
-    }
-
-    if (difficulty === "workout") {
-      modeSelect.value = "4";
-      state.mode = 4;
-    }
-
-    if (difficulty === "challenge") {
-      modeSelect.value = "4";
-      state.mode = 4;
-      levelSelect.value = "6";
-      state.level = 6;
-    }
-  });
-});
-focusButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    if (state.mode === 4 && state.level === 6) return; // Challenge active
-
-    const level = Number(btn.dataset.level);
-
-    levelSelect.value = level;
-    state.level = level;
-  });
-});
-
 nextBtn.onclick = nextProblem;
 
     function nextProblem() {
