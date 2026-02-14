@@ -41,35 +41,12 @@
       box-shadow:0 10px 30px rgba(0,0,0,.45);
       position:relative;
     }
-    
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
 
-.controls {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-.control-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.button-row {
-  display: flex;
-  gap: 10px;
-}
-
-.hidden {
-  display: none;
-}
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
 
     .title{font-size:22px;font-weight:800;}
 
@@ -79,25 +56,6 @@
       align-items:center;
       font-size:14px;
     }
-    
-.controls-area {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-    
-.control-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.button-group {
-  display: flex;
-  gap: 8px;
-}
 
     select{
       padding:6px 8px;
@@ -247,48 +205,28 @@
   <div class="container">
 
     <!-- Header / Settings -->
-<div class="header">
+    <div class="header">
+      <div class="title">Target Number Game</div>
+      <div class="settings">
+        <button id="newGameBtn" class="btn">New Game</button>
+        Mode:
+        <select id="modeSelect">
+          <option value="4">4 numbers</option>
+          <option value="3">3 numbers</option>
+        </select>
+        
+        <select id="levelSelect">
+  <option value="1">Level 1 (0,1,2,5)</option>
+  <option value="2">Level 2 (3,4)</option>
+  <option value="3">Level 3 (6,7)</option>
+  <option value="4">Level 4 (8,9)</option>
+  <option value="5">Level 5 (6–9)</option>
+  <option value="6">Level 6 (0–12)</option>
+</select>
 
-  <div class="title">Target Number Game</div>
-
-  <div class="controls">
-
-    <!-- Difficulty -->
-    <div class="control-block">
-      <div class="control-label">Choose Difficulty</div>
-      <div class="button-row" id="difficultyGroup">
-        <button class="btn difficulty-btn" data-difficulty="warmup">Warm-Up</button>
-        <button class="btn difficulty-btn" data-difficulty="workout">Workout</button>
-        <button class="btn difficulty-btn" data-difficulty="challenge">Challenge</button>
+        <button id="startBtn" class="btn">Start Game</button>
       </div>
     </div>
-
-    <!-- Fact Focus -->
-    <div class="control-block hidden" id="factFocusSection">
-      <div class="control-label">Choose Fact Focus</div>
-      <div class="button-row" id="factGroup">
-        <button class="btn fact-btn" data-level="1">2s & 5s</button>
-        <button class="btn fact-btn" data-level="2">3s & 4s</button>
-        <button class="btn fact-btn" data-level="3">6s & 7s</button>
-        <button class="btn fact-btn" data-level="4">8s & 9s</button>
-        <button class="btn fact-btn" data-level="5">Mixed 6–9</button>
-      </div>
-    </div>
-
-    <button id="newGameBtn" class="btn">New Game</button>
-    <button id="startBtn" class="btn primary">Start Game</button>
-
-  </div>
-
-</div>
-
-    <!-- Reserved space for Fact Focus -->
-    <div id="factFocusSection" class="hidden">
-      <!-- Fact Focus buttons will go here later -->
-    </div>
-
-  </div>
-</div>
 
     <!-- Score / Target Display -->
     <div class="row">
@@ -332,50 +270,6 @@
     /* --------------------------------------------------
        Utility functions
        -------------------------------------------------- */
-const difficultyButtons = document.querySelectorAll(".difficulty-btn");
-const factSection = document.getElementById("factFocusSection");
-
-difficultyButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    const selected = btn.dataset.difficulty;
-    state.difficulty = selected;
-
-    // Visual active state
-    difficultyButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    if (selected === "warmup") {
-      state.count = 3;
-      factSection.classList.remove("hidden");
-    }
-
-    if (selected === "workout") {
-      state.count = 4;
-      factSection.classList.remove("hidden");
-    }
-
-    if (selected === "challenge") {
-      state.count = 4;
-      state.level = 6;   // automatic
-      factSection.classList.add("hidden");
-    }
-
-  });
-});
-const factButtons = document.querySelectorAll(".fact-btn");
-
-factButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-
-    const level = parseInt(btn.dataset.level);
-    state.level = level;
-
-    factButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-  });
-});
 
     // Random integer from 0..m
     const randInt = m => Math.floor(Math.random() * (m + 1));
@@ -441,29 +335,27 @@ function randomInitialNumber(level, existing = []) {
        Global game state
        -------------------------------------------------- */
 
-   let state = {
-  mode: 4,
-  level: 1,   // ← ADD THIS LINE
-  max: 99,
-  numbers: [],
-  original: [],
-  solution: [],
-  target: 0,
+    let state = {
+      mode: 4,
+      max: 99,
+      numbers: [],
+      original: [],
+      solution: [],
+      target: 0,
 
-  selection: { first: null, op: null },
+      selection: { first: null, op: null },
 
-  score: 0,
-  problems: 0,
-  moveCount: 0,
-  usedHint: 0,
-  solutionShown: false,
-  gameStarted: false,
+      score: 0,
+      problems: 0,
+      moveCount: 0,
+      usedHint: 0,
+      solutionShown: false,
+      gameStarted: false,
 
-  totalProblems: 10,
-  hintsUsed: 0,
-  solutionsUsed: 0
-};
-
+      totalProblems: 10,
+      hintsUsed: 0,
+      solutionsUsed: 0
+    };
 
     /* --------------------------------------------------
        DOM references
