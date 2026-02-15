@@ -591,7 +591,7 @@
         <div class="mission-brief">
           <div class="mission-brief-title">Mission Objectives</div>
           <div class="mission-brief-item">Hit the Target using any Operation</div>
-          <div class="mission-brief-item">Each step must produce a whole number</div>
+          <div class="mission-brief-item">Each step must result in a whole number</div>
           <div class="mission-brief-item">Mission Control provides hint for 1st move only</div>
         </div>
       </div>
@@ -661,6 +661,13 @@
 
     <!-- Number Buttons -->
     <div class="row" id="numbersRow"></div>
+
+    <!-- Inline feedback for invalid moves -->
+    <div id="feedbackMsg" style="
+      text-align:center; font-size:13px; color:#ff9800;
+      min-height:18px; margin:-6px 0 2px;
+      transition: opacity 0.4s;
+    "></div>
 
     <!-- Control Buttons -->
     <div class="row">
@@ -797,6 +804,18 @@
     const startBtn    = document.getElementById('startBtn');
     const quitBtn     = document.getElementById('quitBtn');
     const solutionBox = document.getElementById('solutionBox');
+    const feedbackMsg = document.getElementById('feedbackMsg');
+
+    let feedbackTimer = null;
+    function showFeedback(msg) {
+      feedbackMsg.textContent = msg;
+      feedbackMsg.style.opacity = '1';
+      if (feedbackTimer) clearTimeout(feedbackTimer);
+      feedbackTimer = setTimeout(() => {
+        feedbackMsg.style.opacity = '0';
+        setTimeout(() => { feedbackMsg.textContent = ''; }, 400);
+      }, 2000);
+    }
     const factRow        = document.getElementById('factRow');
     const difficultyLabel = document.getElementById('difficultyLabel');
     const factLabel       = document.getElementById('factLabel');
@@ -1084,6 +1103,7 @@
       if (!state.level || (state.difficulty !== 'challenge' && state.factFocus === null)) return;
 
       solutionBox.style.display = 'none';
+      if (feedbackMsg) { feedbackMsg.textContent = ''; feedbackMsg.style.opacity = '0'; }
 
       state.selectedFirst        = null;
       state.selectedOp           = null;
@@ -1178,6 +1198,7 @@
     function resetSelection() {
       state.selectedFirst = null;
       state.selectedOp    = null;
+      processingMove      = false; // safety — ensure lock is always cleared
       clearHighlights();
     }
 
@@ -1199,8 +1220,11 @@
        NUMBER CLICKS
     ═══════════════════════════════════════════════════ */
 
+    let processingMove = false; // guard against double-click race condition
+
     function numberClick(i, btn) {
       if (state.solutionShown || !state.gameStarted) return;
+      if (processingMove) return; // ignore clicks while a move is animating
 
       if (state.selectedFirst === i && state.selectedOp === null) {
         resetSelection();
@@ -1221,12 +1245,21 @@
       const b = state.numbers[i];
 
       if (state.selectedOp === '/' && (b === 0 || a % b !== 0)) {
+        showFeedback('Each step must result in a whole number.');
         resetSelection();
         return;
       }
 
       const res = calculate(a, state.selectedOp, b);
+
+      // Block negative results and non-integers (belt-and-suspenders for division edge cases)
+      if (res < 0 || !Number.isInteger(res)) {
+        showFeedback('Each step must result in a whole number.');
+        resetSelection();
+        return;
+      }
       state.moveCount++;
+      processingMove = true; // lock until state is fully updated
       refreshButtonStates();
 
       setTimeout(() => {
@@ -1234,6 +1267,7 @@
         state.numbers.unshift(res);
         renderNumbers();
         resetSelection();
+        processingMove = false; // unlock
 
         if (state.numbers.length === 1 &&
             state.numbers[0] === state.target &&
