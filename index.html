@@ -528,7 +528,7 @@
     .summaryBox {
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.92);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -539,6 +539,7 @@
       text-align: center;
       gap: 10px;
       padding: 24px;
+      z-index: 100; /* sits above target, crosshair rings, everything */
     }
 
     /* Master unlock banner inside summary */
@@ -702,6 +703,18 @@
         candidates = candidates.filter(n => n !== 0 && n !== 1);
         const softened = candidates.filter(n => n !== 2 && n !== 10);
         if (softened.length && Math.random() < 0.6) candidates = softened;
+      }
+
+      // ── Adjacent-pair avoidance (levels 3–5: 6s&7s, 8s&9s, All×6-9) ──
+      // If the tile set already contains a number, strongly avoid adding its
+      // immediate neighbour (e.g. don't add 7 if 6 is already there) because
+      // adjacent pairs trivially subtract to 1, enabling cheap ×1 shortcuts.
+      if (level >= 3 && existing.length > 0) {
+        const noAdjacent = candidates.filter(n =>
+          !existing.some(e => Math.abs(e - n) === 1)
+        );
+        // Use non-adjacent pool ~80% of the time; allow adjacents occasionally
+        if (noAdjacent.length && Math.random() < 0.80) candidates = noAdjacent;
       }
 
       if (level === 1) {
@@ -963,6 +976,28 @@
     function solutionUsesRequiredFact(solution, nums) {
       const hasMultDiv = solution.some(s => s.op === '*' || s.op === '/');
       if (!hasMultDiv) return false;
+
+      // ── NEW: reject solutions that manufacture a 1 via subtraction then
+      // use it in a multiply/divide step — these are trivial and undesirable.
+      // Build the set of results produced by subtraction steps.
+      const manufacturedOnes = new Set();
+      for (const s of solution) {
+        if ((s.op === '-') && s.result === 1) manufacturedOnes.add(1);
+      }
+      // If any mult/div step uses a manufactured 1 as either operand, reject.
+      if (manufacturedOnes.size > 0) {
+        for (const s of solution) {
+          if (s.op === '*' || s.op === '/') {
+            if (s.a === 1 || s.b === 1) return false;
+          }
+        }
+      }
+
+      // ── NEW: also reject any mult/div where either operand is 1, period —
+      // multiplying or dividing by 1 is trivially uninteresting regardless of origin.
+      for (const s of solution) {
+        if ((s.op === '*' || s.op === '/') && (s.a === 1 || s.b === 1)) return false;
+      }
 
       const meaningful = solution.filter(s =>
         (s.op === '*' || s.op === '/') &&
@@ -1542,7 +1577,12 @@
       `;
 
       document.querySelector('.container').appendChild(summary);
-      document.getElementById('closeSummaryBtn').onclick = () => summary.remove();
+
+      // Closing summary resets to selection screen — no need to hit Quit
+      document.getElementById('closeSummaryBtn').onclick = () => {
+        summary.remove();
+        resetGame(false); // re-prompt difficulty so student chooses deliberately
+      };
 
       if (unlockMaster) {
         document.getElementById('masterModeBtn').onclick = () => {
@@ -1556,12 +1596,14 @@
        NEW GAME (full reset)
     ═══════════════════════════════════════════════════ */
 
-    function resetGame() {
+    function resetGame(keepDifficultyChosen = true) {
       const prevDiff = state.difficulty;
 
       state = {
         difficulty: prevDiff,
-        difficultyChosen: true,  // they just clicked Quit — preserve difficulty highlight
+        // After Quit: keep difficulty highlighted so player can just pick Fact Focus
+        // After game ends via summary Close: re-prompt so they choose deliberately
+        difficultyChosen: keepDifficultyChosen,
         factFocus:  null,
         mode:  DIFF_MODE[prevDiff],
         level: prevDiff === 'challenge' ? 6 : 1,
@@ -1582,7 +1624,7 @@
       unlockMenu();
       selectDifficulty(prevDiff);
 
-      if (prevDiff === 'challenge') {
+      if (keepDifficultyChosen && prevDiff === 'challenge') {
         state.level = 6;
         state.mode  = DIFF_MODE['challenge'];
         generateProblem();
@@ -1591,7 +1633,7 @@
       refreshButtonStates();
     }
 
-    quitBtn.onclick = () => resetGame();
+    quitBtn.onclick = () => resetGame(true);   // Quit: keep difficulty chosen
 
     /* ═══════════════════════════════════════════════════
        INIT
