@@ -3,236 +3,651 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Target Number Game</title>
+  <title>Operation: Number Blaster</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
-  <!--
-    ==============================
-    CSS STYLES
-    ==============================
-    Visual design is unchanged from the baseline.
-    Variables are used for colors and sizing consistency.
-  -->
   <style>
-    :root{
-      --bg1:#1a6ed8; --bg2:#3fa9f5; --panel:#0f2f57;
-      --num:#1f8fff; --numShadow:#0c4fa3;
-      --opAdd:#2ecc71; --opSub:#f39c12; --opMul:#9b59b6; --opDiv:#e74c3c;
-      --btn:#34495e; --btnShadow:#1f2d3a;
-      --white:#fff;
+    :root {
+      --bg1: #1a6ed8;
+      --bg2: #3fa9f5;
+      --panel: #0f2f57;
+      --num: #1f8fff;
+      --numShadow: #0c4fa3;
+      --opAdd: #2ecc71;
+      --opSub: #f39c12;
+      --opMul: #9b59b6;
+      --opDiv: #e74c3c;
+      --btn: #34495e;
+      --btnShadow: #1f2d3a;
+      --white: #fff;
+
+      /* Difficulty button accent colors */
+      --warmup:    #27ae60;
+      --workout:   #e67e22;
+      --challenge: #c0392b;
+      --master:    #8e44ad;
     }
 
-    html,body{
-      height:100%;
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      background:linear-gradient(160deg,var(--bg1),var(--bg2));
-      color:var(--white);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(160deg, var(--bg1), var(--bg2));
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .container{
-      width:960px;
-      max-width:96vw;
-      padding:18px;
-      background:var(--panel);
-      border-radius:14px;
-      box-shadow:0 10px 30px rgba(0,0,0,.45);
-      position:relative;
+    .container {
+      width: 960px;
+      max-width: 96vw;
+      padding: 18px;
+      background: var(--panel);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.45);
+      position: relative;
     }
 
-    .header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
     }
 
-    .title{font-size:22px;font-weight:800;}
-
-    .settings{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      font-size:14px;
+    .title {
+      white-space: nowrap;
+      padding-top: 2px;
+      line-height: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      flex-shrink: 0; /* title never shrinks — menu panel absorbs remaining space */
     }
 
-    select{
-      padding:6px 8px;
-      border-radius:8px;
-      border:none;
-      background:#224a7c;
-      color:white;
+    .title-operation {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.35em;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
     }
 
-    select option{background:#224a7c;color:white;}
-
-    .row{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      gap:14px;
-      margin:16px 0;
-      flex-wrap:wrap;
+    .title-main {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow:
+        0 0 1px rgba(255,255,255,0.9),
+        1px  1px 0 rgba(0,0,0,0.6),
+       -1px -1px 0 rgba(0,0,0,0.3),
+        0 0 12px rgba(100,180,255,0.25);
+      position: relative;
     }
 
-    .target{
-      background:#08213f;
-      padding:10px 18px;
-      border-radius:10px;
-      font-size:30px;
-      font-weight:900;
-      color:#ff7676;
-      min-width:90px;
-      text-align:center;
+    /* Classified-style red stamp under the title */
+    .title-stamp {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 7px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      color: rgba(255,80,80,0.75);
+      border: 1px solid rgba(255,80,80,0.5);
+      border-radius: 2px;
+      padding: 1px 4px;
+      text-transform: uppercase;
+      display: inline-block;
+      transform: rotate(-2deg);
+      margin-top: 2px;
+      width: fit-content;
     }
 
-    .num,.op,.btn{
-      border:none;
-      color:white;
-      font-weight:800;
-      cursor:pointer;
-      border-radius:16px;
-      transition:transform .05s,box-shadow .05s,filter .05s;
+    /* ── Menu panel (right side of header) ── */
+    .menu-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      min-width: 0; /* allow flex child to shrink below content size */
     }
 
-    .num{
-      min-width:160px;
-      padding:34px;
-      font-size:44px;
-      background:var(--num);
-      box-shadow:0 8px var(--numShadow);
+    /* Top row: centre column + action buttons side by side */
+    .menu-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: nowrap;
     }
 
-    .op{
-      min-width:110px;
-      padding:26px;
-      font-size:36px;
-      box-shadow:0 7px rgba(0,0,0,.35);
+    /* Difficulty label + buttons + fact focus — all share one centre axis */
+    .menu-center-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
     }
 
-    .op.add{background:var(--opAdd);}    
-    .op.sub{background:var(--opSub);}    
-    .op.mul{background:var(--opMul);}    
-    .op.div{background:var(--opDiv);}    
-
-    .btn{
-      background:var(--btn);
-      padding:10px 16px;
-      box-shadow:0 6px var(--btnShadow);
+    .diff-buttons {
+      display: flex;
+      gap: 6px;
     }
 
-    .num:active,.op:active,.btn:active{
-      transform:translateY(4px);
-      box-shadow:0 3px rgba(0,0,0,.4);
+    /* Start + Quit + Score stacked vertically, centred */
+    .menu-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
     }
 
-    .selected{filter:brightness(1.35);}    
-    .disabled{opacity:.4;pointer-events:none;}
-
-    .solutionBox{
-      margin-top:10px;
-      background:rgba(0,0,0,.35);
-      padding:10px;
-      border-radius:8px;
-      font-size:14px;
+    /* Difficulty label sits above the difficulty buttons, centred */
+    .difficulty-label {
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      text-align: center;
+      white-space: nowrap;
+      color: #ffeb3b;
+      opacity: 0.9;
     }
 
-    .footer{text-align:center;font-size:13px;opacity:.9;}
-
-    .fireworks{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:64px;
-      pointer-events:none;
-      animation:pop 2s ease-out forwards;
+    /* Flashing prompt state — applied while awaiting a selection */
+    @keyframes prompt-flash {
+      0%, 100% { opacity: 0.9; }
+      50%       { opacity: 0.35; }
     }
 
-    @keyframes pop{
-      0%{opacity:0;transform:scale(.6);}    
-      20%{opacity:1;transform:scale(1);}    
-      100%{opacity:0;}
+    .difficulty-label.flashing,
+    .fact-label.flashing {
+      animation: prompt-flash 1.6s ease-in-out infinite;
     }
 
-    .summaryBox{
-      position:absolute;
-      inset:0;
-      background:rgba(0,0,0,0.85);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      color:white;
-      font-size:22px;
-      border-radius:14px;
-      text-align:center;
-      gap:12px;
+    /* Fact Focus block — label above, buttons centred below */
+    .fact-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: opacity 0.2s;
     }
-  .star {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  font-size: 42px;
-  font-weight: bold;
-  animation: burst 1.3s ease-out forwards;
-  pointer-events: none;
-  text-shadow:
-    0 0 8px currentColor,
-    0 0 16px currentColor,
-    0 0 24px currentColor;
-}
 
-@keyframes burst {
-  from {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 1;
-  }
-  to {
-    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.4);
-    opacity: 0;
-  }
-}
+    .fact-row.hidden {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .fact-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    .fact-label {
+      font-size: 12px;
+      white-space: nowrap;
+      color: #ffeb3b;
+      opacity: 0.9;
+    }
+
+    /* ── Base button styles ── */
+    .num, .op, .btn {
+      border: none;
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      border-radius: 16px;
+      transition: transform .05s, box-shadow .05s, filter .05s;
+    }
+
+    /* Generic utility button (New Game, Start, hints, etc.) */
+    .btn {
+      background: var(--btn);
+      padding: 10px 16px;
+      box-shadow: 0 6px var(--btnShadow);
+      white-space: nowrap;
+    }
+
+    /* Light-blue accent buttons — New Game and Start Game */
+    .btn-accent {
+      background: var(--num);
+      box-shadow: 0 6px var(--numShadow);
+    }
+
+    /* Quit Game — octagon, always visible, greyed until game starts */
+    .quit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      cursor: pointer;
+      background: #c0392b;
+      white-space: nowrap;
+      padding: 8px 11px;
+      clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+      width: 54px;
+      height: 54px;
+      line-height: 1.2;
+      text-align: center;
+      opacity: 0.32;
+      pointer-events: none;
+      transition: filter .1s, transform .05s, opacity .25s;
+    }
+
+    .quit-btn:hover  { filter: brightness(1.2); }
+    .quit-btn:active { transform: scale(0.93); }
+
+    .quit-btn.active {
+      opacity: 1;
+      pointer-events: auto;
+      box-shadow: 0 4px rgba(0,0,0,.4);
+    }
+
+    /* Start Game — elongated hexagon */
+    #startBtn {
+      clip-path: polygon(14px 0%, calc(100% - 14px) 0%, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0% 50%);
+      padding: 10px 26px;
+      border-radius: 0;
+    }
+
+    @keyframes start-pulse {
+      0%, 100% { filter: brightness(1);    box-shadow: 0 6px var(--numShadow); }
+      50%       { filter: brightness(1.3); box-shadow: 0 0 18px rgba(31,143,255,0.7), 0 6px var(--numShadow); }
+    }
+
+    .btn-accent.pulsing {
+      animation: start-pulse 1.2s ease-in-out infinite;
+    }
+
+
+    /* Difficulty buttons */
+    .diff-btn {
+      border: none;
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 20px;
+      padding: 8px 16px;
+      white-space: nowrap;
+      box-shadow: 0 4px rgba(0,0,0,.35);
+      transition: transform .05s, box-shadow .05s, filter .15s, opacity .15s;
+      opacity: 0.65;
+    }
+
+    .diff-btn:active { transform: translateY(3px); box-shadow: 0 2px rgba(0,0,0,.3); }
+
+    .diff-btn.warmup    { background: var(--warmup); }
+    .diff-btn.workout   { background: var(--workout); }
+    .diff-btn.challenge { background: var(--challenge); }
+
+    .diff-btn.active {
+      opacity: 1;
+      filter: brightness(1.15);
+      box-shadow: 0 0 0 3px white, 0 4px rgba(0,0,0,.35);
+    }
+
+    /* Fact Focus buttons */
+    .fact-btn {
+      border: none;
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 20px;
+      padding: 6px 12px;
+      white-space: nowrap;
+      background: #224a7c;
+      box-shadow: 0 3px rgba(0,0,0,.3);
+      transition: transform .05s, box-shadow .05s, filter .15s, opacity .15s;
+      opacity: 0.65;
+    }
+
+    .fact-btn:active { transform: translateY(2px); box-shadow: 0 1px rgba(0,0,0,.3); }
+
+    .fact-btn.active {
+      opacity: 1;
+      filter: brightness(1.2);
+      box-shadow: 0 0 0 2px white, 0 3px rgba(0,0,0,.3);
+    }
+
+    /* ── Game area ── */
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin: 10px 0;
+      flex-wrap: wrap;
+    }
+
+    /* ── Sci-fi crosshair target display ── */
+    .target-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 96px;
+      height: 96px;
+    }
+
+    /* Outer rotating ring */
+    .target-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(255,80,80,0.5);
+      border-top-color: #ff5252;
+      border-right-color: #ff5252;
+      animation: crosshair-spin 3s linear infinite;
+    }
+
+    /* Inner counter-rotating ring */
+    .target-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,80,80,0.3);
+      border-bottom-color: #ff9090;
+      border-left-color: #ff9090;
+      animation: crosshair-spin 2s linear infinite reverse;
+    }
+
+    @keyframes crosshair-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .target {
+      position: relative;
+      z-index: 1;
+      background: #08213f;
+      border: 2px solid rgba(255,80,80,0.4);
+      border-radius: 50%;
+      width: 72px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 900;
+      color: #ff7676;
+      text-shadow: 0 0 8px rgba(255,80,80,0.6);
+      box-shadow: inset 0 0 12px rgba(255,80,80,0.15), 0 0 10px rgba(255,80,80,0.2);
+      transition: transform 0.15s;
+    }
+
+    /* Crosshair tick marks (4 short lines at N/S/E/W) */
+    .target-tick {
+      position: absolute;
+      background: rgba(255,80,80,0.6);
+      border-radius: 2px;
+    }
+    .target-tick.n { width: 2px; height: 10px; top: 2px;  left: 50%; transform: translateX(-50%); }
+    .target-tick.s { width: 2px; height: 10px; bottom: 2px; left: 50%; transform: translateX(-50%); }
+    .target-tick.e { height: 2px; width: 10px; right: 2px; top: 50%; transform: translateY(-50%); }
+    .target-tick.w { height: 2px; width: 10px; left: 2px;  top: 50%; transform: translateY(-50%); }
+
+    /* ── Explosion particles ── */
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      font-weight: 900;
+      animation: particle-fly var(--dur) ease-out forwards;
+      z-index: 9999;
+      text-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
+      transform-origin: center;
+    }
+
+    @keyframes particle-fly {
+      0%   { transform: translate(-50%, -50%) scale(0.6) rotate(var(--rot0)); opacity: 1; }
+      60%  { opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--sf)) rotate(var(--rot1)); opacity: 0; }
+    }
+
+    /* Lock-on flash overlay on the target */
+    .target-flash {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: lock-flash 0.5s ease-out forwards;
+      z-index: 2;
+    }
+
+    @keyframes lock-flash {
+      0%   { box-shadow: 0 0 0 4px #00ff88, 0 0 20px #00ff88; opacity: 1; }
+      100% { box-shadow: 0 0 0 20px transparent, 0 0 60px transparent; opacity: 0; }
+    }
+
+    /* Target shatter — number flies up and fades */
+    @keyframes target-shatter {
+      0%   { transform: scale(1);   opacity: 1; }
+      30%  { transform: scale(1.5) rotate(-8deg); opacity: 1; filter: brightness(3); }
+      100% { transform: scale(0.2) rotate(15deg) translateY(-40px); opacity: 0; }
+    }
+
+    .target.exploding {
+      animation: target-shatter 0.6s ease-out forwards;
+    }
+
+    .num {
+      min-width: 120px;
+      padding: 22px;
+      font-size: 36px;
+      background: var(--num);
+      box-shadow: 0 8px var(--numShadow);
+    }
+
+    .op {
+      min-width: 80px;
+      padding: 18px;
+      font-size: 28px;
+      box-shadow: 0 7px rgba(0,0,0,.35);
+    }
+
+    .op.add { background: var(--opAdd); }
+    .op.sub { background: var(--opSub); }
+    .op.mul { background: var(--opMul); }
+    .op.div { background: var(--opDiv); }
+
+    .num:active, .op:active, .btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 3px rgba(0,0,0,.4);
+    }
+
+    .selected { filter: brightness(1.35); }
+    .disabled { opacity: .4; pointer-events: none; }
+
+    .solutionBox {
+      margin-top: 10px;
+      background: rgba(0,0,0,.35);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .footer { text-align: center; font-size: 13px; opacity: .9; }
+
+    /* (particle explosion styles are defined above with .target styles) */
+
+    /* ── Mission brief (below title) ── */
+    .mission-brief {
+      margin-top: 6px;
+      padding: 7px 10px;
+      border: 1px solid rgba(100,180,255,0.25);
+      border-left: 2px solid rgba(100,180,255,0.5);
+      border-radius: 4px;
+      background: rgba(0,0,0,0.2);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 8.5px;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.9;
+      white-space: nowrap;
+    }
+
+    .mission-brief-title {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: rgba(100,200,255,0.8);
+      margin-bottom: 3px;
+      text-transform: uppercase;
+    }
+
+    .mission-brief-item::before {
+      content: '▸ ';
+      color: rgba(100,200,255,0.7);
+    }
+
+    /* Score/Problem inside menu-actions */
+    .menu-score {
+      font-size: 12px;
+      text-align: center;
+      opacity: 0.85;
+      line-height: 1.6;
+      margin-top: 2px;
+    }
+
+    .menu-score span {
+      font-weight: 900;
+      font-size: 15px;
+      color: #ffeb3b;
+    }
+    .summaryBox {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      border-radius: 14px;
+      text-align: center;
+      gap: 10px;
+      padding: 24px;
+    }
+
+    /* Master unlock banner inside summary */
+    .master-unlock {
+      background: linear-gradient(135deg, var(--master), #6c3483);
+      border-radius: 12px;
+      padding: 14px 22px;
+      font-size: 18px;
+      line-height: 1.5;
+      box-shadow: 0 0 20px rgba(142,68,173,0.6);
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 10px rgba(142,68,173,0.5); }
+      to   { box-shadow: 0 0 28px rgba(142,68,173,0.9); }
+    }
+
+    .master-btn {
+      border: none;
+      color: white;
+      font-weight: 800;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 20px;
+      padding: 12px 28px;
+      background: var(--master);
+      box-shadow: 0 5px rgba(0,0,0,.4);
+      white-space: nowrap;
+      transition: transform .05s, filter .1s;
+    }
+
+    .master-btn:active { transform: translateY(3px); }
+    .master-btn:hover  { filter: brightness(1.2); }
   </style>
 </head>
 <body>
 
-  <!-- ==============================
-       MAIN GAME LAYOUT
-       ============================== -->
   <div class="container">
 
-    <!-- Header / Settings -->
+    <!-- ══════════════════════════════════════
+         HEADER / MENU
+    ══════════════════════════════════════ -->
     <div class="header">
-      <div class="title">Target Number Game</div>
-      <div class="settings">
-        <button id="newGameBtn" class="btn">New Game</button>
-        Mode:
-        <select id="modeSelect">
-          <option value="4">4 numbers</option>
-          <option value="3">3 numbers</option>
-        </select>
-        
-        <select id="levelSelect">
-  <option value="1">Level 1 (0,1,2,5)</option>
-  <option value="2">Level 2 (3,4)</option>
-  <option value="3">Level 3 (6,7)</option>
-  <option value="4">Level 4 (8,9)</option>
-  <option value="5">Level 5 (6–9)</option>
-  <option value="6">Level 6 (0–12)</option>
-</select>
-
-        <button id="startBtn" class="btn">Start Game</button>
+      <div class="title">
+        <div class="title-operation">Operation:</div>
+        <div class="title-main">Number Blaster</div>
+        <div class="title-stamp">Classified</div>
+        <div class="mission-brief">
+          <div class="mission-brief-title">Mission Objectives</div>
+          <div class="mission-brief-item">Hit the Target using any Operation</div>
+          <div class="mission-brief-item">Each step must produce a whole number</div>
+          <div class="mission-brief-item">Mission Control provides hint for 1st move only</div>
+        </div>
       </div>
-    </div>
 
-    <!-- Score / Target Display -->
-    <div class="row">
-      Target <div class="target" id="targetValue">--</div>
-      Score <span id="score">0</span>
-      Problem <span id="problems">0/10</span>
+      <div class="menu-panel">
+
+        <div class="menu-top">
+
+          <!-- Difficulty + Fact Focus stacked column, centred together -->
+          <div class="menu-center-col">
+            <div class="difficulty-label" id="difficultyLabel">Choose a Difficulty Level to start a New Game</div>
+            <div class="diff-buttons">
+              <button class="diff-btn warmup"    data-diff="warmup">Warm-Up</button>
+              <button class="diff-btn workout"   data-diff="workout">Workout</button>
+              <button class="diff-btn challenge" data-diff="challenge">Challenge</button>
+            </div>
+
+            <!-- Fact Focus block (hidden for Challenge) -->
+            <div class="fact-row" id="factRow">
+              <span class="fact-label" id="factLabel">Choose your Fact Focus</span>
+              <div class="fact-buttons">
+                <button class="fact-btn" data-fact="1">2s &amp; 5s</button>
+                <button class="fact-btn" data-fact="2">3s &amp; 4s</button>
+                <button class="fact-btn" data-fact="3">6s &amp; 7s</button>
+                <button class="fact-btn" data-fact="4">8s &amp; 9s</button>
+                <button class="fact-btn" data-fact="5">All ×6–9</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Start + Quit + Score stacked on the right -->
+          <div class="menu-actions">
+            <button id="startBtn" class="btn btn-accent">Start Game</button>
+            <div style="height:6px;"></div>
+            <button id="quitBtn" class="quit-btn">QUIT</button>
+            <div class="menu-score">
+              Score: <span id="score">0</span><br>
+              Problem: <span id="problems">0/10</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div><!-- .menu-panel -->
+    </div><!-- .header -->
+
+    <!-- Target Display — truly centred, label floated left -->
+    <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin:18px 0 14px;">
+      <span style="font-size:12px; opacity:0.65; letter-spacing:0.1em; text-align:right; padding-right:12px;">TARGET</span>
+      <div class="target-wrap" id="targetWrap">
+        <div class="target-tick n"></div>
+        <div class="target-tick s"></div>
+        <div class="target-tick e"></div>
+        <div class="target-tick w"></div>
+        <div class="target" id="targetValue">--</div>
+      </div>
+      <span></span>
     </div>
 
     <!-- Operator Buttons -->
@@ -248,118 +663,114 @@
 
     <!-- Control Buttons -->
     <div class="row">
-      <button id="hintBtn" class="btn disabled">Hint (1st Move)</button>
+      <button id="hintBtn"     class="btn disabled">Hint (1st Move)</button>
       <button id="solutionBtn" class="btn disabled">Show Solution</button>
-      <button id="resetBtn" class="btn disabled">Reset Problem</button>
-      <button id="nextBtn" class="btn disabled">Next Problem</button>
+      <button id="resetBtn"    class="btn disabled">Reset Problem</button>
+      <button id="nextBtn"     class="btn disabled">Next Problem</button>
     </div>
 
     <!-- Solution Display -->
     <div id="solutionBox" class="solutionBox" style="display:none"></div>
 
-    <div class="footer">
-      Use each number once per step. Intermediate results must be integers.
-    </div>
-  </div>
+  </div><!-- .container -->
 
-  <!-- ==============================
-       GAME LOGIC (JavaScript)
-       ============================== -->
+
   <script>
 
-    /* --------------------------------------------------
-       Utility functions
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       UTILITY
+    ═══════════════════════════════════════════════════ */
 
-    // Random integer from 0..m
     const randInt = m => Math.floor(Math.random() * (m + 1));
 
-    // Weighted number generation:
-    // - Small chance of zero
-    // - Avoids multiple zeros
-    const weightedNumber = (existing = []) => {
-      if (existing.includes(0)) return 1 + randInt(10);
-      return Math.random() < 0.05 ? 0 : 1 + randInt(10);
-    };
-    
-function randomInitialNumber(level, existing = []) {
-  let pool;
-
-  if (level === 6) {
-    // Level 6: allow 3–12
-    pool = [3,4,5,6,7,8,9,10,11,12];
-  } else {
-    // Levels 1–5: allow 0–10
-    pool = [0,1,2,3,4,5,6,7,8,9,10];
-  }
-
-  const available = pool.filter(n => !existing.includes(n));
-  const source = available.length ? available : pool;
-
-  let candidates = source;
-
-  // Existing behavior for level >= 2: remove 0/1, soft-discourage 2 and 10
-  if (level >= 2) {
-    candidates = candidates.filter(n => n !== 0 && n !== 1);
-
-    const softened = candidates.filter(n => n !== 2 && n !== 10);
-    if (softened.length && Math.random() < 0.6) {
-      candidates = softened;
-    }
-  }
-
-  // Special biasing for Level 1:
-  // - Prefer 2 or 5 (target family) if not already present.
-  // - Strongly discourage 10 (so it doesn't dominate) but still allow it as a partner.
-  if (level === 1) {
-    const preferred = [2, 5].filter(n => !existing.includes(n));
-    if (preferred.length && Math.random() < 0.5) {
-      return preferred[Math.floor(Math.random() * preferred.length)];
+    function calculate(a, op, b) {
+      if (op === '+') return a + b;
+      if (op === '-') return a - b;
+      if (op === '*') return a * b;
+      if (op === '/') return a / b;
     }
 
-    // Disfavor 10 strongly for random picks unless it's the only choice
-    const without10 = candidates.filter(n => n !== 10);
-    if (without10.length && Math.random() < 0.75) {
-      candidates = without10;
+    function randomInitialNumber(level, existing = []) {
+      const fullPool = level === 6
+        ? [3,4,5,6,7,8,9,10,11,12]
+        : [0,1,2,3,4,5,6,7,8,9,10];
+
+      const available = fullPool.filter(n => !existing.includes(n));
+      let candidates = available.length ? available : fullPool;
+
+      if (level >= 2) {
+        candidates = candidates.filter(n => n !== 0 && n !== 1);
+        const softened = candidates.filter(n => n !== 2 && n !== 10);
+        if (softened.length && Math.random() < 0.6) candidates = softened;
+      }
+
+      if (level === 1) {
+        const preferred = [2, 5].filter(n => !existing.includes(n));
+        if (preferred.length && Math.random() < 0.5) {
+          return preferred[Math.floor(Math.random() * preferred.length)];
+        }
+        const without10 = candidates.filter(n => n !== 10);
+        if (without10.length && Math.random() < 0.75) candidates = without10;
+      }
+
+      if (!candidates.length) candidates = fullPool;
+      return candidates[Math.floor(Math.random() * candidates.length)];
     }
-  }
 
-  // Safety fallback (should rarely trigger)
-  if (!candidates.length) {
-    candidates = source;
-  }
+    /* ═══════════════════════════════════════════════════
+       MENU CONFIG
+       Maps UI difficulty + factFocus selections → internal level + mode
+    ═══════════════════════════════════════════════════ */
 
-  return candidates[Math.floor(Math.random() * candidates.length)];
-}
-    /* --------------------------------------------------
-       Global game state
-       -------------------------------------------------- */
+    // difficulty → mode (number of tiles)
+    const DIFF_MODE = { warmup: 3, workout: 4, challenge: 4 };
+
+    // difficulty + factFocus → internal level (1–6)
+    // challenge always maps to level 6 regardless of factFocus
+    function resolveLevel(difficulty, factFocus) {
+      if (difficulty === 'challenge') return 6;
+      return factFocus; // factFocus is already 1–5
+    }
+
+    /* ═══════════════════════════════════════════════════
+       STATE
+    ═══════════════════════════════════════════════════ */
+
+    const TOTAL_PROBLEMS = 10;
+    const PERFECT_SCORE  = TOTAL_PROBLEMS * 100; // 1000
 
     let state = {
-      mode: 4,
-      max: 99,
-      numbers: [],
-      original: [],
-      solution: [],
-      target: 0,
+      // Menu selections
+      difficulty: 'warmup',   // 'warmup' | 'workout' | 'challenge'
+      difficultyChosen: false, // true only after student actively clicks a difficulty btn
+      factFocus:  null,        // null = not yet chosen; 1–5 once picked (ignored for challenge)
 
-      selection: { first: null, op: null },
+      // Derived from menu (set on Start)
+      mode:  3,   // 3 or 4 number tiles
+      level: 1,   // internal 1–6
+      max:   99,
 
-      score: 0,
-      problems: 0,
-      moveCount: 0,
-      usedHint: 0,
+      // Problem data
+      numbers: [], original: [], solution: [], target: 0,
+
+      // Interaction
+      selectedFirst: null,
+      selectedOp:    null,
+
+      // Progress
+      score: 0, problems: 0, moveCount: 0,
+      hintUsedThisProblem: false,
       solutionShown: false,
-      gameStarted: false,
+      gameStarted:   false,
 
-      totalProblems: 10,
-      hintsUsed: 0,
+      // Summary stats
+      hintsUsed:     0,
       solutionsUsed: 0
     };
 
-    /* --------------------------------------------------
-       DOM references
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       DOM REFERENCES
+    ═══════════════════════════════════════════════════ */
 
     const numbersRow  = document.getElementById('numbersRow');
     const targetEl    = document.getElementById('targetValue');
@@ -367,383 +778,344 @@ function randomInitialNumber(level, existing = []) {
     const problemsEl  = document.getElementById('problems');
 
     const hintBtn     = document.getElementById('hintBtn');
-    const resetBtn    = document.getElementById('resetBtn');
     const solutionBtn = document.getElementById('solutionBtn');
-    const solutionBox = document.getElementById('solutionBox');
-    const startBtn    = document.getElementById('startBtn');
+    const resetBtn    = document.getElementById('resetBtn');
     const nextBtn     = document.getElementById('nextBtn');
+    const startBtn    = document.getElementById('startBtn');
+    const quitBtn     = document.getElementById('quitBtn');
+    const solutionBox = document.getElementById('solutionBox');
+    const factRow        = document.getElementById('factRow');
+    const difficultyLabel = document.getElementById('difficultyLabel');
+    const factLabel       = document.getElementById('factLabel');
 
-    const modeSelect  = document.getElementById('modeSelect');
-    const levelSelect = document.getElementById('levelSelect');
-    const newGameBtn  = document.getElementById('newGameBtn');
+    const diffBtns = document.querySelectorAll('.diff-btn');
+    const factBtns = document.querySelectorAll('.fact-btn');
 
-    /* --------------------------------------------------
-       Solver (recursive backtracking)
-       Finds *one* valid solution sequence
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       BUTTON ENABLE / DISABLE — single source of truth
+    ═══════════════════════════════════════════════════ */
+
+    function setEnabled(btn, enabled) {
+      btn.classList.toggle('disabled', !enabled);
+    }
+
+    function refreshButtonStates() {
+      const active  = state.gameStarted && !state.solutionShown;
+      const canHint = active && state.moveCount === 0 && !state.hintUsedThisProblem;
+
+      // Start requires: game not started AND (challenge OR a fact focus chosen)
+      const needsFact = (state.difficulty === 'warmup' || state.difficulty === 'workout')
+                        && state.factFocus === null;
+      const canStart  = !state.gameStarted && state.difficultyChosen && !needsFact;
+
+      setEnabled(hintBtn,     canHint);
+      setEnabled(solutionBtn, active);
+      setEnabled(resetBtn,    active);
+      setEnabled(nextBtn,     state.solutionShown && state.gameStarted);
+      setEnabled(startBtn,    canStart);
+
+      // Pulse Start Game once it's enabled — stops when game begins
+      startBtn.classList.toggle('pulsing', canStart);
+
+      // Quit button: always visible, active (red + clickable) only during game
+      quitBtn.classList.toggle('active', state.gameStarted);
+
+      // Flash difficulty label only before game starts — not during play
+      const shouldFlashDifficulty = !state.gameStarted && !state.difficultyChosen;
+      difficultyLabel.classList.toggle('flashing', shouldFlashDifficulty);
+
+      // Flash fact-focus label when waiting for a fact pick (warmup/workout only)
+      factLabel.classList.toggle('flashing', !state.gameStarted && needsFact);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       MENU INTERACTION
+    ═══════════════════════════════════════════════════ */
+
+    function selectDifficulty(diff) {
+      state.difficulty = diff;
+
+      // Update difficulty button highlights
+      diffBtns.forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
+
+      // Show/hide Fact Focus row
+      const showFacts = diff === 'warmup' || diff === 'workout';
+      factRow.classList.toggle('hidden', !showFacts);
+
+      if (showFacts) {
+        // Reset fact focus so student must pick again
+        state.factFocus = null;
+        factBtns.forEach(b => b.classList.remove('active'));
+      } else {
+        // Challenge: no fact focus needed — set level directly
+        state.factFocus = null; // unused but keep clean
+        state.level = 6;
+        state.mode  = DIFF_MODE[diff];
+      }
+    }
+
+    function selectFactFocus(factLevel) {
+      state.factFocus = factLevel;
+      state.difficultyChosen = true; // choosing a fact also counts as confirming difficulty
+
+      // Update fact button highlights
+      factBtns.forEach(b => b.classList.toggle('active', +b.dataset.fact === factLevel));
+
+      // Derive state and generate a preview problem
+      state.level = resolveLevel(state.difficulty, state.factFocus);
+      state.mode  = DIFF_MODE[state.difficulty];
+      generateProblem();
+
+      refreshButtonStates(); // enables Start now that factFocus is set
+    }
+
+    // Wire up difficulty buttons — only active before a game starts
+    diffBtns.forEach(b => {
+      b.onclick = () => {
+        if (state.gameStarted) return; // Quit button handles mid-game exit
+
+        const diff = b.dataset.diff;
+        selectDifficulty(diff);
+        state.difficultyChosen = true;
+
+        if (diff === 'challenge') {
+          state.level = resolveLevel(state.difficulty, state.factFocus);
+          state.mode  = DIFF_MODE[state.difficulty];
+          generateProblem();
+        } else {
+          renderPlaceholders(DIFF_MODE[diff]);
+        }
+
+        refreshButtonStates();
+      };
+    });
+
+    // Wire up fact-focus buttons
+    factBtns.forEach(b => {
+      b.onclick = () => selectFactFocus(+b.dataset.fact);
+    });
+
+    // Apply initial selections on page load — no difficulty pre-highlighted,
+    // no fact pre-selected. Warm-Up parameters are used as defaults but
+    // nothing appears "chosen" until the student actively clicks.
+    function initMenuSelections() {
+      // Set up internal state for warmup defaults without highlighting the button
+      state.difficulty = 'warmup';
+      state.mode = DIFF_MODE['warmup'];
+      // Show fact focus row (warmup/workout style) but no button highlighted
+      factRow.classList.remove('hidden');
+      // factFocus stays null — student must pick one before Start activates
+    }
+
+    /* ═══════════════════════════════════════════════════
+       LOCK / UNLOCK MENU during gameplay
+    ═══════════════════════════════════════════════════ */
+
+    function lockMenu() {
+      // Difficulty buttons stay clickable mid-game (they trigger abort/reset)
+      // Only lock fact-focus buttons during play
+      factBtns.forEach(b => { b.style.pointerEvents = 'none'; });
+    }
+
+    function unlockMenu() {
+      factBtns.forEach(b => { b.style.pointerEvents = ''; });
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SOLVER
+    ═══════════════════════════════════════════════════ */
 
     function solve(nums, target) {
-      if (nums.length === 1) {
-        return nums[0] === target ? [] : null;
-      }
+      if (nums.length === 1) return nums[0] === target ? [] : null;
 
       for (let i = 0; i < nums.length; i++) {
         for (let j = 0; j < nums.length; j++) {
           if (i === j) continue;
-
-          const a = nums[i];
-          const b = nums[j];
+          const a = nums[i], b = nums[j];
           const rest = nums.filter((_, k) => k !== i && k !== j);
 
-         const ops = [
-  { v: a + b, op: '+', ai: i, bi: j },
-  { v: a * b, op: '*', ai: i, bi: j },
-  { v: a - b, op: '-', ai: i, bi: j },
-  { v: b - a, op: '-', ai: j, bi: i }
-];
+          const ops = [
+            { v: a + b, op: '+', ai: i, bi: j },
+            { v: a * b, op: '*', ai: i, bi: j },
+            { v: a - b, op: '-', ai: i, bi: j },
+            { v: b - a, op: '-', ai: j, bi: i }
+          ];
 
-        if (b !== 0 && a % b === 0)
-  ops.push({ v: a / b, op: '/', ai: i, bi: j });
+          if (b !== 0 && a % b === 0) ops.push({ v: a / b, op: '/', ai: i, bi: j });
+          if (a !== 0 && b % a === 0) ops.push({ v: b / a, op: '/', ai: j, bi: i });
 
-if (a !== 0 && b % a === 0)
-  ops.push({ v: b / a, op: '/', ai: j, bi: i });
-// Slightly randomize operation order to reduce solver bias
-ops.sort(() => Math.random() - 0.5);
+          ops.sort(() => Math.random() - 0.5);
 
           for (const o of ops) {
-            if (!Number.isInteger(o.v)) continue;
-            if (o.v < 0) continue;
+            if (!Number.isInteger(o.v) || o.v < 0) continue;
             const r = solve([o.v, ...rest], target);
-           if (r) {
-  return [{
-    a: nums[o.ai],
-    b: nums[o.bi],
-    op: o.op,
-    result: o.v
-  }, ...r];
-}
+            if (r) return [{ a: nums[o.ai], b: nums[o.bi], op: o.op, result: o.v }, ...r];
           }
         }
       }
       return null;
     }
 
-    /* --------------------------------------------------
-       Problem generation
-       -------------------------------------------------- */
-function solutionUsesRequiredFact(solution, nums) {
-   // Universal rule: reject add/sub-only solutions
-  const hasAnyMultDiv = solution.some(
-    step => step.op === '*' || step.op === '/'
-  );
-  if (!hasAnyMultDiv) return false;
-  // Level 6 = free play: require at least one meaningful × or ÷ (operands > 1)
-if (state.level === 6) {
-  const meaningfulSteps = solution.filter(
-    step =>
-      (step.op === '*' || step.op === '/') &&
-      step.a > 1 &&
-      step.b > 1
-  );
+    /* ═══════════════════════════════════════════════════
+       SOLUTION QUALITY FILTER
+    ═══════════════════════════════════════════════════ */
 
-  // Require at least TWO meaningful × or ÷
-  if (meaningfulSteps.length < 2) return false;
+    function solutionUsesRequiredFact(solution, nums) {
+      const hasMultDiv = solution.some(s => s.op === '*' || s.op === '/');
+      if (!hasMultDiv) return false;
 
-  // Prevent runaway ballooning
-  const maxIntermediate = 120;
-  if (solution.some(step => step.result > maxIntermediate)) {
-    return false;
-  }
+      const meaningful = solution.filter(s =>
+        (s.op === '*' || s.op === '/') &&
+        s.a > 1 && s.b > 1 && s.result > 1 &&
+        !(s.op === '/' && s.a === s.b)
+      );
 
-  return true;
-}
-
-  // Define level-specific required bases and partner sets (fact families)
-  let required = [];
-  let partners = [];
-
-  if (state.level === 1) {
-    // Focus on 2x and 5x families
-    required = [2, 5];
-    // Allow partner factors up to 10 for Level 1, but we'll bias against 10 in generation
-    partners = [2,3,4,5,6,7,8,9,10];
-  } else if (state.level === 2) {
-    required = [3, 4];
-    partners = [2, 3, 4, 5, 6];
-  } else if (state.level === 3) {
-    required = [6, 7];
-    partners = [2, 3, 4, 5, 6, 7];
-  } else if (state.level === 4) {
-    required = [8, 9];
-    partners = [3, 4, 5, 6, 7, 8, 9];
-  } else if (state.level === 5) {
-    required = [6, 7, 8, 9];
-    partners = [3, 4, 5, 6, 7, 8, 9];
-  } else {
-    // Unknown level: be permissive
-    return true;
-  }
-
-  // Helper to count occurrences in an array
-  const countIn = (arr, v) => arr.reduce((c, x) => c + (x === v ? 1 : 0), 0);
-
-  // Choose a conservative partner-size limit per level.
-  // For Level 1 we enforce partners <= 10 (you can relax this if needed).
-  const partnerMax = state.level === 1 ? 10 : 12;
-
-  // Collect meaningful multiplication/division steps (ignore ×0, ×1, ÷1 and results < 0)
- const multDivSteps = solution.filter(
-  step =>
-    (step.op === '*' || step.op === '/') &&
-    step.a > 1 &&
-    step.b > 1 &&
-    Number.isInteger(step.result) &&
-    step.result > 1 &&                  // eliminate ÷ producing 1
-    !(step.op === '/' && step.a === step.b)  // eliminate 3÷3, 4÷4, etc.
-);
-  // Validate all meaningful mult/div steps
-for (const step of multDivSteps) {
-
-  const aReq = required.includes(step.a);
-  const bReq = required.includes(step.b);
-
-  // Must involve at least one required family number
-  if (!aReq && !bReq) return false;
-
-  const other = aReq ? step.b : step.a;
-
-  // Other factor must be in partner set
-  if (!partners.includes(other)) return false;
-
-  // Keep operand sizes reasonable
-  if (step.a > partnerMax || step.b > partnerMax) return false;
-}
-
-const squareMultSteps = solution.filter(
-  step => step.op === '*' && step.a === step.b && step.a > 1
-);
-
-const squareDivSteps = solution.filter(
-  step => step.op === '/' && step.a === step.b * step.b
-);
-
-const hasSquareFact =
-  squareMultSteps.length > 0 || squareDivSteps.length > 0;
-
-// Prefer division sometimes to increase variety
-if (multDivSteps.length === 1) {
-  const d = multDivSteps[0];
-  if (d.op === '*') {
-    // 40% chance: reject multiplication to let division through
-    if (Math.random() < 0.4) return false;
-  }
-}
-
-  // Must include at least one meaningful mult/div
-  if (multDivSteps.length === 0) return false;
-
-  // For Levels 1-5 require at least one meaningful mult/div step
-  if (multDivSteps.length < 1) return false;
-
-  const dominant = multDivSteps[0];
-
-  // Dominant must use exactly one required operand (e.g. a 2 or 5 for level 1)
-  const aReq = required.includes(dominant.a);
-  const bReq = required.includes(dominant.b);
-  // Allow square facts like 4×4 and 5×5
-if (aReq === bReq) {
-  // allow if it's a square fact (a === b)
-  if (dominant.a !== dominant.b) return false;
-}
-// Allow square-division facts like 16 ÷ 4 or 25 ÷ 5
-if (dominant.op === '/' && dominant.a === dominant.b * dominant.b) {
-  // allowed as long as divisor is valid
-}
-  // --- Occasional square requirement (all levels) ---
-const squareSteps = solution.filter(
-  step =>
-    step.op === '*' &&
-    step.a === step.b &&
-    step.a > 1
-);
-
-// 10% chance to require a square fact
-if (Math.random() < 0.10 && !hasSquareFact) {
-  return false;
-}
-
-  // The other operand must be in the allowed partner set
-  const other = aReq ? dominant.b : dominant.a;
-  // Level 2: softly discourage ×5 dominance
-if (state.level === 2 && other === 5) {
-  return Math.random() < 0.6 ? false : true;
-}
-  if (!partners.includes(other)) return false;
-
-  // Enforce partner-size limit: both operands used in the dominant step must be reasonable
-  if (dominant.a > partnerMax || dominant.b > partnerMax) return false;
-
-  // Both operands used in the dominant step must come from the original numbers (nums).
-  // Check multiplicity: if a === b we need at least two occurrences in nums.
-  const needA = dominant.a;
-  const needB = dominant.b;
-  if (needA === needB) {
-    if (countIn(nums, needA) < 2) return false;
-  } else {
-    if (countIn(nums, needA) < 1 || countIn(nums, needB) < 1) return false;
-  }
-
-  // The required operand must be present in the original numbers (nums) and not manufactured earlier.
-  const requiredValue = aReq ? dominant.a : dominant.b;
-  if (!nums.includes(requiredValue)) return false;
-
-  // Also ensure required wasn't manufactured earlier (no earlier + or - produced the required value)
-  const domIndex = solution.indexOf(dominant);
-  if (domIndex === -1) return false; // fail-safe
-
-  for (let k = 0; k < domIndex; k++) {
-    const s = solution[k];
-    if ((s.op === '+' || s.op === '-') && s.result === requiredValue) {
-      return false;
-    }
-  }
-
-  // Prevent mult/div chaining: no other mult/div step should use the result of any other
-  // mult/div step as an operand unless that earlier step is the dominant.
-  for (let i = 0; i < solution.length; i++) {
-    const s = solution[i];
-    if (s.op !== '*' && s.op !== '/') continue;
-    for (let j = 0; j < solution.length; j++) {
-      if (i === j) continue;
-      const t = solution[j];
-      if (t.op !== '*' && t.op !== '/') continue;
-      // If s.result is used as an operand in t, then s must be the dominant
-      if ((t.a === s.result || t.b === s.result) && s !== dominant) {
-        return false;
+      if (state.level === 6) {
+        if (meaningful.length < 2) return false;
+        if (solution.some(s => s.result > 120)) return false;
+        return true;
       }
-    }
-  }
 
-  // 0 and 1 are allowed but only as secondary/identity factors; they cannot be the dominant step because
-  // we collected only meaningful steps with operands > 1. (This preserves your "0/1 secondary" rule.)
+      const LEVEL_CONFIG = {
+        1: { required: [2, 5],       partners: [2,3,4,5,6,7,8,9,10], partnerMax: 10 },
+        2: { required: [3, 4],       partners: [2,3,4,5,6],           partnerMax: 12 },
+        3: { required: [6, 7],       partners: [2,3,4,5,6,7],         partnerMax: 12 },
+        4: { required: [8, 9],       partners: [3,4,5,6,7,8,9],       partnerMax: 12 },
+        5: { required: [6,7,8,9],    partners: [3,4,5,6,7,8,9],       partnerMax: 12 }
+      };
 
-  // Passed all checks
-  return true;
-}
+      const cfg = LEVEL_CONFIG[state.level];
+      if (!cfg) return true;
 
-function generateProblem() {
-  solutionBox.style.display = 'none';
+      const { required, partners, partnerMax } = cfg;
+      const countIn = (arr, v) => arr.filter(x => x === v).length;
 
-  state.numbers = [];
-  state.selection = { first: null, op: null };
-  state.moveCount = 0;
-  state.usedHint = 0;
-  state.solutionShown = false;
+      if (meaningful.length === 0) return false;
 
-  let nums = [];
+      for (const step of meaningful) {
+        const aReq = required.includes(step.a);
+        const bReq = required.includes(step.b);
+        if (!aReq && !bReq) return false;
+        const other = aReq ? step.b : step.a;
+        if (!partners.includes(other)) return false;
+        if (step.a > partnerMax || step.b > partnerMax) return false;
+      }
 
-  // Required anchor numbers by level
-  let required = [];
-  if (state.level === 1) required = [2, 5];
-  if (state.level === 2) required = [3, 4];
-  if (state.level === 3) required = [6, 7];
-  if (state.level === 4) required = [8, 9];
-  if (state.level === 5) required = [6, 7, 8, 9];
+      const dominant = meaningful[0];
+      const aReq = required.includes(dominant.a);
+      const bReq = required.includes(dominant.b);
+      if (aReq && bReq && dominant.a !== dominant.b) return false;
 
-  // Force one required number if the level has a family
-  if (required.length) {
-    nums.push(required[Math.floor(Math.random() * required.length)]);
-  }
+      const requiredValue = aReq ? dominant.a : dominant.b;
+      if (!nums.includes(requiredValue)) return false;
 
-  // Fill remaining slots normally
-  while (nums.length < state.mode) {
-    let n = randomInitialNumber(state.level, nums);
+      const domIndex = solution.indexOf(dominant);
+      for (let k = 0; k < domIndex; k++) {
+        const s = solution[k];
+        if ((s.op === '+' || s.op === '-') && s.result === requiredValue) return false;
+      }
 
-    // --- FIX: prevent 0 as a starting number for Level 1 ---
-    if (state.level === 1 && n === 0) continue;
+      if (state.level === 2) {
+        const other = aReq ? dominant.b : dominant.a;
+        if (other === 5 && Math.random() < 0.6) return false;
+      }
 
-    nums.push(n);
-  }
+      if (dominant.a === dominant.b) {
+        if (countIn(nums, dominant.a) < 2) return false;
+      } else {
+        if (countIn(nums, dominant.a) < 1 || countIn(nums, dominant.b) < 1) return false;
+      }
 
-  function preferredTarget(nums) {
-    let candidates = [];
-
-    for (let i = 0; i < nums.length; i++) {
-      for (let j = i + 1; j < nums.length; j++) {
-        let a = nums[i], b = nums[j];
-
-        // multiplication (avoid ×1 and ×0)
-        if (a > 1 && b > 1) {
-          candidates.push(a * b);
-        }
-
-        // clean division (avoid ÷1)
-        if (b > 1 && a % b === 0) candidates.push(a / b);
-        if (a > 1 && b % a === 0) candidates.push(b / a);
-
-        // --- BOOST: occasional non-2 division targets (~10%) ---
-        if (Math.random() < 0.1) {
-          if (b > 1 && a % b !== 0 && a / b <= state.max) candidates.push(a / b);
-          if (a > 1 && b % a !== 0 && b / a <= state.max) candidates.push(b / a);
+      for (const s of meaningful) {
+        for (const t of meaningful) {
+          if (s === t) continue;
+          if ((t.a === s.result || t.b === s.result) && s !== dominant) return false;
         }
       }
+
+      const hasSquare = solution.some(s => s.op === '*' && s.a === s.b && s.a > 1);
+      if (Math.random() < 0.10 && !hasSquare) return false;
+
+      return true;
     }
 
-    // keep targets in range
-    candidates = candidates.filter(n => n > 0 && n < state.max);
+    /* ═══════════════════════════════════════════════════
+       PROBLEM GENERATION
+    ═══════════════════════════════════════════════════ */
 
-    if (candidates.length === 0) return null;
-    return candidates[Math.floor(Math.random() * candidates.length)];
-  }
+    function generateProblem() {
+      // Don't generate if we don't have a valid level yet
+      // (warmup/workout waiting for fact focus pick)
+      if (!state.level || (state.difficulty !== 'challenge' && state.factFocus === null)) return;
 
-  let t, sol = null;
+      solutionBox.style.display = 'none';
 
-  for (let tries = 0; tries < 60; tries++) {
-    t = Math.random() < 0.6
-      ? preferredTarget(nums) ?? randInt(state.max)
-      : randInt(state.max);
+      state.selectedFirst        = null;
+      state.selectedOp           = null;
+      state.moveCount            = 0;
+      state.hintUsedThisProblem  = false;
+      state.solutionShown        = false;
 
-    if (nums.includes(t)) continue;
+      const ANCHORS = {
+        1: [2,5], 2: [3,4], 3: [6,7],
+        4: [8,9], 5: [6,7,8,9]
+      };
+      const anchors = ANCHORS[state.level] || [];
 
-    sol = solve([...nums], t);
-    if (!sol) continue;
-    if (!solutionUsesRequiredFact(sol, nums)) continue;
+      let nums = [];
+      if (anchors.length) {
+        nums.push(anchors[Math.floor(Math.random() * anchors.length)]);
+      }
 
-    break;
-  }
+      while (nums.length < state.mode) {
+        const n = randomInitialNumber(state.level, nums);
+        if (state.level === 1 && n === 0) continue;
+        nums.push(n);
+      }
 
-  if (!sol || !solutionUsesRequiredFact(sol, nums)) {
-  return generateProblem();
-}
+      function preferredTarget(nums) {
+        const candidates = [];
+        for (let i = 0; i < nums.length; i++) {
+          for (let j = i + 1; j < nums.length; j++) {
+            const a = nums[i], b = nums[j];
+            if (a > 1 && b > 1) candidates.push(a * b);
+            if (b > 1 && a % b === 0) candidates.push(a / b);
+            if (a > 1 && b % a === 0) candidates.push(b / a);
+          }
+        }
+        const valid = candidates.filter(n => n > 0 && n < state.max);
+        return valid.length ? valid[Math.floor(Math.random() * valid.length)] : null;
+      }
 
-  state.numbers  = nums.slice();
-  state.original = nums.slice();
-  state.target   = t;
-  state.solution = sol;
+      let t, sol = null;
+      for (let tries = 0; tries < 60; tries++) {
+        t = Math.random() < 0.6
+          ? (preferredTarget(nums) ?? randInt(state.max))
+          : randInt(state.max);
+        if (nums.includes(t)) continue;
+        sol = solve([...nums], t);
+        if (sol && solutionUsesRequiredFact(sol, nums)) break;
+        sol = null;
+      }
 
-  if (state.gameStarted) {
-    targetEl.textContent = state.target;
-    renderNumbers();
-    hintBtn.classList.remove('disabled');
-    resetBtn.classList.remove('disabled');
-    solutionBtn.classList.remove('disabled');
-  } else {
-    targetEl.textContent = '--';
-    renderNumbers(true);
-    hintBtn.classList.add('disabled');
-    resetBtn.classList.add('disabled');
-    solutionBtn.classList.add('disabled');
-    startBtn.classList.remove('disabled');
-  }
-}
+      if (!sol) { generateProblem(); return; } // rare fallback
 
-    /* --------------------------------------------------
-       Rendering helpers
-       -------------------------------------------------- */
+      state.numbers  = nums.slice();
+      state.original = nums.slice();
+      state.target   = t;
+      state.solution = sol;
+
+      targetEl.textContent = state.gameStarted ? state.target : '--';
+      renderNumbers(false); // always render actual numbers; pre-game shows hidden via renderPlaceholders
+      refreshButtonStates();
+    }
+
+    /* ═══════════════════════════════════════════════════
+       RENDERING
+    ═══════════════════════════════════════════════════ */
 
     function renderNumbers(hidden = false) {
       numbersRow.innerHTML = '';
-
       state.numbers.forEach((n, i) => {
         const b = document.createElement('button');
         b.className = 'num';
@@ -753,166 +1125,203 @@ function generateProblem() {
       });
     }
 
+    /** Render N inert placeholder tiles — used before a game starts so layout stays stable */
+    function renderPlaceholders(count) {
+      numbersRow.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const b = document.createElement('button');
+        b.className = 'num disabled';
+        b.textContent = '?';
+        numbersRow.appendChild(b);
+      }
+    }
+
     function clearHighlights() {
-      document.querySelectorAll('.selected')
-        .forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.selected').forEach(b => b.classList.remove('selected'));
     }
 
     function resetSelection() {
-      state.selection = { first: null, op: null };
+      state.selectedFirst = null;
+      state.selectedOp    = null;
       clearHighlights();
     }
 
-    /* --------------------------------------------------
-       Operator selection
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       OPERATOR CLICKS
+    ═══════════════════════════════════════════════════ */
 
     document.querySelectorAll('.op').forEach(b => {
       b.onclick = () => {
-        if (state.selection.first === null ||
-            state.solutionShown ||
-            !state.gameStarted) return;
-
+        if (state.selectedFirst === null || state.solutionShown || !state.gameStarted) return;
         clearHighlights();
         b.classList.add('selected');
-        state.selection.op = b.dataset.op;
-        numbersRow.children[state.selection.first]
-          ?.classList.add('selected');
+        state.selectedOp = b.dataset.op;
+        numbersRow.children[state.selectedFirst]?.classList.add('selected');
       };
     });
 
-    /* --------------------------------------------------
-       Number click logic
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       NUMBER CLICKS
+    ═══════════════════════════════════════════════════ */
 
     function numberClick(i, btn) {
       if (state.solutionShown || !state.gameStarted) return;
 
-      const s = state.selection;
-
-      // Deselect if clicking same number again
-      if (s.first === i && s.op === null) {
+      if (state.selectedFirst === i && state.selectedOp === null) {
         resetSelection();
         return;
       }
 
-      // First number selection
-      if (s.first === null) {
-        s.first = i;
+      if (state.selectedFirst === null) {
+        state.selectedFirst = i;
         btn.classList.add('selected');
         return;
       }
 
-      // Must have operator and second number
-      if (s.op === null || i === s.first) return;
+      if (state.selectedOp === null || i === state.selectedFirst) return;
 
       btn.classList.add('selected');
 
-      const a = state.numbers[s.first];
+      const a = state.numbers[state.selectedFirst];
       const b = state.numbers[i];
 
-      // Division must be exact
-      if (s.op === '/' && (b === 0 || a % b !== 0)) {
-  resetSelection();
-  return;
-}
+      if (state.selectedOp === '/' && (b === 0 || a % b !== 0)) {
+        resetSelection();
+        return;
+      }
 
-      const res = eval(`${a}${s.op}${b}`);
+      const res = calculate(a, state.selectedOp, b);
       state.moveCount++;
-      hintBtn.classList.add('disabled');
+      refreshButtonStates();
 
       setTimeout(() => {
-        state.numbers = state.numbers
-          .filter((_, k) => k !== s.first && k !== i);
+        state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst && k !== i);
         state.numbers.unshift(res);
-
         renderNumbers();
         resetSelection();
 
-        // Check end of problem
-        if (state.numbers.length === 1) {
+        if (state.numbers.length === 1 &&
+            state.numbers[0] === state.target &&
+            !state.solutionShown) {
 
-          if (state.numbers[0] === state.target &&
-              !state.solutionShown) {
+          // Hint penalty: Warm-Up = −50pts, Workout & Challenge = −30pts
+          const hintPenalty = state.difficulty === 'warmup' ? 50 : 30;
+          const pts = state.hintUsedThisProblem ? (100 - hintPenalty) : 100;
+          state.score += pts;
+          scoreEl.textContent = state.score;
 
-            const pts = state.usedHint
-              ? (state.mode === 3 ? 50 : 70)
-              : 100;
-
-            state.score += pts;
-            scoreEl.textContent = state.score;
-
-            fireworks();
-            setTimeout(nextProblem, 2000);
-          }
+          fireworks();
+          setTimeout(nextProblem, 2000);
         }
       }, 400);
     }
 
-    /* --------------------------------------------------
-       Effects
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       FIREWORKS
+    ═══════════════════════════════════════════════════ */
 
     function fireworks() {
-  const container = document.querySelector('.container');
+      const targetEl  = document.getElementById('targetValue');
+      const targetNum = state.target;
 
-  const colors = [
-    '#ff5252', // red
-    '#ffeb3b', // yellow
-    '#4caf50', // green
-    '#2196f3', // blue
-    '#e040fb', // purple
-    '#ff9800'  // orange
-  ];
+      // Get the target's position on screen for explosion origin
+      const rect = targetEl.getBoundingClientRect();
+      const ox = rect.left + rect.width  / 2;
+      const oy = rect.top  + rect.height / 2;
 
-  for (let i = 0; i < 14; i++) {
-    const star = document.createElement('div');
-    star.className = 'star';
-    star.textContent = '★';
+      // 1. Green "LOCKED" flash ring on the target
+      const flash = document.createElement('div');
+      flash.className = 'target-flash';
+      targetEl.parentElement.appendChild(flash);
+      setTimeout(() => flash.remove(), 500);
 
-    const angle = Math.random() * 2 * Math.PI;
-    const distance = 90 + Math.random() * 50;
+      // 2. Target number shatters
+      setTimeout(() => {
+        targetEl.classList.add('exploding');
+        setTimeout(() => {
+          targetEl.classList.remove('exploding');
+          targetEl.textContent = '--'; // clear after shatter
+        }, 600);
+      }, 120);
 
-    star.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
-    star.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+      // 3. Particle burst — mix of numbers, operators, stars, embers
+      const COLORS  = ['#ff5252','#ffeb3b','#4caf50','#00e5ff','#e040fb','#ff9800','#00ff88'];
+      const NUMBERS = [targetNum, ...state.original].map(String);
+      const OPS     = ['×','÷','+','−','='];
+      const SPARKS  = ['★','✦','•','◆','🔥','💥'];
 
-    // 🎨 random bright color
-    star.style.color = colors[Math.floor(Math.random() * colors.length)];
+      // Build a pool: ~40% numbers, ~25% operators, ~20% stars, ~15% embers
+      const pool = [];
+      for (let i = 0; i < 8;  i++) pool.push({ type: 'num',   glyph: NUMBERS[Math.floor(Math.random() * NUMBERS.length)] });
+      for (let i = 0; i < 5;  i++) pool.push({ type: 'op',    glyph: OPS[Math.floor(Math.random() * OPS.length)] });
+      for (let i = 0; i < 8;  i++) pool.push({ type: 'spark', glyph: SPARKS[Math.floor(Math.random() * SPARKS.length)] });
+      for (let i = 0; i < 6;  i++) pool.push({ type: 'ember', glyph: '•' });
 
-    container.appendChild(star);
-    setTimeout(() => star.remove(), 1300);
-  }
-}
-    /* --------------------------------------------------
-       Hint logic (first move only)
-       -------------------------------------------------- */
+      pool.forEach((p, idx) => {
+        setTimeout(() => {
+          const el = document.createElement('div');
+          el.className = 'particle';
+          el.textContent = p.glyph;
+
+          // Size varies by type
+          const size = p.type === 'num'   ? 28 + Math.random() * 20
+                     : p.type === 'op'    ? 24 + Math.random() * 16
+                     : p.type === 'spark' ? 20 + Math.random() * 18
+                     :                      8  + Math.random() * 8;
+          el.style.fontSize = `${size}px`;
+
+          // Color
+          el.style.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+          // Trajectory — full 360°, varied distance
+          const angle    = Math.random() * 2 * Math.PI;
+          const dist     = 120 + Math.random() * 220;
+          const dx       = Math.cos(angle) * dist;
+          const dy       = Math.sin(angle) * dist;
+          const duration = 0.9 + Math.random() * 0.7;
+          const rot0     = `${Math.random() * 60 - 30}deg`;
+          const rot1     = `${Math.random() * 720 - 360}deg`;
+          const sf       = 0.3 + Math.random() * 0.8;
+
+          el.style.left = `${ox}px`;
+          el.style.top  = `${oy}px`;
+          el.style.setProperty('--dx',   `${dx}px`);
+          el.style.setProperty('--dy',   `${dy}px`);
+          el.style.setProperty('--dur',  `${duration}s`);
+          el.style.setProperty('--rot0', rot0);
+          el.style.setProperty('--rot1', rot1);
+          el.style.setProperty('--sf',   sf);
+
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), duration * 1000 + 100);
+        }, idx * 18); // stagger slightly so they don't all fire at once
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════
+       HINT
+    ═══════════════════════════════════════════════════ */
 
     hintBtn.onclick = () => {
-      if (state.moveCount > 0 || state.solutionShown) return;
+      if (state.moveCount > 0 || state.solutionShown || state.hintUsedThisProblem) return;
 
-      state.usedHint++;
+      state.hintUsedThisProblem = true;
       state.hintsUsed++;
+      refreshButtonStates();
 
       const step = state.solution[0];
-let d = 0;
+      const ai = state.numbers.indexOf(step.a);
+      const bi = step.a === step.b
+        ? state.numbers.findIndex((v, i) => v === step.b && i !== ai)
+        : state.numbers.indexOf(step.b);
 
-// find indices of values in the CURRENT numbers
-const ai = state.numbers.indexOf(step.a);
+      let delay = 0;
+      const after = ms => { delay += ms; return delay; };
 
-// if a and b are the same value, find a different index for b
-let bi;
-if (step.a === step.b) {
-  bi = state.numbers.findIndex((v, i) => v === step.b && i !== ai);
-} else {
-  bi = state.numbers.indexOf(step.b);
-}
-
-[
-  () => highlightNum(ai),
-  () => highlightOp(step.op),
-  () => highlightNum(bi),
-  clearHighlights
-].forEach(fn => setTimeout(fn, d += 500));
+      setTimeout(() => highlightNum(ai),     after(500));
+      setTimeout(() => highlightOp(step.op), after(500));
+      setTimeout(() => highlightNum(bi),     after(500));
+      setTimeout(clearHighlights,            after(500));
     };
 
     function highlightNum(i) {
@@ -922,158 +1331,277 @@ if (step.a === step.b) {
 
     function highlightOp(op) {
       clearHighlights();
-      document.querySelector(`.op[data-op="${op}"]`)
-        ?.classList.add('selected');
+      document.querySelector(`.op[data-op="${op}"]`)?.classList.add('selected');
     }
 
-    /* --------------------------------------------------
-       Show full solution
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       SHOW SOLUTION
+    ═══════════════════════════════════════════════════ */
 
     solutionBtn.onclick = () => {
       if (state.solutionShown) return;
 
       state.solutionShown = true;
       state.solutionsUsed++;
-
-      hintBtn.classList.add('disabled');
-      resetBtn.classList.add('disabled');
-      solutionBtn.classList.add('disabled');
-      nextBtn.classList.remove('disabled');
+      refreshButtonStates();
 
       let nums = state.original.slice();
       const steps = [];
 
       state.solution.forEach(s => {
-        const a = s.a;
-const b = s.b;
-const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
-const r = s.result;
-
-steps.push(`${a} ${sym} ${b} = ${r}`);
-
-// remove by VALUE, not index
-nums.splice(nums.indexOf(a), 1);
-nums.splice(nums.indexOf(b), 1);
-nums.unshift(r);
+        const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
+        steps.push(`${s.a} ${sym} ${s.b} = ${s.result}`);
+        nums.splice(nums.indexOf(s.a), 1);
+        nums.splice(nums.indexOf(s.b), 1);
+        nums.unshift(s.result);
       });
 
       solutionBox.innerHTML = `<b>One valid solution:</b> ${steps.join('; ')}`;
       solutionBox.style.display = 'block';
     };
 
-    /* --------------------------------------------------
-       Reset current problem
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       RESET PROBLEM
+    ═══════════════════════════════════════════════════ */
 
     resetBtn.onclick = () => {
       if (state.solutionShown) return;
-
       state.numbers = state.original.slice();
       state.moveCount = 0;
-      state.usedHint = 0;
-
+      state.hintUsedThisProblem = false;
       renderNumbers();
       resetSelection();
-      hintBtn.classList.remove('disabled');
+      refreshButtonStates();
     };
 
-    /* --------------------------------------------------
-       Start / progression
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       NEXT PROBLEM / PROGRESSION
+    ═══════════════════════════════════════════════════ */
 
-    startBtn.onclick = () => {
-      if (state.level === undefined) state.level = Number(levelSelect.value);
-      nextProblem();
-      startBtn.classList.add('disabled');
-      targetEl.textContent = state.target;
-
-      renderNumbers();
-
-      hintBtn.classList.remove('disabled');
-      resetBtn.classList.remove('disabled');
-      solutionBtn.classList.remove('disabled');
-
-      state.gameStarted = true;
-      modeSelect.disabled = true;
-      levelSelect.disabled = true;
-    };
-    
-nextBtn.onclick = nextProblem;
+    nextBtn.onclick = nextProblem;
 
     function nextProblem() {
-  if (state.problems >= state.totalProblems) {
-    showSummary();
-    return;
-  }
+      if (state.problems >= TOTAL_PROBLEMS) {
+        showSummary();
+        return;
+      }
+      state.problems++;
+      problemsEl.textContent = `${state.problems}/${TOTAL_PROBLEMS}`;
+      generateProblem();
+    }
 
-  state.problems++;
-  problemsEl.textContent = `${state.problems}/${state.totalProblems}`;
-  generateProblem();
-}
+    /* ═══════════════════════════════════════════════════
+       START GAME
+    ═══════════════════════════════════════════════════ */
 
-    /* --------------------------------------------------
-       End-of-game summary
-       -------------------------------------------------- */
+    startBtn.onclick = () => {
+      // Resolve final level & mode from menu selections
+      state.level = resolveLevel(state.difficulty, state.factFocus);
+      state.mode  = DIFF_MODE[state.difficulty];
+
+      state.gameStarted = true;
+      state.problems    = 1;
+      problemsEl.textContent = `1/${TOTAL_PROBLEMS}`;
+
+      lockMenu();
+
+      // Reveal pre-generated problem
+      targetEl.textContent = state.target;
+      renderNumbers(false);
+      refreshButtonStates();
+    };
+
+    /* ═══════════════════════════════════════════════════
+       END-OF-GAME SUMMARY
+       Includes Master Mode unlock hook for perfect Challenge scores
+    ═══════════════════════════════════════════════════ */
 
     function showSummary() {
+      const isPerfect    = state.score === PERFECT_SCORE;
+      const isChallenge  = state.difficulty === 'challenge';
+      const unlockMaster = isPerfect && isChallenge;
+
+      /* ── Display names ── */
+      const DIFF_NAMES = { warmup: 'Warm-Up', workout: 'Workout', challenge: 'Challenge' };
+      const FACT_NAMES = { 1: '2s & 5s', 2: '3s & 4s', 3: '6s & 7s', 4: '8s & 9s', 5: 'All ×6–9' };
+
+      const diffName = DIFF_NAMES[state.difficulty];
+      const factName = isChallenge ? null : FACT_NAMES[state.factFocus];
+
+      /* ── Progression map ──
+         Each entry is { difficulty, factFocus } for the NEXT recommended step.
+         null means "you've reached the top of this path". */
+      const NEXT_STEP = {
+        // Warm-Up path: advance fact family, then graduate to Workout
+        'warmup-1': { difficulty: 'warmup',   factFocus: 2, label: 'Warm-Up · 3s & 4s'   },
+        'warmup-2': { difficulty: 'warmup',   factFocus: 3, label: 'Warm-Up · 6s & 7s'   },
+        'warmup-3': { difficulty: 'warmup',   factFocus: 4, label: 'Warm-Up · 8s & 9s'   },
+        'warmup-4': { difficulty: 'warmup',   factFocus: 5, label: 'Warm-Up · All ×6–9'  },
+        'warmup-5': { difficulty: 'workout',  factFocus: 1, label: 'Workout · 2s & 5s'   },
+        // Workout path: same fact-family progression, then Challenge
+        'workout-1': { difficulty: 'workout', factFocus: 2, label: 'Workout · 3s & 4s'   },
+        'workout-2': { difficulty: 'workout', factFocus: 3, label: 'Workout · 6s & 7s'   },
+        'workout-3': { difficulty: 'workout', factFocus: 4, label: 'Workout · 8s & 9s'   },
+        'workout-4': { difficulty: 'workout', factFocus: 5, label: 'Workout · All ×6–9'  },
+        'workout-5': { difficulty: 'challenge', factFocus: null, label: 'Challenge'       },
+        // Challenge top of ladder — Master handled separately
+        'challenge-null': null
+      };
+
+      /* ── Build recommendation text ── */
+      function getRecommendation() {
+        // Master unlock takes priority
+        if (unlockMaster) return null; // handled by master banner below
+
+        // Challenge high score (900+) but not perfect → encourage another try
+        if (isChallenge && state.score >= 900) {
+          return { color: '#2ecc71', text: '🌟 Amazing work on Challenge! Try it again to chase a perfect score!' };
+        }
+
+        // Challenge low score
+        if (isChallenge && state.score < 600) {
+          return { color: '#f39c12', text: '💪 Challenge is tough! Revisit some Workout levels to sharpen your facts.' };
+        }
+
+        if (isChallenge) {
+          return { color: '#3fa9f5', text: '👍 Good effort on Challenge! Keep practicing — you\'re getting there.' };
+        }
+
+        // Warm-Up / Workout with a fact focus
+        const key   = `${state.difficulty}-${state.factFocus}`;
+        const next  = NEXT_STEP[key];
+        const score = state.score;
+
+        if (score >= 900) {
+          // Ready to move up
+          if (!next) {
+            return { color: '#2ecc71', text: `🌟 Outstanding! You've mastered everything — try Challenge!` };
+          }
+          return {
+            color: '#2ecc71',
+            text: `🌟 Great work! You're ready to try <b>${next.label}</b> next!`
+          };
+        }
+
+        if (score < 600) {
+          // Needs more practice at this level
+          return {
+            color: '#f39c12',
+            text: `💪 Keep going — more practice on <b>${diffName} · ${factName}</b> will build your confidence!`
+          };
+        }
+
+        // Middle range (600–899): doing well, almost there
+        return {
+          color: '#3fa9f5',
+          text: `👍 Good effort! A score of 900 on <b>${diffName} · ${factName}</b> means you're ready to move up.`
+        };
+      }
+
+      const rec = getRecommendation();
+
+      /* ── Build HTML ── */
       const summary = document.createElement('div');
       summary.className = 'summaryBox';
 
       summary.innerHTML = `
-  <b>Game Over</b><br><br>
-  Level: ${state.level}<br>
-  Mode: ${state.mode} numbers<br><br>
-  Final Score: ${state.score}<br>
-  Hints Used: ${state.hintsUsed}<br>
-  Solutions Used: ${state.solutionsUsed}<br><br>
-  <button class="btn" id="closeSummaryBtn">Close</button>
-`;
+        <b>Game Over!</b>
+        <div style="font-size:15px; opacity:0.85;">
+          ${diffName}${factName ? ' · ' + factName : ''}
+        </div>
+        <div style="font-size:28px; font-weight:900; color:#ffeb3b;">
+          ${state.score} / ${PERFECT_SCORE}
+        </div>
+        <div style="font-size:14px; opacity:0.8;">
+          Hints: ${state.hintsUsed} &nbsp;|&nbsp; Solutions Shown: ${state.solutionsUsed}
+        </div>
+
+        ${rec ? `
+          <div style="
+            background: rgba(0,0,0,0.3);
+            border-left: 4px solid ${rec.color};
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 15px;
+            max-width: 420px;
+            line-height: 1.5;
+            color: white;
+            text-align: left;
+          ">${rec.text}</div>
+        ` : ''}
+
+        ${unlockMaster ? `
+          <div class="master-unlock">
+            ⭐ Perfect Score! ⭐<br>
+            <span style="font-size:15px;">You've unlocked <b>Master Mode</b>!</span>
+          </div>
+          <button class="master-btn" id="masterModeBtn">Try Master Mode</button>
+        ` : ''}
+
+        <button class="btn" id="closeSummaryBtn">Close</button>
+      `;
 
       document.querySelector('.container').appendChild(summary);
+      document.getElementById('closeSummaryBtn').onclick = () => summary.remove();
 
-      document.getElementById('closeSummaryBtn').onclick = () => {
-  summary.remove();
-};
-
+      if (unlockMaster) {
+        document.getElementById('masterModeBtn').onclick = () => {
+          alert('Master Mode coming soon! 🚀');
+          // Future: summary.remove(); launchMasterMode();
+        };
+      }
     }
 
-    /* --------------------------------------------------
-       Full game reset
-       -------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════
+       NEW GAME (full reset)
+    ═══════════════════════════════════════════════════ */
 
     function resetGame() {
+      const prevDiff = state.difficulty;
+
       state = {
-        ...state,
-        score: 0,
-        problems: 0,
-        moveCount: 0,
-        usedHint: 0,
-        solutionShown: false,
-        gameStarted: false,
-        hintsUsed: 0,
-        solutionsUsed: 0
+        difficulty: prevDiff,
+        difficultyChosen: true,  // they just clicked Quit — preserve difficulty highlight
+        factFocus:  null,
+        mode:  DIFF_MODE[prevDiff],
+        level: prevDiff === 'challenge' ? 6 : 1,
+        max:   99,
+        numbers: [], original: [], solution: [], target: 0,
+        selectedFirst: null, selectedOp: null,
+        score: 0, problems: 0, moveCount: 0,
+        hintUsedThisProblem: false, solutionShown: false, gameStarted: false,
+        hintsUsed: 0, solutionsUsed: 0
       };
 
-      scoreEl.textContent = '0';
-      problemsEl.textContent = '0/10';
+      scoreEl.textContent    = '0';
+      problemsEl.textContent = `0/${TOTAL_PROBLEMS}`;
+      targetEl.textContent   = '--';
+      solutionBox.style.display = 'none';
+      renderPlaceholders(DIFF_MODE[prevDiff]);
 
-      modeSelect.disabled = false;
-      levelSelect.disabled = false;
+      unlockMenu();
+      selectDifficulty(prevDiff);
 
-      generateProblem();
+      if (prevDiff === 'challenge') {
+        state.level = 6;
+        state.mode  = DIFF_MODE['challenge'];
+        generateProblem();
+      }
+
+      refreshButtonStates();
     }
 
-    /* --------------------------------------------------
-       Settings & initialization
-       -------------------------------------------------- */
+    quitBtn.onclick = () => resetGame();
 
-    newGameBtn.onclick = resetGame;
-    modeSelect.onchange = e => { state.mode = +e.target.value; };
-    levelSelect.onchange = e => { state.level = +e.target.value; };
+    /* ═══════════════════════════════════════════════════
+       INIT
+    ═══════════════════════════════════════════════════ */
 
-    // Initial problem on load
-    generateProblem();
+    // Set up menu visuals — no fact pre-selected, Start greyed out with nudge
+    initMenuSelections();
+    renderPlaceholders(3); // show 3 placeholders immediately so layout doesn't jump
+    refreshButtonStates();
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus
 
   </script>
 </body>
