@@ -525,6 +525,57 @@
       font-size: 15px;
       color: #ffeb3b;
     }
+    /* ── Master clearance code display ── */
+    .master-code-wrap {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(142,68,173,0.6);
+      border-radius: 10px;
+      padding: 12px 20px;
+      text-align: center;
+      max-width: 340px;
+    }
+
+    .master-clearance {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      color: rgba(200,150,255,0.7);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .master-codename {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: #e040fb;
+      text-shadow: 0 0 12px rgba(224,64,251,0.7);
+      margin-bottom: 8px;
+    }
+
+    .master-short-code {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      color: #fff;
+      background: rgba(142,68,173,0.35);
+      border: 1px solid rgba(200,150,255,0.4);
+      border-radius: 6px;
+      padding: 6px 16px;
+      display: inline-block;
+      text-shadow: 0 0 8px rgba(255,255,255,0.5);
+    }
+
+    .master-instructions {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* ── Summary overlay ── */
     .summaryBox {
       position: absolute;
       inset: 0;
@@ -1485,6 +1536,51 @@
        Includes Master Mode unlock hook for perfect Challenge scores
     ═══════════════════════════════════════════════════ */
 
+    /* ═══════════════════════════════════════════════════
+       MASTER CODE GENERATION
+       Encodes day-number since epoch + checksum into a
+       short self-validating code. No server needed.
+       Format: NB-XXXX-CC  (4 payload chars, 2 check chars)
+    ═══════════════════════════════════════════════════ */
+
+    function generateMasterCode() {
+      // Day number since a fixed epoch (Jan 1 2025)
+      const EPOCH = new Date('2025-01-01').getTime();
+      const dayNum = Math.floor((Date.now() - EPOCH) / 86400000);
+
+      // Encode dayNum into 4 base-24 chars using unambiguous alphabet
+      // (no 0/O, 1/I/L confusion — safe for handwriting)
+      const ALPHA = 'ABCDEFGHJKMNPQRSTVWXYZ234';  // 25 chars
+      let n = dayNum;
+      let payload = '';
+      for (let i = 0; i < 4; i++) {
+        payload = ALPHA[n % ALPHA.length] + payload;
+        n = Math.floor(n / ALPHA.length);
+      }
+
+      // 2-char checksum: sum of char indices mod 25, plus XOR mod 25
+      const indices = payload.split('').map(c => ALPHA.indexOf(c));
+      const sum = indices.reduce((a, b) => a + b, 0) % ALPHA.length;
+      const xor = indices.reduce((a, b) => a ^ b, 0) % ALPHA.length;
+      const check = ALPHA[sum] + ALPHA[xor];
+
+      return `NB-${payload}-${check}`;
+    }
+
+    /* Verify a code entered by the student (for future Master Mode gate) */
+    function verifyMasterCode(code) {
+      const ALPHA = 'ABCDEFGHJKMNPQRSTVWXYZ234';
+      const match = code.trim().toUpperCase().match(/^NB-([A-Z2-4]{4})-([A-Z2-4]{2})$/);
+      if (!match) return false;
+      const payload = match[1];
+      const check   = match[2];
+      const indices = payload.split('').map(c => ALPHA.indexOf(c));
+      if (indices.includes(-1)) return false;
+      const sum = indices.reduce((a, b) => a + b, 0) % ALPHA.length;
+      const xor = indices.reduce((a, b) => a ^ b, 0) % ALPHA.length;
+      return check === ALPHA[sum] + ALPHA[xor];
+    }
+
     function showSummary() {
       const isPerfect    = state.score === PERFECT_SCORE;
       const isChallenge  = state.difficulty === 'challenge';
@@ -1602,9 +1698,17 @@
         ${unlockMaster ? `
           <div class="master-unlock">
             ⭐ Perfect Score! ⭐<br>
-            <span style="font-size:15px;">You've unlocked <b>Master Mode</b>!</span>
+            <span style="font-size:15px;">You've earned <b>Master Clearance</b>!</span>
           </div>
-          <button class="master-btn" id="masterModeBtn">Try Master Mode</button>
+          <div class="master-code-wrap">
+            <div class="master-clearance">Clearance Level Granted</div>
+            <div class="master-codename">★ MASTER BLASTER ★</div>
+            <div class="master-short-code" id="masterCodeDisplay"></div>
+            <div class="master-instructions">
+              Write down or screenshot this code.<br>
+              Enter it when Master Mode launches to skip ahead.
+            </div>
+          </div>
         ` : ''}
 
         <button class="btn" id="closeSummaryBtn">Close</button>
@@ -1619,10 +1723,9 @@
       };
 
       if (unlockMaster) {
-        document.getElementById('masterModeBtn').onclick = () => {
-          alert('Master Mode coming soon! 🚀');
-          // Future: summary.remove(); launchMasterMode();
-        };
+        // Generate and display the unique clearance code
+        const code = generateMasterCode();
+        document.getElementById('masterCodeDisplay').textContent = code;
       }
     }
 
