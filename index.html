@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -744,7 +743,8 @@
       if (level >= 2) {
         candidates = candidates.filter(n => n !== 0 && n !== 1);
         const softened = candidates.filter(n => n !== 2 && n !== 10);
-        if (softened.length && Math.random() < 0.6) candidates = softened;
+        // Reduced to 30% to allow larger partners (8, 9, 10) more frequently
+        if (softened.length && Math.random() < 0.30) candidates = softened;
       }
 
       // ── Adjacent-pair avoidance (levels 3–5: 6s&7s, 8s&9s, All×6-9) ──
@@ -1105,7 +1105,7 @@
       const dominant = meaningful[0];
       const aReq = required.includes(dominant.a);
       const bReq = required.includes(dominant.b);
-      if (aReq && bReq && dominant.a !== dominant.b) return false;
+      // Removed: anchor×anchor rejection — we want 6×7, 8×9, etc. to appear
 
       const requiredValue = aReq ? dominant.a : dominant.b;
       if (!nums.includes(requiredValue)) return false;
@@ -1116,10 +1116,7 @@
         if ((s.op === '+' || s.op === '-') && s.result === requiredValue) return false;
       }
 
-      if (state.level === 2) {
-        const other = aReq ? dominant.b : dominant.a;
-        if (other === 5 && Math.random() < 0.6) return false;
-      }
+      // Removed: level 2 penalty for 5 as partner — was causing high failure rate
 
       if (dominant.a === dominant.b) {
         if (countIn(nums, dominant.a) < 2) return false;
@@ -1127,15 +1124,21 @@
         if (countIn(nums, dominant.a) < 1 || countIn(nums, dominant.b) < 1) return false;
       }
 
-      for (const s of meaningful) {
-        for (const t of meaningful) {
-          if (s === t) continue;
-          if ((t.a === s.result || t.b === s.result) && s !== dominant) return false;
+      // Relax chaining check for struggling levels (3s&4s, ×2→×9)
+      if (state.level !== 2 && state.level !== 5) {
+        for (const s of meaningful) {
+          for (const t of meaningful) {
+            if (s === t) continue;
+            if ((t.a === s.result || t.b === s.result) && s !== dominant) return false;
+          }
         }
       }
 
       const hasSquare = solution.some(s => s.op === '*' && s.a === s.b && s.a > 1);
-      if (Math.random() < 0.10 && !hasSquare) return false;
+      // Increased to 40% to encourage squares (6×6, 7×7, 8×8, 9×9), skip for struggling levels
+      if (state.level !== 2 && state.level !== 5) {
+        if (Math.random() < 0.40 && !hasSquare) return false;
+      }
 
       return true;
     }
