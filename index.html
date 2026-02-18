@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -802,7 +803,7 @@
       // Derived from menu (set on Start)
       mode:  3,   // 3 or 4 number tiles
       level: 1,   // internal 1–6
-      max:   99,
+      max:   60,  // target ceiling (60 for warmup, 99 for workout/challenge)
 
       // Problem data
       numbers: [], original: [], solution: [], target: 0,
@@ -892,6 +893,9 @@
 
     function selectDifficulty(diff) {
       state.difficulty = diff;
+
+      // Set target ceiling based on difficulty
+      state.max = (diff === 'warmup') ? 60 : 99;
 
       // Update difficulty button highlights
       diffBtns.forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
@@ -1284,14 +1288,6 @@
         return;
       }
 
-      // Warm-Up only: cap addition/subtraction results at 20 to reduce cognitive load
-      if (state.difficulty === 'warmup' && 
-          (state.selectedOp === '+' || state.selectedOp === '-') && 
-          res > 20) {
-        showFeedback('In Warm-Up, addition and subtraction must result in 20 or less.');
-        resetSelection();
-        return;
-      }
       state.moveCount++;
       processingMove = true; // lock until state is fully updated
       refreshButtonStates();
@@ -1727,7 +1723,7 @@
         factFocus:  null,
         mode:  DIFF_MODE[prevDiff],
         level: prevDiff === 'challenge' ? 6 : 1,
-        max:   99,
+        max:   prevDiff === 'warmup' ? 60 : 99,
         numbers: [], original: [], solution: [], target: 0,
         selectedFirst: null, selectedOp: null,
         score: 0, problems: 0, moveCount: 0,
