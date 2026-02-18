@@ -78,7 +78,7 @@
 
     .title-main {
       font-family: 'Orbitron', sans-serif;
-      font-size: 19px;
+      font-size: 22px;
       font-weight: 900;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -250,22 +250,6 @@
       opacity: 1;
       pointer-events: auto;
       box-shadow: 0 4px rgba(0,0,0,.4);
-    }
-
-    /* Start Game — elongated hexagon */
-    #startBtn {
-      clip-path: polygon(14px 0%, calc(100% - 14px) 0%, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0% 50%);
-      padding: 10px 26px;
-      border-radius: 0;
-    }
-
-    @keyframes start-pulse {
-      0%, 100% { filter: brightness(1);    box-shadow: 0 6px var(--numShadow); }
-      50%       { filter: brightness(1.3); box-shadow: 0 0 18px rgba(31,143,255,0.7), 0 6px var(--numShadow); }
-    }
-
-    .btn-accent.pulsing {
-      animation: start-pulse 1.2s ease-in-out infinite;
     }
 
 
@@ -466,7 +450,7 @@
       box-shadow: 0 3px rgba(0,0,0,.4);
     }
 
-    .selected { filter: brightness(1.35); }
+    .selected { filter: brightness(1.65); box-shadow: 0 0 12px rgba(255,255,255,0.6); }
     .disabled { opacity: .4; pointer-events: none; }
 
     .solutionBox {
@@ -484,13 +468,13 @@
     /* ── Mission brief (below title) ── */
     .mission-brief {
       margin-top: 6px;
-      padding: 7px 10px;
+      padding: 8px 12px;
       border: 1px solid rgba(100,180,255,0.25);
       border-left: 2px solid rgba(100,180,255,0.5);
       border-radius: 4px;
       background: rgba(0,0,0,0.2);
       font-family: 'Orbitron', sans-serif;
-      font-size: 8.5px;
+      font-size: 10px;
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.75);
       line-height: 1.9;
@@ -498,7 +482,7 @@
     }
 
     .mission-brief-title {
-      font-size: 8px;
+      font-size: 9px;
       font-weight: 700;
       letter-spacing: 0.2em;
       color: rgba(100,200,255,0.8);
@@ -662,22 +646,21 @@
 
             <!-- Fact Focus block (hidden for Challenge) -->
             <div class="fact-row" id="factRow">
-              <span class="fact-label" id="factLabel">Choose your Fact Focus</span>
+              <span class="fact-label" id="factLabel">Choose your Fact Focus to begin</span>
               <div class="fact-buttons">
                 <button class="fact-btn" data-fact="1">2s &amp; 5s</button>
                 <button class="fact-btn" data-fact="2">3s &amp; 4s</button>
                 <button class="fact-btn" data-fact="3">6s &amp; 7s</button>
                 <button class="fact-btn" data-fact="4">8s &amp; 9s</button>
-                <button class="fact-btn" data-fact="5">All ×6–9</button>
+                <button class="fact-btn" data-fact="5">×2→×9</button>
               </div>
             </div>
           </div>
 
-          <!-- Start + Quit + Score stacked on the right -->
+          <!-- Quit + Score stacked on the right -->
           <div class="menu-actions">
-            <button id="startBtn" class="btn btn-accent">Start Game</button>
-            <div style="height:6px;"></div>
             <button id="quitBtn" class="quit-btn">QUIT</button>
+            <div style="height:12px;"></div>
             <div class="menu-score">
               Score: <span id="score">0</span><br>
               Problem: <span id="problems">0/10</span>
@@ -852,7 +835,6 @@
     const solutionBtn = document.getElementById('solutionBtn');
     const resetBtn    = document.getElementById('resetBtn');
     const nextBtn     = document.getElementById('nextBtn');
-    const startBtn    = document.getElementById('startBtn');
     const quitBtn     = document.getElementById('quitBtn');
     const solutionBox = document.getElementById('solutionBox');
     const feedbackMsg = document.getElementById('feedbackMsg');
@@ -884,21 +866,12 @@
 
     function refreshButtonStates() {
       const active  = state.gameStarted && !state.solutionShown;
-      const canHint = active && state.moveCount === 0 && !state.hintUsedThisProblem;
-
-      // Start requires: game not started AND (challenge OR a fact focus chosen)
-      const needsFact = (state.difficulty === 'warmup' || state.difficulty === 'workout')
-                        && state.factFocus === null;
-      const canStart  = !state.gameStarted && state.difficultyChosen && !needsFact;
+      const canHint = active && state.moveCount === 0;
 
       setEnabled(hintBtn,     canHint);
       setEnabled(solutionBtn, active);
       setEnabled(resetBtn,    active);
       setEnabled(nextBtn,     state.solutionShown && state.gameStarted);
-      setEnabled(startBtn,    canStart);
-
-      // Pulse Start Game once it's enabled — stops when game begins
-      startBtn.classList.toggle('pulsing', canStart);
 
       // Quit button: always visible, active (red + clickable) only during game
       quitBtn.classList.toggle('active', state.gameStarted);
@@ -908,6 +881,8 @@
       difficultyLabel.classList.toggle('flashing', shouldFlashDifficulty);
 
       // Flash fact-focus label when waiting for a fact pick (warmup/workout only)
+      const needsFact = (state.difficulty === 'warmup' || state.difficulty === 'workout')
+                        && state.factFocus === null;
       factLabel.classList.toggle('flashing', !state.gameStarted && needsFact);
     }
 
@@ -939,20 +914,18 @@
 
     function selectFactFocus(factLevel) {
       state.factFocus = factLevel;
-      state.difficultyChosen = true; // choosing a fact also counts as confirming difficulty
+      state.difficultyChosen = true;
 
       // Update fact button highlights
       factBtns.forEach(b => b.classList.toggle('active', +b.dataset.fact === factLevel));
 
-      // Derive state and generate a preview problem
+      // Derive state and auto-start the game
       state.level = resolveLevel(state.difficulty, state.factFocus);
       state.mode  = DIFF_MODE[state.difficulty];
-      generateProblem();
-
-      refreshButtonStates(); // enables Start now that factFocus is set
+      startGame();
     }
 
-    // Wire up difficulty buttons — only active before a game starts
+    // Wire up difficulty buttons
     diffBtns.forEach(b => {
       b.onclick = () => {
         if (state.gameStarted) return; // Quit button handles mid-game exit
@@ -962,18 +935,19 @@
         state.difficultyChosen = true;
 
         if (diff === 'challenge') {
-          state.level = resolveLevel(state.difficulty, state.factFocus);
-          state.mode  = DIFF_MODE[state.difficulty];
-          generateProblem();
+          // Challenge: auto-start immediately with all facts
+          state.level = 6;
+          state.mode  = DIFF_MODE[diff];
+          startGame();
         } else {
+          // Warmup/Workout: show placeholders and wait for fact selection
           renderPlaceholders(DIFF_MODE[diff]);
+          refreshButtonStates();
         }
-
-        refreshButtonStates();
       };
     });
 
-    // Wire up fact-focus buttons
+    // Wire up fact-focus buttons — auto-start on selection
     factBtns.forEach(b => {
       b.onclick = () => selectFactFocus(+b.dataset.fact);
     });
@@ -1086,7 +1060,7 @@
         2: { required: [3, 4],       partners: [2,3,4,5,6],           partnerMax: 12 },
         3: { required: [6, 7],       partners: [2,3,4,5,6,7],         partnerMax: 12 },
         4: { required: [8, 9],       partners: [3,4,5,6,7,8,9],       partnerMax: 12 },
-        5: { required: [6,7,8,9],    partners: [3,4,5,6,7,8,9],       partnerMax: 12 }
+        5: { required: [3,4,6,7,8,9], partners: [2,3,4,5,6,7,8,9], partnerMax: 12 }
       };
 
       const cfg = LEVEL_CONFIG[state.level];
@@ -1309,6 +1283,15 @@
         resetSelection();
         return;
       }
+
+      // Warm-Up only: cap addition/subtraction results at 20 to reduce cognitive load
+      if (state.difficulty === 'warmup' && 
+          (state.selectedOp === '+' || state.selectedOp === '-') && 
+          res > 20) {
+        showFeedback('In Warm-Up, addition and subtraction must result in 20 or less.');
+        resetSelection();
+        return;
+      }
       state.moveCount++;
       processingMove = true; // lock until state is fully updated
       refreshButtonStates();
@@ -1423,12 +1406,15 @@
     ═══════════════════════════════════════════════════ */
 
     hintBtn.onclick = () => {
-      if (state.moveCount > 0 || state.solutionShown || state.hintUsedThisProblem) return;
+      if (state.moveCount > 0 || state.solutionShown) return;
 
-      state.hintUsedThisProblem = true;
-      state.hintsUsed++;
-      refreshButtonStates();
+      // Mark hint as used for scoring purposes (only first time)
+      if (!state.hintUsedThisProblem) {
+        state.hintUsedThisProblem = true;
+        state.hintsUsed++;
+      }
 
+      // Always show the hint animation (repeatable)
       const step = state.solution[0];
       const ai = state.numbers.indexOf(step.a);
       const bi = step.a === step.b
@@ -1511,25 +1497,22 @@
     }
 
     /* ═══════════════════════════════════════════════════
-       START GAME
+       START GAME (called when fact selection or Challenge is clicked)
     ═══════════════════════════════════════════════════ */
 
-    startBtn.onclick = () => {
-      // Resolve final level & mode from menu selections
-      state.level = resolveLevel(state.difficulty, state.factFocus);
-      state.mode  = DIFF_MODE[state.difficulty];
-
+    function startGame() {
       state.gameStarted = true;
       state.problems    = 1;
       problemsEl.textContent = `1/${TOTAL_PROBLEMS}`;
 
       lockMenu();
+      generateProblem();
 
-      // Reveal pre-generated problem
+      // Reveal the problem
       targetEl.textContent = state.target;
       renderNumbers(false);
       refreshButtonStates();
-    };
+    }
 
     /* ═══════════════════════════════════════════════════
        END-OF-GAME SUMMARY
@@ -1588,7 +1571,7 @@
 
       /* ── Display names ── */
       const DIFF_NAMES = { warmup: 'Warm-Up', workout: 'Workout', challenge: 'Challenge' };
-      const FACT_NAMES = { 1: '2s & 5s', 2: '3s & 4s', 3: '6s & 7s', 4: '8s & 9s', 5: 'All ×6–9' };
+      const FACT_NAMES = { 1: '2s & 5s', 2: '3s & 4s', 3: '6s & 7s', 4: '8s & 9s', 5: '×2→×9' };
 
       const diffName = DIFF_NAMES[state.difficulty];
       const factName = isChallenge ? null : FACT_NAMES[state.factFocus];
@@ -1601,13 +1584,13 @@
         'warmup-1': { difficulty: 'warmup',   factFocus: 2, label: 'Warm-Up · 3s & 4s'   },
         'warmup-2': { difficulty: 'warmup',   factFocus: 3, label: 'Warm-Up · 6s & 7s'   },
         'warmup-3': { difficulty: 'warmup',   factFocus: 4, label: 'Warm-Up · 8s & 9s'   },
-        'warmup-4': { difficulty: 'warmup',   factFocus: 5, label: 'Warm-Up · All ×6–9'  },
+        'warmup-4': { difficulty: 'warmup',   factFocus: 5, label: 'Warm-Up · ×2→×9'  },
         'warmup-5': { difficulty: 'workout',  factFocus: 1, label: 'Workout · 2s & 5s'   },
         // Workout path: same fact-family progression, then Challenge
         'workout-1': { difficulty: 'workout', factFocus: 2, label: 'Workout · 3s & 4s'   },
         'workout-2': { difficulty: 'workout', factFocus: 3, label: 'Workout · 6s & 7s'   },
         'workout-3': { difficulty: 'workout', factFocus: 4, label: 'Workout · 8s & 9s'   },
-        'workout-4': { difficulty: 'workout', factFocus: 5, label: 'Workout · All ×6–9'  },
+        'workout-4': { difficulty: 'workout', factFocus: 5, label: 'Workout · ×2→×9'  },
         'workout-5': { difficulty: 'challenge', factFocus: null, label: 'Challenge'       },
         // Challenge top of ladder — Master handled separately
         'challenge-null': null
@@ -1760,6 +1743,11 @@
 
       unlockMenu();
       selectDifficulty(prevDiff);
+
+      // If not keeping difficulty chosen, clear the highlight
+      if (!keepDifficultyChosen) {
+        diffBtns.forEach(b => b.classList.remove('active'));
+      }
 
       if (keepDifficultyChosen && prevDiff === 'challenge') {
         state.level = 6;
