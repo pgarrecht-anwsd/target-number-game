@@ -787,6 +787,23 @@
       return factFocus; // factFocus is already 1–5
     }
 
+    function resolveMax(difficulty, factFocus) {
+      if (difficulty === 'workout' || difficulty === 'challenge') return 99;
+      
+      // Warm-Up: progressive caps based on fact family
+      if (!factFocus) return 60; // default before fact selection
+      
+      const WARMUP_CAPS = {
+        1: 60,  // 2s & 5s
+        2: 60,  // 3s & 4s
+        3: 75,  // 6s & 7s
+        4: 90,  // 8s & 9s
+        5: 99   // ×2→×9
+      };
+      
+      return WARMUP_CAPS[factFocus] || 60;
+    }
+
     /* ═══════════════════════════════════════════════════
        STATE
     ═══════════════════════════════════════════════════ */
@@ -894,8 +911,8 @@
     function selectDifficulty(diff) {
       state.difficulty = diff;
 
-      // Set target ceiling based on difficulty
-      state.max = (diff === 'warmup') ? 60 : 99;
+      // Set target ceiling based on difficulty (will be refined when fact is chosen)
+      state.max = resolveMax(diff, state.factFocus);
 
       // Update difficulty button highlights
       diffBtns.forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
@@ -923,9 +940,10 @@
       // Update fact button highlights
       factBtns.forEach(b => b.classList.toggle('active', +b.dataset.fact === factLevel));
 
-      // Derive state and auto-start the game
+      // Derive state (including max based on warmup fact level) and auto-start
       state.level = resolveLevel(state.difficulty, state.factFocus);
       state.mode  = DIFF_MODE[state.difficulty];
+      state.max   = resolveMax(state.difficulty, state.factFocus);
       startGame();
     }
 
@@ -1723,7 +1741,7 @@
         factFocus:  null,
         mode:  DIFF_MODE[prevDiff],
         level: prevDiff === 'challenge' ? 6 : 1,
-        max:   prevDiff === 'warmup' ? 60 : 99,
+        max:   resolveMax(prevDiff, null), // null factFocus uses default cap
         numbers: [], original: [], solution: [], target: 0,
         selectedFirst: null, selectedOp: null,
         score: 0, problems: 0, moveCount: 0,
