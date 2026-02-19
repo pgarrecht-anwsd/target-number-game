@@ -466,7 +466,11 @@
       box-shadow: 0 3px rgba(0,0,0,.4);
     }
 
-    .selected { filter: brightness(1.65); box-shadow: 0 0 12px rgba(255,255,255,0.6); }
+    .selected { 
+      filter: brightness(1.65); 
+      box-shadow: 0 0 12px rgba(255,255,255,0.6); 
+      color: #000 !important;
+    }
     .disabled { opacity: .4; pointer-events: none; }
 
     .solutionBox {
@@ -2029,13 +2033,11 @@
 
       state = {
         difficulty: prevDiff,
-        // After Quit: keep difficulty highlighted so player can just pick Fact Focus
-        // After game ends via summary Close: re-prompt so they choose deliberately
-        difficultyChosen: keepDifficultyChosen,
+        difficultyChosen: false, // Always start with no difficulty chosen
         factFocus:  null,
-        mode:  DIFF_MODE[prevDiff],
-        level: prevDiff === 'challenge' ? 6 : 1,
-        max:   resolveMax(prevDiff, null), // null factFocus uses default cap
+        mode:  3, // default to warmup mode
+        level: 1, // default to level 1
+        max:   60, // default to warmup max
         numbers: [], original: [], solution: [], target: 0,
         selectedFirst: null, selectedOp: null,
         score: 0, problems: 0, moveCount: 0,
@@ -2047,26 +2049,28 @@
       problemsEl.textContent = `0/${TOTAL_PROBLEMS}`;
       targetEl.textContent   = '--';
       solutionBox.style.display = 'none';
-      renderPlaceholders(DIFF_MODE[prevDiff]);
+      
+      // Clear all button highlights
+      diffBtns.forEach(b => b.classList.remove('active'));
+      factBtns.forEach(b => b.classList.remove('active'));
+      
+      // Show placeholders (default 3 for warmup)
+      renderPlaceholders(3);
+      
+      // Reset mission brief to default
+      updateMissionBrief('warmup');
+      
+      // Hide x² button
+      sqrBtn.style.display = 'none';
+      
+      // Show fact focus row (for warmup/workout)
+      factRow.classList.remove('hidden');
 
       unlockMenu();
-      selectDifficulty(prevDiff);
-
-      // If not keeping difficulty chosen, clear the highlight
-      if (!keepDifficultyChosen) {
-        diffBtns.forEach(b => b.classList.remove('active'));
-      }
-
-      if (keepDifficultyChosen && prevDiff === 'challenge') {
-        state.level = 6;
-        state.mode  = DIFF_MODE['challenge'];
-        generateProblem();
-      }
-
       refreshButtonStates();
     }
 
-    quitBtn.onclick = () => resetGame(true);   // Quit: keep difficulty chosen
+    quitBtn.onclick = () => resetGame(false);   // Quit: full reset
 
     /* ═══════════════════════════════════════════════════
        INIT
