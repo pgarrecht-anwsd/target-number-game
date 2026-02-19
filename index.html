@@ -1,3 +1,10 @@
+
+target-number-game-v29.html
+Page
+1
+/
+1
+100%
 <!doctype html>
 <html lang="en">
 <head>
@@ -273,6 +280,21 @@
     .diff-btn.warmup    { background: var(--warmup); }
     .diff-btn.workout   { background: var(--workout); }
     .diff-btn.challenge { background: var(--challenge); }
+    .diff-btn.master { 
+      background: var(--master); 
+      position: relative;
+    }
+    
+    .diff-btn.master.locked {
+      background: #666;
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .diff-btn.master.locked .lock-icon {
+      font-size: 14px;
+      margin-right: 4px;
+    }
 
     .diff-btn.active {
       opacity: 1;
@@ -444,6 +466,7 @@
     .op.sub { background: var(--opSub); }
     .op.mul { background: var(--opMul); }
     .op.div { background: var(--opDiv); }
+    .op.sqr { background: var(--master); }
 
     .num:active, .op:active, .btn:active {
       transform: translateY(4px);
@@ -559,6 +582,80 @@
       line-height: 1.5;
     }
 
+    /* ── Master code entry modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    
+    .modal-box {
+      background: var(--panel);
+      border: 2px solid rgba(142,68,173,0.8);
+      border-radius: 12px;
+      padding: 28px;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: 0 0 30px rgba(142,68,173,0.6);
+      text-align: center;
+    }
+    
+    .modal-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--master);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    
+    .modal-input {
+      width: 100%;
+      padding: 12px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-align: center;
+      background: rgba(0,0,0,0.4);
+      border: 2px solid rgba(142,68,173,0.5);
+      border-radius: 6px;
+      color: #fff;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    
+    .modal-input:focus {
+      outline: none;
+      border-color: var(--master);
+      box-shadow: 0 0 12px rgba(142,68,173,0.5);
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    
+    .modal-hint {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+    
+    .modal-error {
+      color: #ff5252;
+      font-size: 13px;
+      margin-top: 12px;
+      font-weight: 600;
+    }
+
     /* ── Summary overlay ── */
     .summaryBox {
       position: absolute;
@@ -623,7 +720,7 @@
         <div class="title-operation">Operation:</div>
         <div class="title-main">Number Blaster</div>
         <div class="title-stamp">Classified</div>
-        <div class="mission-brief">
+        <div class="mission-brief" id="missionBrief">
           <div class="mission-brief-title">Mission Objectives</div>
           <div class="mission-brief-item">Hit the Target using any Operation</div>
           <div class="mission-brief-item">Each step must result in a whole number</div>
@@ -642,6 +739,9 @@
               <button class="diff-btn warmup"    data-diff="warmup">Warm-Up</button>
               <button class="diff-btn workout"   data-diff="workout">Workout</button>
               <button class="diff-btn challenge" data-diff="challenge">Challenge</button>
+              <button class="diff-btn master locked" data-diff="master" id="masterBtn">
+                <span class="lock-icon">🔒</span> Master
+              </button>
             </div>
 
             <!-- Fact Focus block (hidden for Challenge) -->
@@ -657,10 +757,8 @@
             </div>
           </div>
 
-          <!-- Quit + Score stacked on the right -->
+          <!-- Score display on the right -->
           <div class="menu-actions">
-            <button id="quitBtn" class="quit-btn">QUIT</button>
-            <div style="height:12px;"></div>
             <div class="menu-score">
               Score: <span id="score">0</span><br>
               Problem: <span id="problems">0/10</span>
@@ -691,6 +789,7 @@
       <button class="op sub" data-op="-">−</button>
       <button class="op mul" data-op="*">×</button>
       <button class="op div" data-op="/">÷</button>
+      <button class="op sqr" data-op="^2" id="sqrBtn" style="display:none;">x²</button>
     </div>
 
     <!-- Number Buttons -->
@@ -714,6 +813,9 @@
     <!-- Solution Display -->
     <div id="solutionBox" class="solutionBox" style="display:none"></div>
 
+    <!-- Quit button — bottom right corner -->
+    <button id="quitBtn" class="quit-btn" style="position:absolute; bottom:18px; right:18px;">QUIT</button>
+
   </div><!-- .container -->
 
 
@@ -733,6 +835,14 @@
     }
 
     function randomInitialNumber(level, existing = []) {
+      // Master Mode (level 7): -10 to 10 range
+      if (level === 7) {
+        const fullPool = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10];
+        const available = fullPool.filter(n => !existing.includes(n));
+        const candidates = available.length ? available : fullPool;
+        return candidates[Math.floor(Math.random() * candidates.length)];
+      }
+      
       const fullPool = level === 6
         ? [3,4,5,6,7,8,9,10,11,12]
         : [0,1,2,3,4,5,6,7,8,9,10];
@@ -778,7 +888,7 @@
     ═══════════════════════════════════════════════════ */
 
     // difficulty → mode (number of tiles)
-    const DIFF_MODE = { warmup: 3, workout: 4, challenge: 4 };
+    const DIFF_MODE = { warmup: 3, workout: 4, challenge: 4, master: 4 };
 
     // difficulty + factFocus → internal level (1–6)
     // challenge always maps to level 6 regardless of factFocus
@@ -788,6 +898,7 @@
     }
 
     function resolveMax(difficulty, factFocus) {
+      if (difficulty === 'master') return 99; // Master uses ±99 range (handled in generation)
       if (difficulty === 'workout' || difficulty === 'challenge') return 99;
       
       // Warm-Up: progressive caps based on fact family
@@ -873,6 +984,9 @@
 
     const diffBtns = document.querySelectorAll('.diff-btn');
     const factBtns = document.querySelectorAll('.fact-btn');
+    const masterBtn = document.getElementById('masterBtn');
+    const sqrBtn = document.getElementById('sqrBtn');
+    const missionBrief = document.getElementById('missionBrief');
 
     /* ═══════════════════════════════════════════════════
        BUTTON ENABLE / DISABLE — single source of truth
@@ -908,6 +1022,36 @@
        MENU INTERACTION
     ═══════════════════════════════════════════════════ */
 
+    function updateMissionBrief(diff) {
+      const briefHTML = {
+        'warmup': `
+          <div class="mission-brief-title">Mission Objectives</div>
+          <div class="mission-brief-item">Hit the Target using any Operation</div>
+          <div class="mission-brief-item">Each step must result in a whole number</div>
+          <div class="mission-brief-item">Mission Control provides hint for 1st move only</div>
+        `,
+        'workout': `
+          <div class="mission-brief-title">Mission Objectives</div>
+          <div class="mission-brief-item">Hit the Target using any Operation</div>
+          <div class="mission-brief-item">Each step must result in a whole number</div>
+          <div class="mission-brief-item">Mission Control provides hint for 1st move only</div>
+        `,
+        'challenge': `
+          <div class="mission-brief-title">Mission Objectives</div>
+          <div class="mission-brief-item">Hit the Target using any Operation</div>
+          <div class="mission-brief-item">Each step must result in a whole number</div>
+          <div class="mission-brief-item">Mission Control provides hint for 1st move only</div>
+        `,
+        'master': `
+          <div class="mission-brief-title">Master Objectives</div>
+          <div class="mission-brief-item">Target includes negative numbers</div>
+          <div class="mission-brief-item">Use x² to square any number</div>
+          <div class="mission-brief-item">Each step must result in an integer</div>
+        `
+      };
+      missionBrief.innerHTML = briefHTML[diff] || briefHTML['warmup'];
+    }
+
     function selectDifficulty(diff) {
       state.difficulty = diff;
 
@@ -916,6 +1060,12 @@
 
       // Update difficulty button highlights
       diffBtns.forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
+
+      // Update mission brief
+      updateMissionBrief(diff);
+
+      // Show/hide x² button for Master mode
+      sqrBtn.style.display = (diff === 'master') ? 'inline-flex' : 'none';
 
       // Show/hide Fact Focus row
       const showFacts = diff === 'warmup' || diff === 'workout';
@@ -926,9 +1076,9 @@
         state.factFocus = null;
         factBtns.forEach(b => b.classList.remove('active'));
       } else {
-        // Challenge: no fact focus needed — set level directly
+        // Challenge/Master: no fact focus needed — set level directly
         state.factFocus = null; // unused but keep clean
-        state.level = 6;
+        state.level = (diff === 'master') ? 7 : 6;
         state.mode  = DIFF_MODE[diff];
       }
     }
@@ -953,12 +1103,19 @@
         if (state.gameStarted) return; // Quit button handles mid-game exit
 
         const diff = b.dataset.diff;
+        
+        // Master locked? Show code entry modal
+        if (diff === 'master' && b.classList.contains('locked')) {
+          showMasterCodeModal();
+          return;
+        }
+        
         selectDifficulty(diff);
         state.difficultyChosen = true;
 
-        if (diff === 'challenge') {
-          // Challenge: auto-start immediately with all facts
-          state.level = 6;
+        if (diff === 'challenge' || diff === 'master') {
+          // Challenge/Master: auto-start immediately
+          state.level = (diff === 'master') ? 7 : 6;
           state.mode  = DIFF_MODE[diff];
           startGame();
         } else {
@@ -1006,6 +1163,17 @@
 
     function solve(nums, target) {
       if (nums.length === 1) return nums[0] === target ? [] : null;
+      
+      // Try unary operations (x²) for Master Mode
+      if (state.level === 7) {
+        for (let i = 0; i < nums.length; i++) {
+          const n = nums[i];
+          const squared = n * n;
+          const rest = nums.filter((_, k) => k !== i);
+          const r = solve([squared, ...rest], target);
+          if (r) return [{ a: n, b: null, op: '^2', result: squared }, ...r];
+        }
+      }
 
       for (let i = 0; i < nums.length; i++) {
         for (let j = 0; j < nums.length; j++) {
@@ -1026,7 +1194,10 @@
           ops.sort(() => Math.random() - 0.5);
 
           for (const o of ops) {
-            if (!Number.isInteger(o.v) || o.v < 0) continue;
+            // Master allows negatives, others require non-negative integers
+            if (!Number.isInteger(o.v)) continue;
+            if (state.level !== 7 && o.v < 0) continue;
+            
             const r = solve([o.v, ...rest], target);
             if (r) return [{ a: nums[o.ai], b: nums[o.bi], op: o.op, result: o.v }, ...r];
           }
@@ -1150,7 +1321,7 @@
     function generateProblem() {
       // Don't generate if we don't have a valid level yet
       // (warmup/workout waiting for fact focus pick)
-      if (!state.level || (state.difficulty !== 'challenge' && state.factFocus === null)) return;
+      if (!state.level || (state.difficulty !== 'challenge' && state.difficulty !== 'master' && state.factFocus === null)) return;
 
       solutionBox.style.display = 'none';
       if (feedbackMsg) { feedbackMsg.textContent = ''; feedbackMsg.style.opacity = '0'; }
@@ -1194,12 +1365,17 @@
 
       let t, sol = null;
       for (let tries = 0; tries < 60; tries++) {
-        t = Math.random() < 0.6
-          ? (preferredTarget(nums) ?? randInt(state.max))
-          : randInt(state.max);
+        if (state.level === 7) {
+          // Master Mode: targets from -99 to 99
+          t = Math.floor(Math.random() * 199) - 99;
+        } else {
+          t = Math.random() < 0.6
+            ? (preferredTarget(nums) ?? randInt(state.max))
+            : randInt(state.max);
+        }
         if (nums.includes(t)) continue;
         sol = solve([...nums], t);
-        if (sol && solutionUsesRequiredFact(sol, nums)) break;
+        if (state.level === 7 || (sol && solutionUsesRequiredFact(sol, nums))) break;
         sol = null;
       }
 
@@ -1258,10 +1434,50 @@
 
     document.querySelectorAll('.op').forEach(b => {
       b.onclick = () => {
-        if (state.selectedFirst === null || state.solutionShown || !state.gameStarted) return;
+        if (state.solutionShown || !state.gameStarted) return;
+        
+        const op = b.dataset.op;
+        
+        // x² is unary: requires selectedFirst, executes immediately
+        if (op === '^2') {
+          if (state.selectedFirst === null) return;
+          
+          const num = state.numbers[state.selectedFirst];
+          const res = num * num;
+          
+          state.moveCount++;
+          processingMove = true;
+          
+          clearHighlights();
+          b.classList.add('selected');
+          
+          setTimeout(() => {
+            state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst);
+            state.numbers.unshift(res);
+            renderNumbers();
+            resetSelection();
+            processingMove = false;
+            
+            if (state.numbers.length === 1 &&
+                state.numbers[0] === state.target &&
+                !state.solutionShown) {
+              const hintPenalty = state.difficulty === 'warmup' ? 50 : 30;
+              const pts = state.hintUsedThisProblem ? (100 - hintPenalty) : 100;
+              state.score += pts;
+              scoreEl.textContent = state.score;
+              fireworks();
+              setTimeout(nextProblem, 2000);
+            }
+          }, 400);
+          
+          return;
+        }
+        
+        // Binary operators: require selectedFirst, wait for second number
+        if (state.selectedFirst === null) return;
         clearHighlights();
         b.classList.add('selected');
-        state.selectedOp = b.dataset.op;
+        state.selectedOp = op;
         numbersRow.children[state.selectedFirst]?.classList.add('selected');
       };
     });
@@ -1472,11 +1688,19 @@
       const steps = [];
 
       state.solution.forEach(s => {
-        const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
-        steps.push(`${s.a} ${sym} ${s.b} = ${s.result}`);
-        nums.splice(nums.indexOf(s.a), 1);
-        nums.splice(nums.indexOf(s.b), 1);
-        nums.unshift(s.result);
+        if (s.op === '^2') {
+          // Unary operation: x²
+          steps.push(`${s.a}² = ${s.result}`);
+          nums.splice(nums.indexOf(s.a), 1);
+          nums.unshift(s.result);
+        } else {
+          // Binary operation
+          const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
+          steps.push(`${s.a} ${sym} ${s.b} = ${s.result}`);
+          nums.splice(nums.indexOf(s.a), 1);
+          nums.splice(nums.indexOf(s.b), 1);
+          nums.unshift(s.result);
+        }
       });
 
       solutionBox.innerHTML = `<b>One valid solution:</b> ${steps.join('; ')}`;
@@ -1579,6 +1803,80 @@
       const sum = indices.reduce((a, b) => a + b, 0) % ALPHA.length;
       const xor = indices.reduce((a, b) => a ^ b, 0) % ALPHA.length;
       return check === ALPHA[sum] + ALPHA[xor];
+    }
+
+    /* Check Master unlock status from localStorage */
+    function checkMasterUnlock() {
+      return localStorage.getItem('masterUnlocked') === 'true';
+    }
+
+    function unlockMaster() {
+      localStorage.setItem('masterUnlocked', 'true');
+      masterBtn.classList.remove('locked');
+      masterBtn.querySelector('.lock-icon').style.display = 'none';
+    }
+
+    function showMasterCodeModal() {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-box">
+          <div class="modal-title">⭐ Master Mode Access ⭐</div>
+          <input 
+            type="text" 
+            class="modal-input" 
+            id="codeInput" 
+            placeholder="NB-XXXX-XX"
+            maxlength="12"
+            autocomplete="off"
+          />
+          <div class="modal-error" id="codeError" style="display:none;"></div>
+          <div class="modal-buttons">
+            <button class="btn" id="submitCodeBtn">Submit</button>
+            <button class="btn" id="cancelCodeBtn">Cancel</button>
+          </div>
+          <div class="modal-hint">
+            Earn a Master code by scoring<br>
+            1000 points on Challenge Mode.
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      const input = document.getElementById('codeInput');
+      const error = document.getElementById('codeError');
+      input.focus();
+      
+      document.getElementById('submitCodeBtn').onclick = () => {
+        const code = input.value.trim();
+        if (verifyMasterCode(code)) {
+          unlockMaster();
+          modal.remove();
+          // Auto-select Master mode
+          selectDifficulty('master');
+          state.difficultyChosen = true;
+          startGame();
+        } else {
+          error.textContent = 'Invalid code. Please check and try again.';
+          error.style.display = 'block';
+          input.value = '';
+          input.focus();
+        }
+      };
+      
+      document.getElementById('cancelCodeBtn').onclick = () => modal.remove();
+      
+      // Allow Enter key to submit
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') document.getElementById('submitCodeBtn').click();
+        if (e.key === 'Escape') modal.remove();
+      };
+      
+      // Click outside to close
+      modal.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+      };
     }
 
     function showSummary() {
@@ -1785,8 +2083,16 @@
     initMenuSelections();
     renderPlaceholders(3); // show 3 placeholders immediately so layout doesn't jump
     refreshButtonStates();
+    
+    // Check Master unlock status
+    if (checkMasterUnlock()) {
+      masterBtn.classList.remove('locked');
+      masterBtn.querySelector('.lock-icon').style.display = 'none';
+    }
+    
     // No generateProblem() on load — wait for student to pick difficulty + fact focus
 
   </script>
 </body>
 </html>
+Displaying target-number-game-v29.html.
