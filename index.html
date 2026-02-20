@@ -1850,9 +1850,15 @@
         if (verifyMasterCode(code)) {
           unlockMaster();
           modal.remove();
-          // Auto-select Master mode
+          
+          // Set up Master mode state
           selectDifficulty('master');
           state.difficultyChosen = true;
+          state.level = 7;
+          state.mode = 4;
+          state.max = 99;
+          
+          // Start the game
           startGame();
         } else {
           error.textContent = 'Invalid code. Please check and try again.';
