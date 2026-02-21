@@ -446,6 +446,65 @@
       font-size: 36px;
       background: var(--num);
       box-shadow: 0 8px var(--numShadow);
+      position: relative;
+      transition: all 0.6s ease-out;
+    }
+    
+    /* Animation states for tiles */
+    .num.merging {
+      z-index: 10;
+      transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+    
+    .num.fading-out {
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    
+    .num.fading-in {
+      animation: fadeInScale 0.8s ease-out;
+    }
+    
+    @keyframes fadeInScale {
+      0% {
+        opacity: 0;
+        transform: scale(1.3);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    /* Operation indicator during merge */
+    .operation-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 0 8px rgba(0,0,0,0.8), 0 0 16px rgba(255,255,255,0.3);
+      pointer-events: none;
+      z-index: 20;
+      animation: opPulse 0.8s ease-out;
+    }
+    
+    @keyframes opPulse {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+      }
+      50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1);
+      }
     }
 
     .op {
@@ -1439,7 +1498,28 @@
        RENDERING
     ═══════════════════════════════════════════════════ */
 
-    function renderNumbers(hidden = false) {
+    function renderNumbers(hidden = false, animate = false) {
+      if (!animate) {
+        // Normal render without animation
+        numbersRow.innerHTML = '';
+        state.numbers.forEach((n, i) => {
+          const b = document.createElement('button');
+          b.className = 'num';
+          b.textContent = hidden ? '?' : n;
+          b.onclick = () => numberClick(i, b);
+          numbersRow.appendChild(b);
+        });
+        return;
+      }
+      
+      // Animated render: capture old positions before clearing
+      const oldPositions = [];
+      Array.from(numbersRow.children).forEach(btn => {
+        const rect = btn.getBoundingClientRect();
+        oldPositions.push({ left: rect.left, top: rect.top });
+      });
+      
+      // Render new tiles
       numbersRow.innerHTML = '';
       state.numbers.forEach((n, i) => {
         const b = document.createElement('button');
@@ -1447,6 +1527,36 @@
         b.textContent = hidden ? '?' : n;
         b.onclick = () => numberClick(i, b);
         numbersRow.appendChild(b);
+      });
+      
+      // Animate tiles sliding to new positions
+      Array.from(numbersRow.children).forEach((btn, i) => {
+        const newRect = btn.getBoundingClientRect();
+        
+        // Find closest old position (tiles may have shifted)
+        let closestOld = null;
+        let minDist = Infinity;
+        oldPositions.forEach(old => {
+          const dist = Math.abs(old.left - newRect.left);
+          if (dist < minDist && dist < 200) { // only match nearby tiles
+            minDist = dist;
+            closestOld = old;
+          }
+        });
+        
+        if (closestOld && minDist > 5) {
+          // Start from old position
+          const deltaX = closestOld.left - newRect.left;
+          btn.style.transform = `translateX(${deltaX}px)`;
+          btn.style.transition = 'none';
+          
+          // Force reflow
+          btn.offsetHeight;
+          
+          // Animate to new position
+          btn.style.transition = 'transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+          btn.style.transform = 'translateX(0)';
+        }
       });
     }
 
@@ -1482,12 +1592,13 @@
         
         const op = b.dataset.op;
         
-        // x² is unary: requires selectedFirst, executes immediately
+        // x² is unary: requires selectedFirst, executes immediately with animation
         if (op === '^2') {
           if (state.selectedFirst === null) return;
           
           const num = state.numbers[state.selectedFirst];
           const res = num * num;
+          const targetBtn = numbersRow.children[state.selectedFirst];
           
           state.moveCount++;
           processingMove = true;
@@ -1495,10 +1606,25 @@
           clearHighlights();
           b.classList.add('selected');
           
+          // Animation: fade out original, show x², fade in result
+          targetBtn.classList.add('fading-out');
+          
+          // Show x² indicator
+          const indicator = document.createElement('div');
+          indicator.className = 'operation-indicator';
+          indicator.textContent = (num < 0 ? `(${num})` : num) + '²';
+          indicator.style.position = 'absolute';
+          indicator.style.left = targetBtn.offsetLeft + targetBtn.offsetWidth / 2 + 'px';
+          indicator.style.top = targetBtn.offsetTop + targetBtn.offsetHeight / 2 + 'px';
+          numbersRow.parentElement.style.position = 'relative';
+          numbersRow.parentElement.appendChild(indicator);
+          
           setTimeout(() => {
+            indicator.remove();
             state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst);
-            state.numbers.unshift(res);
+            state.numbers.splice(state.selectedFirst, 0, res); // keep in same position
             renderNumbers();
+            numbersRow.children[state.selectedFirst]?.classList.add('fading-in');
             resetSelection();
             processingMove = false;
             
@@ -1512,7 +1638,7 @@
               fireworks();
               setTimeout(nextProblem, 2000);
             }
-          }, 400);
+          }, 800);
           
           return;
         }
@@ -1554,7 +1680,13 @@
       const a = state.numbers[state.selectedFirst];
       const b = state.numbers[i];
 
-      if (state.selectedOp === '/' && (b === 0 || a % b !== 0)) {
+      if (state.selectedOp === '/' && b === 0) {
+        showFeedback('Cannot divide by zero.');
+        resetSelection();
+        return;
+      }
+      
+      if (state.selectedOp === '/' && !Number.isInteger(a / b)) {
         showFeedback('Each step must result in a whole number.');
         resetSelection();
         return;
@@ -1562,8 +1694,14 @@
 
       const res = calculate(a, state.selectedOp, b);
 
-      // Block negative results and non-integers (belt-and-suspenders for division edge cases)
-      if (res < 0 || !Number.isInteger(res)) {
+      // Block negative results and non-integers (Master Mode allows negatives)
+      if (!Number.isInteger(res)) {
+        showFeedback('Each step must result in a whole number.');
+        resetSelection();
+        return;
+      }
+      
+      if (state.level !== 7 && res < 0) {
         showFeedback('Each step must result in a whole number.');
         resetSelection();
         return;
@@ -1572,28 +1710,62 @@
       state.moveCount++;
       processingMove = true; // lock until state is fully updated
       refreshButtonStates();
+      
+      // Animation: second tile slides to first, both fade out, result fades in
+      const firstBtn = numbersRow.children[state.selectedFirst];
+      const secondBtn = numbersRow.children[i];
+      const targetPosition = state.selectedFirst; // result appears at first tile's position
+      
+      // Calculate slide distance
+      const firstRect = firstBtn.getBoundingClientRect();
+      const secondRect = secondBtn.getBoundingClientRect();
+      const slideX = firstRect.left - secondRect.left;
+      const slideY = firstRect.top - secondRect.top;
+      
+      // Animate second tile sliding to first
+      secondBtn.classList.add('merging');
+      secondBtn.style.transform = `translate(${slideX}px, ${slideY}px)`;
+      
+      // Show operation indicator
+      const opSymbol = state.selectedOp === '*' ? '×' : state.selectedOp === '/' ? '÷' : state.selectedOp;
+      const indicator = document.createElement('div');
+      indicator.className = 'operation-indicator';
+      indicator.textContent = opSymbol;
+      indicator.style.position = 'absolute';
+      indicator.style.left = firstRect.left + firstRect.width / 2 + 'px';
+      indicator.style.top = firstRect.top + firstRect.height / 2 + 'px';
+      numbersRow.parentElement.style.position = 'relative';
+      numbersRow.parentElement.appendChild(indicator);
 
       setTimeout(() => {
-        state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst && k !== i);
-        state.numbers.unshift(res);
-        renderNumbers();
-        resetSelection();
-        processingMove = false; // unlock
+        // Fade out both tiles
+        firstBtn.classList.add('fading-out');
+        secondBtn.classList.add('fading-out');
+        
+        setTimeout(() => {
+          indicator.remove();
+          state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst && k !== i);
+          state.numbers.splice(targetPosition, 0, res); // result at first position
+          renderNumbers(false, true); // animate=true for smooth sliding
+          numbersRow.children[targetPosition]?.classList.add('fading-in');
+          resetSelection();
+          processingMove = false; // unlock
 
-        if (state.numbers.length === 1 &&
-            state.numbers[0] === state.target &&
-            !state.solutionShown) {
+          if (state.numbers.length === 1 &&
+              state.numbers[0] === state.target &&
+              !state.solutionShown) {
 
-          // Hint penalty: Warm-Up = −50pts, Workout & Challenge = −30pts
-          const hintPenalty = state.difficulty === 'warmup' ? 50 : 30;
-          const pts = state.hintUsedThisProblem ? (100 - hintPenalty) : 100;
-          state.score += pts;
-          scoreEl.textContent = state.score;
+            // Hint penalty: Warm-Up = −50pts, Workout & Challenge = −30pts
+            const hintPenalty = state.difficulty === 'warmup' ? 50 : 30;
+            const pts = state.hintUsedThisProblem ? (100 - hintPenalty) : 100;
+            state.score += pts;
+            scoreEl.textContent = state.score;
 
-          fireworks();
-          setTimeout(nextProblem, 2000);
-        }
-      }, 400);
+            fireworks();
+            setTimeout(nextProblem, 2000);
+          }
+        }, 600); // fade out duration
+      }, 800); // slide duration
     }
 
     /* ═══════════════════════════════════════════════════
@@ -2135,7 +2307,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v31
 
   </script>
 </body>
