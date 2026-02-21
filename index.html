@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -1159,7 +1158,10 @@
        SOLVER
     ═══════════════════════════════════════════════════ */
 
-    function solve(nums, target) {
+    function solve(nums, target, depth = 0) {
+      // Prevent infinite recursion
+      if (depth > 20) return null;
+      
       if (nums.length === 1) return nums[0] === target ? [] : null;
       
       // Try unary operations (x²) for Master Mode
@@ -1167,8 +1169,12 @@
         for (let i = 0; i < nums.length; i++) {
           const n = nums[i];
           const squared = n * n;
+          
+          // Prevent runaway squaring - cap at 10000
+          if (Math.abs(squared) > 10000) continue;
+          
           const rest = nums.filter((_, k) => k !== i);
-          const r = solve([squared, ...rest], target);
+          const r = solve([squared, ...rest], target, depth + 1);
           if (r) return [{ a: n, b: null, op: '^2', result: squared }, ...r];
         }
       }
@@ -1196,7 +1202,10 @@
             if (!Number.isInteger(o.v)) continue;
             if (state.level !== 7 && o.v < 0) continue;
             
-            const r = solve([o.v, ...rest], target);
+            // Prevent runaway values
+            if (Math.abs(o.v) > 10000) continue;
+            
+            const r = solve([o.v, ...rest], target, depth + 1);
             if (r) return [{ a: nums[o.ai], b: nums[o.bi], op: o.op, result: o.v }, ...r];
           }
         }
