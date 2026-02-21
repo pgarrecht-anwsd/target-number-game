@@ -1186,8 +1186,8 @@
             { v: b - a, op: '-', ai: j, bi: i }
           ];
 
-          if (b !== 0 && a % b === 0) ops.push({ v: a / b, op: '/', ai: i, bi: j });
-          if (a !== 0 && b % a === 0) ops.push({ v: b / a, op: '/', ai: j, bi: i });
+          if (b !== 0 && Number.isInteger(a / b)) ops.push({ v: a / b, op: '/', ai: i, bi: j });
+          if (a !== 0 && Number.isInteger(b / a)) ops.push({ v: b / a, op: '/', ai: j, bi: i });
 
           ops.sort(() => Math.random() - 0.5);
 
@@ -1362,22 +1362,59 @@
       }
 
       let t, sol = null;
-      for (let tries = 0; tries < 60; tries++) {
-        if (state.level === 7) {
-          // Master Mode: targets from -99 to 99
-          t = Math.floor(Math.random() * 199) - 99;
-        } else {
+      
+      // Master Mode needs simpler problems to ensure solvability
+      if (state.level === 7) {
+        // Try 100 times with guard against infinite recursion
+        for (let tries = 0; tries < 100; tries++) {
+          // Generate simpler targets for Master (avoid extreme values initially)
+          const simpleRange = Math.random() < 0.7; // 70% of time use smaller range
+          if (simpleRange) {
+            t = Math.floor(Math.random() * 61) - 30; // -30 to 30
+          } else {
+            t = Math.floor(Math.random() * 199) - 99; // full -99 to 99
+          }
+          
+          if (nums.includes(t)) continue;
+          sol = solve([...nums], t);
+          if (sol) break;
+        }
+        
+        // Fallback: if still no solution, use a guaranteed solvable target
+        if (!sol) {
+          // Just pick sum of two tiles as fallback
+          t = nums[0] + nums[1];
+          sol = solve([...nums], t);
+        }
+      } else {
+        // Non-Master modes: existing logic
+        for (let tries = 0; tries < 60; tries++) {
           t = Math.random() < 0.6
             ? (preferredTarget(nums) ?? randInt(state.max))
             : randInt(state.max);
+          if (nums.includes(t)) continue;
+          sol = solve([...nums], t);
+          if (sol && solutionUsesRequiredFact(sol, nums)) break;
+          sol = null;
         }
-        if (nums.includes(t)) continue;
-        sol = solve([...nums], t);
-        if (state.level === 7 || (sol && solutionUsesRequiredFact(sol, nums))) break;
-        sol = null;
       }
 
-      if (!sol) { generateProblem(); return; } // rare fallback
+      // Last resort: regenerate new tiles (but with recursion guard)
+      if (!sol) { 
+        console.warn('No solution found, regenerating...');
+        if (!state._genAttempts) state._genAttempts = 0;
+        state._genAttempts++;
+        if (state._genAttempts < 10) {
+          generateProblem();
+          return;
+        } else {
+          console.error('Failed to generate problem after 10 attempts');
+          state._genAttempts = 0;
+          return;
+        }
+      }
+      
+      state._genAttempts = 0; // Reset counter on success
 
       state.numbers  = nums.slice();
       state.original = nums.slice();
@@ -1852,15 +1889,10 @@
           unlockMaster();
           modal.remove();
           
-          // Set up Master mode state
-          selectDifficulty('master');
-          state.difficultyChosen = true;
-          state.level = 7;
-          state.mode = 4;
-          state.max = 99;
-          
-          // Start the game
-          startGame();
+          // Simulate clicking the Master button (now unlocked)
+          setTimeout(() => {
+            masterBtn.click();
+          }, 100);
         } else {
           error.textContent = 'Invalid code. Please check and try again.';
           error.style.display = 'block';
