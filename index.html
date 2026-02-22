@@ -466,6 +466,24 @@
       animation: fadeInScale 0.8s ease-out;
     }
     
+    .num.text-fade-out {
+      color: transparent;
+      transition: color 0.4s ease-out;
+    }
+    
+    .num.text-fade-in {
+      animation: textFadeIn 0.6s ease-out;
+    }
+    
+    @keyframes textFadeIn {
+      0% {
+        color: transparent;
+      }
+      100% {
+        color: inherit;
+      }
+    }
+    
     @keyframes fadeInScale {
       0% {
         opacity: 0;
@@ -1433,14 +1451,14 @@
       
       // Master Mode needs simpler problems to ensure solvability
       if (state.level === 7) {
-        // Try 100 times with guard against infinite recursion
-        for (let tries = 0; tries < 100; tries++) {
-          // Generate simpler targets for Master (avoid extreme values initially)
-          const simpleRange = Math.random() < 0.7; // 70% of time use smaller range
-          if (simpleRange) {
-            t = Math.floor(Math.random() * 61) - 30; // -30 to 30
+        // Try fewer times to avoid freezing (each solve can be expensive)
+        for (let tries = 0; tries < 30; tries++) {
+          // Start with very simple targets
+          const verySimple = Math.random() < 0.8; // 80% of time use tiny range
+          if (verySimple) {
+            t = Math.floor(Math.random() * 21) - 10; // -10 to 10
           } else {
-            t = Math.floor(Math.random() * 199) - 99; // full -99 to 99
+            t = Math.floor(Math.random() * 61) - 30; // -30 to 30
           }
           
           if (nums.includes(t)) continue;
@@ -1448,11 +1466,31 @@
           if (sol) break;
         }
         
-        // Fallback: if still no solution, use a guaranteed solvable target
+        // Fallback: guaranteed solvable targets
         if (!sol) {
-          // Just pick sum of two tiles as fallback
-          t = nums[0] + nums[1];
-          sol = solve([...nums], t);
+          // Try a few simple guaranteed operations
+          const fallbacks = [
+            nums[0] + nums[1],
+            nums[0] * nums[1],
+            nums[0] - nums[1],
+            nums[0] * nums[0], // square
+            nums[1] * nums[1]  // square
+          ];
+          
+          for (const fb of fallbacks) {
+            if (Math.abs(fb) <= 99 && !nums.includes(fb)) {
+              t = fb;
+              sol = solve([...nums], t);
+              if (sol) break;
+            }
+          }
+        }
+        
+        // Ultimate fallback if still no solution - just use first number
+        if (!sol) {
+          console.warn('Master Mode: using ultimate fallback');
+          t = nums[0];
+          sol = [];
         }
       } else {
         // Non-Master modes: existing logic
@@ -1738,33 +1776,48 @@
       numbersRow.parentElement.appendChild(indicator);
 
       setTimeout(() => {
-        // Fade out both tiles
-        firstBtn.classList.add('fading-out');
+        // Fade out text on both tiles
+        firstBtn.classList.add('text-fade-out');
+        
+        // Fade out second tile completely (it will be removed)
         secondBtn.classList.add('fading-out');
         
         setTimeout(() => {
           indicator.remove();
+          
+          // Update the first tile's text content
+          firstBtn.textContent = res;
+          firstBtn.classList.remove('text-fade-out');
+          firstBtn.classList.add('text-fade-in');
+          
+          // Update state - remove both numbers, add result at first position
           state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst && k !== i);
-          state.numbers.splice(targetPosition, 0, res); // result at first position
-          renderNumbers(false, true); // animate=true for smooth sliding
-          numbersRow.children[targetPosition]?.classList.add('fading-in');
-          resetSelection();
-          processingMove = false; // unlock
+          state.numbers.splice(targetPosition, 0, res);
+          
+          // Remove second tile, keep first tile in place
+          secondBtn.remove();
+          
+          // Now slide remaining tiles smoothly
+          setTimeout(() => {
+            renderNumbers(false, true); // animate=true for smooth sliding
+            resetSelection();
+            processingMove = false; // unlock
 
-          if (state.numbers.length === 1 &&
-              state.numbers[0] === state.target &&
-              !state.solutionShown) {
+            if (state.numbers.length === 1 &&
+                state.numbers[0] === state.target &&
+                !state.solutionShown) {
 
-            // Hint penalty: Warm-Up = −50pts, Workout & Challenge = −30pts
-            const hintPenalty = state.difficulty === 'warmup' ? 50 : 30;
-            const pts = state.hintUsedThisProblem ? (100 - hintPenalty) : 100;
-            state.score += pts;
-            scoreEl.textContent = state.score;
+              // Hint penalty: Warm-Up = −50pts, Workout & Challenge = −30pts
+              const hintPenalty = state.difficulty === 'warmup' ? 50 : 30;
+              const pts = state.hintUsedThisProblem ? (100 - hintPenalty) : 100;
+              state.score += pts;
+              scoreEl.textContent = state.score;
 
-            fireworks();
-            setTimeout(nextProblem, 2000);
-          }
-        }, 600); // fade out duration
+              fireworks();
+              setTimeout(nextProblem, 2000);
+            }
+          }, 100); // small delay before repositioning
+        }, 600); // text fade + second tile fade duration
       }, 800); // slide duration
     }
 
@@ -2307,7 +2360,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v31
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v35
 
   </script>
 </body>
