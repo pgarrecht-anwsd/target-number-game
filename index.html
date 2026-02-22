@@ -447,7 +447,7 @@
       background: var(--num);
       box-shadow: 0 8px var(--numShadow);
       position: relative;
-      transition: all 0.6s ease-out;
+      transition: all 0.6s ease-out, color 0.8s ease-out, filter 0.8s ease-out;
     }
     
     /* Animation states for tiles */
@@ -468,11 +468,11 @@
     
     .num.text-fade-out {
       color: transparent;
-      transition: color 0.4s ease-out;
+      transition: color 0.8s ease-out;
     }
     
     .num.text-fade-in {
-      animation: textFadeIn 0.6s ease-out;
+      animation: textFadeIn 1.2s ease-out;
     }
     
     @keyframes textFadeIn {
@@ -1452,7 +1452,7 @@
       // Master Mode needs simpler problems to ensure solvability
       if (state.level === 7) {
         // Try fewer times to avoid freezing (each solve can be expensive)
-        for (let tries = 0; tries < 30; tries++) {
+        for (let tries = 0; tries < 20; tries++) {
           // Start with very simple targets
           const verySimple = Math.random() < 0.8; // 80% of time use tiny range
           if (verySimple) {
@@ -1592,7 +1592,7 @@
           btn.offsetHeight;
           
           // Animate to new position
-          btn.style.transition = 'transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)';
+          btn.style.transition = 'transform 1.0s cubic-bezier(0.4, 0.0, 0.2, 1)';
           btn.style.transform = 'translateX(0)';
         }
       });
@@ -1816,8 +1816,8 @@
               fireworks();
               setTimeout(nextProblem, 2000);
             }
-          }, 100); // small delay before repositioning
-        }, 600); // text fade + second tile fade duration
+          }, 1200); // wait for text fade-in to complete before repositioning
+        }, 800); // text fade + second tile fade duration
       }, 800); // slide duration
     }
 
@@ -2360,7 +2360,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v35
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus
 
   </script>
 </body>
