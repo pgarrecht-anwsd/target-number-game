@@ -468,11 +468,11 @@
     
     .num.text-fade-out {
       color: transparent;
-      transition: color 0.8s ease-out;
+      transition: color 0.48s ease-out;
     }
     
     .num.text-fade-in {
-      animation: textFadeIn 1.2s ease-out;
+      animation: textFadeIn 0.72s ease-out;
     }
     
     @keyframes textFadeIn {
@@ -1749,6 +1749,9 @@
       processingMove = true; // lock until state is fully updated
       refreshButtonStates();
       
+      // Remove highlights to avoid flash during animation
+      clearHighlights();
+      
       // Animation: second tile slides to first, both fade out, result fades in
       const firstBtn = numbersRow.children[state.selectedFirst];
       const secondBtn = numbersRow.children[i];
@@ -1764,41 +1767,38 @@
       secondBtn.classList.add('merging');
       secondBtn.style.transform = `translate(${slideX}px, ${slideY}px)`;
       
-      // Show operation indicator
-      const opSymbol = state.selectedOp === '*' ? '×' : state.selectedOp === '/' ? '÷' : state.selectedOp;
-      const indicator = document.createElement('div');
-      indicator.className = 'operation-indicator';
-      indicator.textContent = opSymbol;
-      indicator.style.position = 'absolute';
-      indicator.style.left = firstRect.left + firstRect.width / 2 + 'px';
-      indicator.style.top = firstRect.top + firstRect.height / 2 + 'px';
-      numbersRow.parentElement.style.position = 'relative';
-      numbersRow.parentElement.appendChild(indicator);
-
       setTimeout(() => {
-        // Fade out text on both tiles
-        firstBtn.classList.add('text-fade-out');
-        
         // Fade out second tile completely (it will be removed)
         secondBtn.classList.add('fading-out');
         
+        // Show the equation immediately on first tile (no fade-out first)
+        const opSymbol = state.selectedOp === '*' ? '×' : state.selectedOp === '/' ? '÷' : state.selectedOp;
+        const equation = `${a} ${opSymbol} ${b}`;
+        firstBtn.textContent = equation;
+        firstBtn.style.fontSize = '28px'; // smaller for equation
+        
+        // After equation is visible for a moment, fade to result
         setTimeout(() => {
-          indicator.remove();
+          firstBtn.classList.add('text-fade-out');
           
-          // Update the first tile's text content
-          firstBtn.textContent = res;
-          firstBtn.classList.remove('text-fade-out');
-          firstBtn.classList.add('text-fade-in');
-          
-          // Update state - remove both numbers, add result at first position
-          state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst && k !== i);
-          state.numbers.splice(targetPosition, 0, res);
-          
-          // Remove second tile, keep first tile in place
-          secondBtn.remove();
-          
-          // Now slide remaining tiles smoothly
           setTimeout(() => {
+            // Now show the result
+            firstBtn.textContent = res;
+            firstBtn.style.fontSize = ''; // reset to default
+            firstBtn.classList.remove('text-fade-out');
+            firstBtn.classList.add('text-fade-in');
+            
+            // Update state - remove both numbers, add result at correct position
+            // Calculate new position: if second was before first, first's index shifts down by 1
+            const newPosition = i < state.selectedFirst ? state.selectedFirst - 1 : state.selectedFirst;
+            state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst && k !== i);
+            state.numbers.splice(newPosition, 0, res);
+            
+            // Remove second tile, keep first tile in place
+            secondBtn.remove();
+            
+            // Wait for result to be fully visible + pause, THEN slide tiles
+            setTimeout(() => {
             renderNumbers(false, true); // animate=true for smooth sliding
             resetSelection();
             processingMove = false; // unlock
@@ -1816,9 +1816,10 @@
               fireworks();
               setTimeout(nextProblem, 2000);
             }
-          }, 1200); // wait for text fade-in to complete before repositioning
-        }, 800); // text fade + second tile fade duration
-      }, 800); // slide duration
+          }, 1080); // result fade-in (720) + pause (360) before repositioning
+        }, 480); // equation fade-out duration  
+      }, 600); // show equation duration
+    }, 800); // slide duration
     }
 
     /* ═══════════════════════════════════════════════════
