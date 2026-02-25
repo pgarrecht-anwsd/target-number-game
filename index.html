@@ -1768,10 +1768,10 @@
       secondBtn.style.transform = `translate(${slideX}px, ${slideY}px)`;
       
       setTimeout(() => {
-        // Fade out second tile completely (it will be removed)
-        secondBtn.classList.add('fading-out');
+        // Remove second tile instantly (no fade)
+        secondBtn.remove();
         
-        // Show the equation immediately on first tile (no fade-out first)
+        // Show the equation on first tile
         const opSymbol = state.selectedOp === '*' ? '×' : state.selectedOp === '/' ? '÷' : state.selectedOp;
         const equation = `${a} ${opSymbol} ${b}`;
         firstBtn.textContent = equation;
@@ -1788,20 +1788,47 @@
             firstBtn.classList.remove('text-fade-out');
             firstBtn.classList.add('text-fade-in');
             
+            // Clear selection now so unhighlight transition completes
+            resetSelection();
+            
             // Update state - remove both numbers, add result at correct position
             // Calculate new position: if second was before first, first's index shifts down by 1
             const newPosition = i < state.selectedFirst ? state.selectedFirst - 1 : state.selectedFirst;
             state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst && k !== i);
             state.numbers.splice(newPosition, 0, res);
             
-            // Remove second tile, keep first tile in place
-            secondBtn.remove();
-            
-            // Wait for result to be fully visible + pause, THEN slide tiles
+            // Wait for result visible + unhighlight transition (800ms) + pause, THEN slide tiles
             setTimeout(() => {
-            renderNumbers(false, true); // animate=true for smooth sliding
-            resetSelection();
-            processingMove = false; // unlock
+              // Now remove all tiles that aren't the result tile, and recreate from state
+              // But keep the result tile we already have
+              const existingTiles = Array.from(numbersRow.children);
+              
+              // Remove all tiles except the first one (which has our result)
+              for (let j = existingTiles.length - 1; j > 0; j--) {
+                existingTiles[j].remove();
+              }
+              
+              // Now render the remaining tiles from state (skip the first one which we kept)
+              for (let j = 1; j < state.numbers.length; j++) {
+                const b = document.createElement('button');
+                b.className = 'num';
+                b.textContent = state.numbers[j];
+                b.onclick = () => numberClick(j, b);
+                numbersRow.appendChild(b);
+              }
+              
+              // Trigger slide animation on newly added tiles
+              const newTiles = Array.from(numbersRow.children).slice(1);
+              newTiles.forEach((btn, idx) => {
+                // Position to the right, then slide left
+                btn.style.transform = 'translateX(140px)';
+                btn.style.transition = 'none';
+                btn.offsetHeight; // force reflow
+                btn.style.transition = 'transform 1.0s cubic-bezier(0.4, 0.0, 0.2, 1)';
+                btn.style.transform = 'translateX(0)';
+              });
+              
+              processingMove = false; // unlock
 
             if (state.numbers.length === 1 &&
                 state.numbers[0] === state.target &&
@@ -1816,7 +1843,7 @@
               fireworks();
               setTimeout(nextProblem, 2000);
             }
-          }, 1080); // result fade-in (720) + pause (360) before repositioning
+          }, 1880); // result fade-in (720) + pause (360) + unhighlight (800) before repositioning
         }, 480); // equation fade-out duration  
       }, 600); // show equation duration
     }, 800); // slide duration
