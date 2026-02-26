@@ -1749,13 +1749,15 @@
       processingMove = true; // lock until state is fully updated
       refreshButtonStates();
       
-      // Remove highlights to avoid flash during animation
-      clearHighlights();
-      
       // Animation: second tile slides to first, both fade out, result fades in
       const firstBtn = numbersRow.children[state.selectedFirst];
       const secondBtn = numbersRow.children[i];
       const targetPosition = state.selectedFirst; // result appears at first tile's position
+      
+      // Brief delay so user sees the second number highlighted, then clear
+      setTimeout(() => {
+        clearHighlights();
+      }, 200);
       
       // Calculate slide distance
       const firstRect = firstBtn.getBoundingClientRect();
@@ -1791,26 +1793,31 @@
             firstBtn.classList.remove('text-fade-out');
             firstBtn.classList.add('text-fade-in');
             
+            // Calculate new position BEFORE resetSelection clears state.selectedFirst
+            // If second was before first, first's index shifts down by 1
+            const newPosition = i < state.selectedFirst ? state.selectedFirst - 1 : state.selectedFirst;
+            const savedI = i; // save i value before it might change
+            const savedSelectedFirst = state.selectedFirst;
+            
             // Clear selection now so unhighlight transition completes
             resetSelection();
             
             // Update state - remove both numbers, add result at correct position
-            // Calculate new position: if second was before first, first's index shifts down by 1
-            const newPosition = i < state.selectedFirst ? state.selectedFirst - 1 : state.selectedFirst;
-            state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst && k !== i);
+            state.numbers = state.numbers.filter((_, k) => k !== savedSelectedFirst && k !== savedI);
             state.numbers.splice(newPosition, 0, res);
             
             // Wait for result visible + unhighlight transition (800ms) + pause, THEN slide tiles
             setTimeout(() => {
               // Find the result tile (marked with data attribute)
               const resultTile = numbersRow.querySelector('[data-result-tile="true"]');
+              
               if (!resultTile) {
                 console.error('Result tile not found!');
                 return;
               }
               resultTile.removeAttribute('data-result-tile'); // clean up
               
-              // Get all existing tiles EXCEPT the two that were combined
+              // Get all existing tiles EXCEPT the result tile
               const remainingTiles = Array.from(numbersRow.children).filter(tile => 
                 tile !== resultTile
               );
@@ -1823,12 +1830,15 @@
                 if (idx === newPosition) {
                   // Use the result tile at this position
                   resultTile.onclick = () => numberClick(idx, resultTile);
+                  // Remove animation classes to prevent flash
+                  resultTile.classList.remove('text-fade-in', 'text-fade-out', 'fading-in', 'fading-out');
+                  resultTile.className = 'num'; // reset to clean state
                   numbersRow.appendChild(resultTile);
                 } else {
                   // Reuse an existing tile or create if needed
                   let tile = remainingTiles.shift(); // get next remaining tile
                   if (tile) {
-                    // Update existing tile
+                    // Update existing tile (already in DOM, no animation needed)
                     tile.textContent = num;
                     tile.onclick = () => numberClick(idx, tile);
                     tile.className = 'num'; // clear any classes
@@ -1840,25 +1850,11 @@
                     tile.onclick = () => numberClick(idx, tile);
                   }
                   
-                  // If this tile needs to slide in from the right
-                  if (idx > newPosition) {
-                    tile.style.transform = 'translateX(140px)';
-                    tile.style.transition = 'none';
-                  }
-                  
                   numbersRow.appendChild(tile);
                 }
               });
               
-              // Trigger slide animation on tiles that need it
-              const allTiles = Array.from(numbersRow.children);
-              allTiles.forEach((btn, idx) => {
-                if (idx > newPosition && btn !== resultTile) {
-                  btn.offsetHeight; // force reflow
-                  btn.style.transition = 'transform 1.0s cubic-bezier(0.4, 0.0, 0.2, 1)';
-                  btn.style.transform = 'translateX(0)';
-                }
-              });
+              // No sliding animation needed - tiles are already in correct positions
               
               processingMove = false; // unlock
 
@@ -2420,7 +2416,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v44
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v48
 
   </script>
 </body>
