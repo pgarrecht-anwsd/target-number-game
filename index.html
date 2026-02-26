@@ -1771,6 +1771,9 @@
         // Remove second tile instantly (no fade)
         secondBtn.remove();
         
+        // Mark the first tile as the result tile so we can find it later
+        firstBtn.setAttribute('data-result-tile', 'true');
+        
         // Show the equation on first tile
         const opSymbol = state.selectedOp === '*' ? '×' : state.selectedOp === '/' ? '÷' : state.selectedOp;
         const equation = `${a} ${opSymbol} ${b}`;
@@ -1799,33 +1802,55 @@
             
             // Wait for result visible + unhighlight transition (800ms) + pause, THEN slide tiles
             setTimeout(() => {
-              // Now remove all tiles that aren't the result tile, and recreate from state
-              // But keep the result tile we already have
+              // Find the result tile (marked with data attribute)
+              const resultTile = numbersRow.querySelector('[data-result-tile="true"]');
+              resultTile.removeAttribute('data-result-tile'); // clean up
+              
+              // Remove all other tiles
               const existingTiles = Array.from(numbersRow.children);
+              existingTiles.forEach(tile => {
+                if (tile !== resultTile) {
+                  tile.remove();
+                }
+              });
               
-              // Remove all tiles except the first one (which has our result)
-              for (let j = existingTiles.length - 1; j > 0; j--) {
-                existingTiles[j].remove();
-              }
+              // Clear the row and rebuild tiles in correct order from state
+              numbersRow.innerHTML = '';
               
-              // Now render the remaining tiles from state (skip the first one which we kept)
-              for (let j = 1; j < state.numbers.length; j++) {
-                const b = document.createElement('button');
-                b.className = 'num';
-                b.textContent = state.numbers[j];
-                b.onclick = () => numberClick(j, b);
-                numbersRow.appendChild(b);
-              }
+              // Safety check: ensure no duplicate result tiles exist
+              document.querySelectorAll('[data-result-tile]').forEach(t => t.removeAttribute('data-result-tile'));
               
-              // Trigger slide animation on newly added tiles
-              const newTiles = Array.from(numbersRow.children).slice(1);
-              newTiles.forEach((btn, idx) => {
-                // Position to the right, then slide left
-                btn.style.transform = 'translateX(140px)';
-                btn.style.transition = 'none';
-                btn.offsetHeight; // force reflow
-                btn.style.transition = 'transform 1.0s cubic-bezier(0.4, 0.0, 0.2, 1)';
-                btn.style.transform = 'translateX(0)';
+              state.numbers.forEach((num, idx) => {
+                if (idx === newPosition) {
+                  // Use the existing result tile at this position
+                  // Update its onclick handler with correct index
+                  resultTile.onclick = () => numberClick(idx, resultTile);
+                  numbersRow.appendChild(resultTile);
+                } else {
+                  // Create new tile
+                  const b = document.createElement('button');
+                  b.className = 'num';
+                  b.textContent = num;
+                  b.onclick = () => numberClick(idx, b);
+                  
+                  // If this tile needs to slide in from the right
+                  if (idx > newPosition) {
+                    b.style.transform = 'translateX(140px)';
+                    b.style.transition = 'none';
+                  }
+                  
+                  numbersRow.appendChild(b);
+                }
+              });
+              
+              // Trigger slide animation on tiles that need it
+              const allTiles = Array.from(numbersRow.children);
+              allTiles.forEach((btn, idx) => {
+                if (idx > newPosition && btn !== resultTile) {
+                  btn.offsetHeight; // force reflow
+                  btn.style.transition = 'transform 1.0s cubic-bezier(0.4, 0.0, 0.2, 1)';
+                  btn.style.transform = 'translateX(0)';
+                }
               });
               
               processingMove = false; // unlock
