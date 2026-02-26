@@ -1804,42 +1804,49 @@
             setTimeout(() => {
               // Find the result tile (marked with data attribute)
               const resultTile = numbersRow.querySelector('[data-result-tile="true"]');
+              if (!resultTile) {
+                console.error('Result tile not found!');
+                return;
+              }
               resultTile.removeAttribute('data-result-tile'); // clean up
               
-              // Remove all other tiles
-              const existingTiles = Array.from(numbersRow.children);
-              existingTiles.forEach(tile => {
-                if (tile !== resultTile) {
-                  tile.remove();
-                }
-              });
+              // Get all existing tiles EXCEPT the two that were combined
+              const remainingTiles = Array.from(numbersRow.children).filter(tile => 
+                tile !== resultTile
+              );
               
-              // Clear the row and rebuild tiles in correct order from state
+              // Clear the row
               numbersRow.innerHTML = '';
               
-              // Safety check: ensure no duplicate result tiles exist
-              document.querySelectorAll('[data-result-tile]').forEach(t => t.removeAttribute('data-result-tile'));
-              
+              // Rebuild in correct order: reuse existing tiles, result tile at newPosition
               state.numbers.forEach((num, idx) => {
                 if (idx === newPosition) {
-                  // Use the existing result tile at this position
-                  // Update its onclick handler with correct index
+                  // Use the result tile at this position
                   resultTile.onclick = () => numberClick(idx, resultTile);
                   numbersRow.appendChild(resultTile);
                 } else {
-                  // Create new tile
-                  const b = document.createElement('button');
-                  b.className = 'num';
-                  b.textContent = num;
-                  b.onclick = () => numberClick(idx, b);
+                  // Reuse an existing tile or create if needed
+                  let tile = remainingTiles.shift(); // get next remaining tile
+                  if (tile) {
+                    // Update existing tile
+                    tile.textContent = num;
+                    tile.onclick = () => numberClick(idx, tile);
+                    tile.className = 'num'; // clear any classes
+                  } else {
+                    // Create new tile if we somehow don't have enough
+                    tile = document.createElement('button');
+                    tile.className = 'num';
+                    tile.textContent = num;
+                    tile.onclick = () => numberClick(idx, tile);
+                  }
                   
                   // If this tile needs to slide in from the right
                   if (idx > newPosition) {
-                    b.style.transform = 'translateX(140px)';
-                    b.style.transition = 'none';
+                    tile.style.transform = 'translateX(140px)';
+                    tile.style.transition = 'none';
                   }
                   
-                  numbersRow.appendChild(b);
+                  numbersRow.appendChild(tile);
                 }
               });
               
@@ -2413,7 +2420,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v43
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v44
 
   </script>
 </body>
