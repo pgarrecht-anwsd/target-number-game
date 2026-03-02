@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -2040,7 +2041,7 @@
       if (state.solutionShown) return;
       state.numbers = state.original.slice();
       state.moveCount = 0;
-      state.hintUsedThisProblem = false;
+      // DON'T reset hintUsedThisProblem - penalty persists even after reset
       renderNumbers();
       resetSelection();
       refreshButtonStates();
@@ -2416,7 +2417,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v48
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus
 
   </script>
 </body>
