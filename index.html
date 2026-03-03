@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -449,6 +448,9 @@
       box-shadow: 0 8px var(--numShadow);
       position: relative;
       transition: all 0.6s ease-out, color 0.8s ease-out, filter 0.8s ease-out;
+      touch-action: manipulation; /* Removes 300ms tap delay */
+      user-select: none; /* Prevents text selection on long press */
+      -webkit-tap-highlight-color: transparent; /* Removes tap highlight flash on mobile */
     }
     
     /* Animation states for tiles */
@@ -1508,7 +1510,7 @@
 
       // Last resort: regenerate new tiles (but with recursion guard)
       if (!sol) { 
-        console.warn('No solution found, regenerating...');
+        // Silently regenerate - this is normal for difficult fact combinations
         if (!state._genAttempts) state._genAttempts = 0;
         state._genAttempts++;
         if (state._genAttempts < 10) {
@@ -1755,10 +1757,10 @@
       const secondBtn = numbersRow.children[i];
       const targetPosition = state.selectedFirst; // result appears at first tile's position
       
-      // Brief delay so user sees the second number highlighted, then clear
+      // Keep highlights visible during the slide animation
       setTimeout(() => {
         clearHighlights();
-      }, 200);
+      }, 800); // clear after slide completes
       
       // Calculate slide distance
       const firstRect = firstBtn.getBoundingClientRect();
@@ -1806,6 +1808,24 @@
             // Update state - remove both numbers, add result at correct position
             state.numbers = state.numbers.filter((_, k) => k !== savedSelectedFirst && k !== savedI);
             state.numbers.splice(newPosition, 0, res);
+            
+            // Check if problem is solved and trigger fireworks immediately
+            if (state.numbers.length === 1 &&
+                state.numbers[0] === state.target &&
+                !state.solutionShown) {
+
+              // Hint penalty: Warm-Up = −50pts, Workout & Challenge = −30pts
+              const hintPenalty = state.difficulty === 'warmup' ? 50 : 30;
+              const pts = state.hintUsedThisProblem ? (100 - hintPenalty) : 100;
+              state.score += pts;
+              scoreEl.textContent = state.score;
+
+              // Trigger fireworks immediately (while result is fading in)
+              setTimeout(() => fireworks(), 200);
+              
+              // Then move to next problem after delay
+              setTimeout(nextProblem, 2000);
+            }
             
             // Wait for result visible + unhighlight transition (800ms) + pause, THEN slide tiles
             setTimeout(() => {
@@ -1858,20 +1878,6 @@
               // No sliding animation needed - tiles are already in correct positions
               
               processingMove = false; // unlock
-
-            if (state.numbers.length === 1 &&
-                state.numbers[0] === state.target &&
-                !state.solutionShown) {
-
-              // Hint penalty: Warm-Up = −50pts, Workout & Challenge = −30pts
-              const hintPenalty = state.difficulty === 'warmup' ? 50 : 30;
-              const pts = state.hintUsedThisProblem ? (100 - hintPenalty) : 100;
-              state.score += pts;
-              scoreEl.textContent = state.score;
-
-              fireworks();
-              setTimeout(nextProblem, 2000);
-            }
           }, 1880); // result fade-in (720) + pause (360) + unhighlight (800) before repositioning
         }, 480); // equation fade-out duration  
       }, 600); // show equation duration
@@ -2417,7 +2423,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v51
 
   </script>
 </body>
