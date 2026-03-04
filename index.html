@@ -928,7 +928,14 @@
       let candidates = available.length ? available : fullPool;
 
       if (level >= 2) {
-        candidates = candidates.filter(n => n !== 0 && n !== 1);
+        // Always block 0
+        candidates = candidates.filter(n => n !== 0);
+        
+        // Block 1 only in Warm-Up (not in Workout)
+        if (state.difficulty === 'warmup') {
+          candidates = candidates.filter(n => n !== 1);
+        }
+        
         const softened = candidates.filter(n => n !== 2 && n !== 10);
         // Reduced to 30% to allow larger partners (8, 9, 10) more frequently
         if (softened.length && Math.random() < 0.30) candidates = softened;
@@ -1281,6 +1288,9 @@
             // Master allows negatives, others require non-negative integers
             if (!Number.isInteger(o.v)) continue;
             if (state.level !== 7 && o.v < 0) continue;
+            
+            // Cap intermediate values in Workout at 100
+            if (state.difficulty === 'workout' && Math.abs(o.v) > 100) continue;
             
             // Prevent runaway values
             if (Math.abs(o.v) > 10000) continue;
@@ -1744,6 +1754,13 @@
       
       if (state.level !== 7 && res < 0) {
         showFeedback('Each step must result in a whole number.');
+        resetSelection();
+        return;
+      }
+      
+      // Cap intermediate values in Workout at 100
+      if (state.difficulty === 'workout' && res > 100) {
+        showFeedback('Intermediate steps in Workout must be 100 or less.');
         resetSelection();
         return;
       }
@@ -2423,7 +2440,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v51
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus
 
   </script>
 </body>
