@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -1826,6 +1827,57 @@
             state.numbers = state.numbers.filter((_, k) => k !== savedSelectedFirst && k !== savedI);
             state.numbers.splice(newPosition, 0, res);
             
+            // Update DOM immediately to match state
+            // Find the result tile (marked with data attribute)
+            const resultTile = numbersRow.querySelector('[data-result-tile="true"]');
+            
+            if (!resultTile) {
+              console.error('Result tile not found!');
+              processingMove = false; // unlock even on error
+              return;
+            }
+            resultTile.removeAttribute('data-result-tile'); // clean up
+            
+            // Get all existing tiles EXCEPT the result tile
+            const remainingTiles = Array.from(numbersRow.children).filter(tile => 
+              tile !== resultTile
+            );
+            
+            // Clear the row
+            numbersRow.innerHTML = '';
+            
+            // Rebuild in correct order: reuse existing tiles, result tile at newPosition
+            state.numbers.forEach((num, idx) => {
+              if (idx === newPosition) {
+                // Use the result tile at this position
+                resultTile.onclick = () => numberClick(idx, resultTile);
+                // Remove animation classes to prevent flash
+                resultTile.classList.remove('text-fade-in', 'text-fade-out', 'fading-in', 'fading-out');
+                resultTile.className = 'num'; // reset to clean state
+                numbersRow.appendChild(resultTile);
+              } else {
+                // Reuse an existing tile or create if needed
+                let tile = remainingTiles.shift(); // get next remaining tile
+                if (tile) {
+                  // Update existing tile (already in DOM, no animation needed)
+                  tile.textContent = num;
+                  tile.onclick = () => numberClick(idx, tile);
+                  tile.className = 'num'; // clear any classes
+                } else {
+                  // Create new tile if we somehow don't have enough
+                  tile = document.createElement('button');
+                  tile.className = 'num';
+                  tile.textContent = num;
+                  tile.onclick = () => numberClick(idx, tile);
+                }
+                
+                numbersRow.appendChild(tile);
+              }
+            });
+            
+            // DOM is now synced with state - safe to unlock
+            processingMove = false;
+            
             // Check if problem is solved and trigger fireworks immediately
             if (state.numbers.length === 1 &&
                 state.numbers[0] === state.target &&
@@ -1844,59 +1896,7 @@
               setTimeout(nextProblem, 2000);
             }
             
-            // Wait for result visible + unhighlight transition (800ms) + pause, THEN slide tiles
-            setTimeout(() => {
-              // Find the result tile (marked with data attribute)
-              const resultTile = numbersRow.querySelector('[data-result-tile="true"]');
-              
-              if (!resultTile) {
-                console.error('Result tile not found!');
-                return;
-              }
-              resultTile.removeAttribute('data-result-tile'); // clean up
-              
-              // Get all existing tiles EXCEPT the result tile
-              const remainingTiles = Array.from(numbersRow.children).filter(tile => 
-                tile !== resultTile
-              );
-              
-              // Clear the row
-              numbersRow.innerHTML = '';
-              
-              // Rebuild in correct order: reuse existing tiles, result tile at newPosition
-              state.numbers.forEach((num, idx) => {
-                if (idx === newPosition) {
-                  // Use the result tile at this position
-                  resultTile.onclick = () => numberClick(idx, resultTile);
-                  // Remove animation classes to prevent flash
-                  resultTile.classList.remove('text-fade-in', 'text-fade-out', 'fading-in', 'fading-out');
-                  resultTile.className = 'num'; // reset to clean state
-                  numbersRow.appendChild(resultTile);
-                } else {
-                  // Reuse an existing tile or create if needed
-                  let tile = remainingTiles.shift(); // get next remaining tile
-                  if (tile) {
-                    // Update existing tile (already in DOM, no animation needed)
-                    tile.textContent = num;
-                    tile.onclick = () => numberClick(idx, tile);
-                    tile.className = 'num'; // clear any classes
-                  } else {
-                    // Create new tile if we somehow don't have enough
-                    tile = document.createElement('button');
-                    tile.className = 'num';
-                    tile.textContent = num;
-                    tile.onclick = () => numberClick(idx, tile);
-                  }
-                  
-                  numbersRow.appendChild(tile);
-                }
-              });
-              
-              // No sliding animation needed - tiles are already in correct positions
-              
-              processingMove = false; // unlock
-          }, 1880); // result fade-in (720) + pause (360) + unhighlight (800) before repositioning
-        }, 480); // equation fade-out duration  
+          }, 480); // equation fade-out duration  
       }, 600); // show equation duration
     }, 800); // slide duration
     }
@@ -2440,7 +2440,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v54
 
   </script>
 </body>
