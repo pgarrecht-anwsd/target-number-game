@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -1198,20 +1197,20 @@
         // Check if locked and show code entry modal
         if (diff === 'workout' && b.classList.contains('locked')) {
           showUnlockModal('Workout', 'WO', verifyWorkoutCode, unlockWorkout, 
-            'Complete Warm-Up Mixed Facts with a score of 900+ to unlock Workout!');
+            '🔐 Enter your secret code to unlock!<br><br>Earn a code by scoring 900+ on<br>Warm-Up Mixed Facts.');
           return;
         }
         
         if (diff === 'challenge' && b.classList.contains('locked')) {
           showUnlockModal('Challenge', 'CH', verifyChallengeCode, unlockChallenge,
-            'Complete Workout Mixed Facts with a score of 940+ to unlock Challenge!');
+            '🔐 Enter your secret code to unlock!<br><br>Earn a code by scoring 940+ on<br>Workout Mixed Facts.');
           return;
         }
         
         // Master locked? Show code entry modal
         if (diff === 'master' && b.classList.contains('locked')) {
           showUnlockModal('Master Mode', 'NB', verifyMasterCode, unlockMaster,
-            'Complete Challenge with a score of 940+ to unlock Master Mode!');
+            '🔐 Enter your secret code to unlock!<br><br>Earn a code by scoring 940+ on<br>Challenge Mode.');
           return;
         }
         
@@ -2331,47 +2330,56 @@
 
       /* ── Build recommendation text ── */
       function getRecommendation() {
-        // Unlock messages take priority - include codes for backup
+        // Earned unlock - show code but don't auto-save (require manual entry)
         if (shouldUnlockWorkout && !checkWorkoutUnlock()) {
-          unlockWorkout();
           const code = generateWorkoutCode();
           return { 
             color: '#2ecc71', 
-            text: `🎉 Congratulations! You've unlocked Workout!<br><br>
+            text: `🎉 Congratulations! You've earned access to Workout!<br><br>
                    <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 8px;">
-                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">Your Unlock Code (screenshot this!):</div>
-                     <div style="font-size: 20px; font-weight: bold; letter-spacing: 2px; font-family: monospace;">${code}</div>
-                     <div style="font-size: 12px; opacity: 0.8; margin-top: 6px;">Use this code to unlock Workout on any device</div>
+                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">🔐 Your Secret Access Code:</div>
+                     <div style="font-size: 22px; font-weight: bold; letter-spacing: 3px; font-family: monospace; color: #ffd700;">${code}</div>
+                     <div style="font-size: 13px; opacity: 0.9; margin-top: 10px; line-height: 1.5;">
+                       📸 <b>Screenshot this code!</b><br>
+                       Click the Workout button and enter this code to unlock.<br>
+                       Your device will remember it so you only enter it once.
+                     </div>
                    </div>`,
             html: true
           };
         }
         
         if (shouldUnlockChallenge && !checkChallengeUnlock()) {
-          unlockChallenge();
           const code = generateChallengeCode();
           return { 
             color: '#2ecc71', 
-            text: `🎉 Congratulations! You've unlocked Challenge!<br><br>
+            text: `🎉 Congratulations! You've earned access to Challenge!<br><br>
                    <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 8px;">
-                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">Your Unlock Code (screenshot this!):</div>
-                     <div style="font-size: 20px; font-weight: bold; letter-spacing: 2px; font-family: monospace;">${code}</div>
-                     <div style="font-size: 12px; opacity: 0.8; margin-top: 6px;">Use this code to unlock Challenge on any device</div>
+                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">🔐 Your Secret Access Code:</div>
+                     <div style="font-size: 22px; font-weight: bold; letter-spacing: 3px; font-family: monospace; color: #ffd700;">${code}</div>
+                     <div style="font-size: 13px; opacity: 0.9; margin-top: 10px; line-height: 1.5;">
+                       📸 <b>Screenshot this code!</b><br>
+                       Click the Challenge button and enter this code to unlock.<br>
+                       Your device will remember it so you only enter it once.
+                     </div>
                    </div>`,
             html: true
           };
         }
         
         if (shouldUnlockMaster && !checkMasterUnlock()) {
-          unlockMaster();
           const code = generateMasterCode();
           return { 
             color: '#2ecc71', 
-            text: `🎉 Congratulations! You've unlocked Master Mode!<br><br>
+            text: `🎉 Congratulations! You've earned access to Master Mode!<br><br>
                    <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 8px;">
-                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">Your Unlock Code (screenshot this!):</div>
-                     <div style="font-size: 20px; font-weight: bold; letter-spacing: 2px; font-family: monospace;">${code}</div>
-                     <div style="font-size: 12px; opacity: 0.8; margin-top: 6px;">Use this code to unlock Master on any device</div>
+                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">🔐 Your Secret Access Code:</div>
+                     <div style="font-size: 22px; font-weight: bold; letter-spacing: 3px; font-family: monospace; color: #ffd700;">${code}</div>
+                     <div style="font-size: 13px; opacity: 0.9; margin-top: 10px; line-height: 1.5;">
+                       📸 <b>Screenshot this code!</b><br>
+                       Click the Master button and enter this code to unlock.<br>
+                       Your device will remember it so you only enter it once.
+                     </div>
                    </div>`,
             html: true
           };
