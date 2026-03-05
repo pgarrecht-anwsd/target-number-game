@@ -815,8 +815,12 @@
             <div class="difficulty-label" id="difficultyLabel">Choose a Difficulty Level to start a New Game</div>
             <div class="diff-buttons">
               <button class="diff-btn warmup"    data-diff="warmup">Warm-Up</button>
-              <button class="diff-btn workout"   data-diff="workout">Workout</button>
-              <button class="diff-btn challenge" data-diff="challenge">Challenge</button>
+              <button class="diff-btn workout locked"   data-diff="workout" id="workoutBtn">
+                <span class="lock-icon">🔒</span> Workout
+              </button>
+              <button class="diff-btn challenge locked" data-diff="challenge" id="challengeBtn">
+                <span class="lock-icon">🔒</span> Challenge
+              </button>
               <button class="diff-btn master locked" data-diff="master" id="masterBtn">
                 <span class="lock-icon">🔒</span> Master
               </button>
@@ -830,7 +834,7 @@
                 <button class="fact-btn" data-fact="2">3s &amp; 4s</button>
                 <button class="fact-btn" data-fact="3">6s &amp; 7s</button>
                 <button class="fact-btn" data-fact="4">8s &amp; 9s</button>
-                <button class="fact-btn" data-fact="5">×2→×9</button>
+                <button class="fact-btn" data-fact="5">Mixed Facts</button>
               </div>
             </div>
           </div>
@@ -1069,6 +1073,8 @@
 
     const diffBtns = document.querySelectorAll('.diff-btn');
     const factBtns = document.querySelectorAll('.fact-btn');
+    const workoutBtn = document.getElementById('workoutBtn');
+    const challengeBtn = document.getElementById('challengeBtn');
     const masterBtn = document.getElementById('masterBtn');
     const sqrBtn = document.getElementById('sqrBtn');
     const missionBrief = document.getElementById('missionBrief');
@@ -1189,9 +1195,23 @@
 
         const diff = b.dataset.diff;
         
+        // Check if locked and show code entry modal
+        if (diff === 'workout' && b.classList.contains('locked')) {
+          showUnlockModal('Workout', 'WO', verifyWorkoutCode, unlockWorkout, 
+            'Complete Warm-Up Mixed Facts with a score of 900+ to unlock Workout!');
+          return;
+        }
+        
+        if (diff === 'challenge' && b.classList.contains('locked')) {
+          showUnlockModal('Challenge', 'CH', verifyChallengeCode, unlockChallenge,
+            'Complete Workout Mixed Facts with a score of 940+ to unlock Challenge!');
+          return;
+        }
+        
         // Master locked? Show code entry modal
         if (diff === 'master' && b.classList.contains('locked')) {
-          showMasterCodeModal();
+          showUnlockModal('Master Mode', 'NB', verifyMasterCode, unlockMaster,
+            'Complete Challenge with a score of 940+ to unlock Master Mode!');
           return;
         }
         
@@ -2116,12 +2136,12 @@
        Format: NB-XXXX-CC  (4 payload chars, 2 check chars)
     ═══════════════════════════════════════════════════ */
 
-    function generateMasterCode() {
+    function generateUnlockCode(prefix) {
       // Day number since a fixed epoch (Jan 1 2025)
       const EPOCH = new Date('2025-01-01').getTime();
       const dayNum = Math.floor((Date.now() - EPOCH) / 86400000);
 
-      // Encode dayNum into 4 base-24 chars using unambiguous alphabet
+      // Encode dayNum into 4 base-25 chars using unambiguous alphabet
       // (no 0/O, 1/I/L confusion — safe for handwriting)
       const ALPHA = 'ABCDEFGHJKMNPQRSTVWXYZ234';  // 25 chars
       let n = dayNum;
@@ -2137,26 +2157,73 @@
       const xor = indices.reduce((a, b) => a ^ b, 0) % ALPHA.length;
       const check = ALPHA[sum] + ALPHA[xor];
 
-      return `NB-${payload}-${check}`;
+      return `${prefix}-${payload}-${check}`;
     }
 
-    /* Verify a code entered by the student (for future Master Mode gate) */
-    function verifyMasterCode(code) {
+    function generateWorkoutCode() {
+      return generateUnlockCode('WO'); // WO = Workout
+    }
+
+    function generateChallengeCode() {
+      return generateUnlockCode('CH'); // CH = Challenge
+    }
+
+    function generateMasterCode() {
+      return generateUnlockCode('NB'); // NB = Number Blaster
+    }
+
+    /* Verify a code entered by the student */
+    function verifyUnlockCode(code, prefix) {
       const ALPHA = 'ABCDEFGHJKMNPQRSTVWXYZ234';
-      const match = code.trim().toUpperCase().match(/^NB-([A-Z2-4]{4})-([A-Z2-4]{2})$/);
+      const match = code.trim().toUpperCase().match(new RegExp(`^${prefix}-([A-Z2-4]{4})-([A-Z2-4]{2})$`));
       if (!match) return false;
       const payload = match[1];
       const check   = match[2];
+
+      // Recompute checksum
       const indices = payload.split('').map(c => ALPHA.indexOf(c));
-      if (indices.includes(-1)) return false;
       const sum = indices.reduce((a, b) => a + b, 0) % ALPHA.length;
       const xor = indices.reduce((a, b) => a ^ b, 0) % ALPHA.length;
-      return check === ALPHA[sum] + ALPHA[xor];
+      const expected = ALPHA[sum] + ALPHA[xor];
+
+      return check === expected;
     }
 
-    /* Check Master unlock status from localStorage */
+    function verifyWorkoutCode(code) {
+      return verifyUnlockCode(code, 'WO');
+    }
+
+    function verifyChallengeCode(code) {
+      return verifyUnlockCode(code, 'CH');
+    }
+
+    function verifyMasterCode(code) {
+      return verifyUnlockCode(code, 'NB');
+    }
+
+    /* Check unlock status from localStorage */
+    function checkWorkoutUnlock() {
+      return localStorage.getItem('workoutUnlocked') === 'true';
+    }
+
+    function checkChallengeUnlock() {
+      return localStorage.getItem('challengeUnlocked') === 'true';
+    }
+
     function checkMasterUnlock() {
       return localStorage.getItem('masterUnlocked') === 'true';
+    }
+
+    function unlockWorkout() {
+      localStorage.setItem('workoutUnlocked', 'true');
+      workoutBtn.classList.remove('locked');
+      workoutBtn.querySelector('.lock-icon').style.display = 'none';
+    }
+
+    function unlockChallenge() {
+      localStorage.setItem('challengeUnlocked', 'true');
+      challengeBtn.classList.remove('locked');
+      challengeBtn.querySelector('.lock-icon').style.display = 'none';
     }
 
     function unlockMaster() {
@@ -2165,17 +2232,17 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
 
-    function showMasterCodeModal() {
+    function showUnlockModal(levelName, codePrefix, verifyFn, unlockFn, hintText) {
       const modal = document.createElement('div');
       modal.className = 'modal-overlay';
       modal.innerHTML = `
         <div class="modal-box">
-          <div class="modal-title">⭐ Master Mode Access ⭐</div>
+          <div class="modal-title">⭐ ${levelName} Access ⭐</div>
           <input 
             type="text" 
             class="modal-input" 
             id="codeInput" 
-            placeholder="NB-XXXX-XX"
+            placeholder="${codePrefix}-XXXX-XX"
             maxlength="12"
             autocomplete="off"
           />
@@ -2185,8 +2252,7 @@
             <button class="btn" id="cancelCodeBtn">Cancel</button>
           </div>
           <div class="modal-hint">
-            Earn a Master code by scoring<br>
-            1000 points on Challenge Mode.
+            ${hintText}
           </div>
         </div>
       `;
@@ -2199,14 +2265,9 @@
       
       document.getElementById('submitCodeBtn').onclick = () => {
         const code = input.value.trim();
-        if (verifyMasterCode(code)) {
-          unlockMaster();
+        if (verifyFn(code)) {
+          unlockFn();
           modal.remove();
-          
-          // Simulate clicking the Master button (now unlocked)
-          setTimeout(() => {
-            masterBtn.click();
-          }, 100);
         } else {
           error.textContent = 'Invalid code. Please check and try again.';
           error.style.display = 'block';
@@ -2232,11 +2293,18 @@
     function showSummary() {
       const isPerfect    = state.score === PERFECT_SCORE;
       const isChallenge  = state.difficulty === 'challenge';
-      const unlockMaster = isPerfect && isChallenge;
+      const isWorkout    = state.difficulty === 'workout';
+      const isWarmup     = state.difficulty === 'warmup';
+      const isMixedFacts = state.factFocus === 5;
+      
+      // Check for unlocks based on score thresholds
+      const shouldUnlockWorkout   = isWarmup && isMixedFacts && state.score >= 900;
+      const shouldUnlockChallenge = isWorkout && isMixedFacts && state.score >= 940;
+      const shouldUnlockMaster    = isChallenge && state.score >= 940;
 
       /* ── Display names ── */
       const DIFF_NAMES = { warmup: 'Warm-Up', workout: 'Workout', challenge: 'Challenge' };
-      const FACT_NAMES = { 1: '2s & 5s', 2: '3s & 4s', 3: '6s & 7s', 4: '8s & 9s', 5: '×2→×9' };
+      const FACT_NAMES = { 1: '2s & 5s', 2: '3s & 4s', 3: '6s & 7s', 4: '8s & 9s', 5: 'Mixed Facts' };
 
       const diffName = DIFF_NAMES[state.difficulty];
       const factName = isChallenge ? null : FACT_NAMES[state.factFocus];
@@ -2249,13 +2317,13 @@
         'warmup-1': { difficulty: 'warmup',   factFocus: 2, label: 'Warm-Up · 3s & 4s'   },
         'warmup-2': { difficulty: 'warmup',   factFocus: 3, label: 'Warm-Up · 6s & 7s'   },
         'warmup-3': { difficulty: 'warmup',   factFocus: 4, label: 'Warm-Up · 8s & 9s'   },
-        'warmup-4': { difficulty: 'warmup',   factFocus: 5, label: 'Warm-Up · ×2→×9'  },
+        'warmup-4': { difficulty: 'warmup',   factFocus: 5, label: 'Warm-Up · Mixed Facts'  },
         'warmup-5': { difficulty: 'workout',  factFocus: 1, label: 'Workout · 2s & 5s'   },
         // Workout path: same fact-family progression, then Challenge
         'workout-1': { difficulty: 'workout', factFocus: 2, label: 'Workout · 3s & 4s'   },
         'workout-2': { difficulty: 'workout', factFocus: 3, label: 'Workout · 6s & 7s'   },
         'workout-3': { difficulty: 'workout', factFocus: 4, label: 'Workout · 8s & 9s'   },
-        'workout-4': { difficulty: 'workout', factFocus: 5, label: 'Workout · ×2→×9'  },
+        'workout-4': { difficulty: 'workout', factFocus: 5, label: 'Workout · Mixed Facts'  },
         'workout-5': { difficulty: 'challenge', factFocus: null, label: 'Challenge'       },
         // Challenge top of ladder — Master handled separately
         'challenge-null': null
@@ -2263,12 +2331,55 @@
 
       /* ── Build recommendation text ── */
       function getRecommendation() {
-        // Master unlock takes priority
-        if (unlockMaster) return null; // handled by master banner below
+        // Unlock messages take priority - include codes for backup
+        if (shouldUnlockWorkout && !checkWorkoutUnlock()) {
+          unlockWorkout();
+          const code = generateWorkoutCode();
+          return { 
+            color: '#2ecc71', 
+            text: `🎉 Congratulations! You've unlocked Workout!<br><br>
+                   <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">Your Unlock Code (screenshot this!):</div>
+                     <div style="font-size: 20px; font-weight: bold; letter-spacing: 2px; font-family: monospace;">${code}</div>
+                     <div style="font-size: 12px; opacity: 0.8; margin-top: 6px;">Use this code to unlock Workout on any device</div>
+                   </div>`,
+            html: true
+          };
+        }
+        
+        if (shouldUnlockChallenge && !checkChallengeUnlock()) {
+          unlockChallenge();
+          const code = generateChallengeCode();
+          return { 
+            color: '#2ecc71', 
+            text: `🎉 Congratulations! You've unlocked Challenge!<br><br>
+                   <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">Your Unlock Code (screenshot this!):</div>
+                     <div style="font-size: 20px; font-weight: bold; letter-spacing: 2px; font-family: monospace;">${code}</div>
+                     <div style="font-size: 12px; opacity: 0.8; margin-top: 6px;">Use this code to unlock Challenge on any device</div>
+                   </div>`,
+            html: true
+          };
+        }
+        
+        if (shouldUnlockMaster && !checkMasterUnlock()) {
+          unlockMaster();
+          const code = generateMasterCode();
+          return { 
+            color: '#2ecc71', 
+            text: `🎉 Congratulations! You've unlocked Master Mode!<br><br>
+                   <div style="background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                     <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">Your Unlock Code (screenshot this!):</div>
+                     <div style="font-size: 20px; font-weight: bold; letter-spacing: 2px; font-family: monospace;">${code}</div>
+                     <div style="font-size: 12px; opacity: 0.8; margin-top: 6px;">Use this code to unlock Master on any device</div>
+                   </div>`,
+            html: true
+          };
+        }
 
-        // Challenge high score (900+) but not perfect → encourage another try
-        if (isChallenge && state.score >= 900) {
-          return { color: '#2ecc71', text: '🌟 Amazing work on Challenge! Try it again to chase a perfect score!' };
+        // Challenge high score (900+) but not unlock threshold → encourage another try
+        if (isChallenge && state.score >= 900 && state.score < 940) {
+          return { color: '#2ecc71', text: '🌟 Almost there! Score 940+ to unlock Master Mode!' };
         }
 
         // Challenge low score
@@ -2343,22 +2454,6 @@
           ">${rec.text}</div>
         ` : ''}
 
-        ${unlockMaster ? `
-          <div class="master-unlock">
-            ⭐ Perfect Score! ⭐<br>
-            <span style="font-size:15px;">You've earned <b>Master Clearance</b>!</span>
-          </div>
-          <div class="master-code-wrap">
-            <div class="master-clearance">Clearance Level Granted</div>
-            <div class="master-codename">★ MASTER BLASTER ★</div>
-            <div class="master-short-code" id="masterCodeDisplay"></div>
-            <div class="master-instructions">
-              Write down or screenshot this code.<br>
-              Enter it when Master Mode launches to skip ahead.
-            </div>
-          </div>
-        ` : ''}
-
         <button class="btn" id="closeSummaryBtn">Close</button>
       `;
 
@@ -2369,12 +2464,6 @@
         summary.remove();
         resetGame(false); // re-prompt difficulty so student chooses deliberately
       };
-
-      if (unlockMaster) {
-        // Generate and display the unique clearance code
-        const code = generateMasterCode();
-        document.getElementById('masterCodeDisplay').textContent = code;
-      }
     }
 
     /* ═══════════════════════════════════════════════════
@@ -2435,12 +2524,19 @@
     refreshButtonStates();
     
     // Check Master unlock status
+    // Check unlock status on page load
+    if (checkWorkoutUnlock()) {
+      unlockWorkout();
+    }
+    if (checkChallengeUnlock()) {
+      unlockChallenge();
+    }
     if (checkMasterUnlock()) {
       masterBtn.classList.remove('locked');
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v54
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus
 
   </script>
 </body>
