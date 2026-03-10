@@ -1153,7 +1153,12 @@
 
       // Update mission brief
       updateMissionBrief(diff);
-
+      
+      // Update label to prompt for fact focus if needed (Warmup/Workout only)
+      if ((diff === 'warmup' || diff === 'workout') && !state.factFocus) {
+        difficultyLabel.textContent = 'Now choose a Fact Focus';
+      }
+      
       // Show/hide x² button for Master mode
       sqrBtn.style.display = (diff === 'master') ? 'inline-flex' : 'none';
 
@@ -1162,9 +1167,11 @@
       factRow.classList.toggle('hidden', !showFacts);
 
       if (showFacts) {
-        // Reset fact focus so student must pick again
-        state.factFocus = null;
-        factBtns.forEach(b => b.classList.remove('active'));
+        // If fact focus was already selected, keep it highlighted
+        if (state.factFocus) {
+          factBtns.forEach(b => b.classList.toggle('active', +b.dataset.fact === state.factFocus));
+        }
+        // Don't reset state.factFocus - preserve selection if already made
       } else {
         // Challenge/Master: no fact focus needed — set level directly
         state.factFocus = null; // unused but keep clean
@@ -1175,16 +1182,21 @@
 
     function selectFactFocus(factLevel) {
       state.factFocus = factLevel;
-      state.difficultyChosen = true;
 
       // Update fact button highlights
       factBtns.forEach(b => b.classList.toggle('active', +b.dataset.fact === factLevel));
 
-      // Derive state (including max based on warmup fact level) and auto-start
-      state.level = resolveLevel(state.difficulty, state.factFocus);
-      state.mode  = DIFF_MODE[state.difficulty];
-      state.max   = resolveMax(state.difficulty, state.factFocus);
-      startGame();
+      // Only start if both difficulty and fact focus are selected
+      if (state.difficultyChosen && state.difficulty) {
+        // Derive state (including max based on warmup fact level) and auto-start
+        state.level = resolveLevel(state.difficulty, state.factFocus);
+        state.mode  = DIFF_MODE[state.difficulty];
+        state.max   = resolveMax(state.difficulty, state.factFocus);
+        startGame();
+      } else {
+        // Show prompt to select difficulty if not yet chosen
+        difficultyLabel.textContent = 'Now choose a Difficulty Level';
+      }
     }
 
     // Wire up difficulty buttons
@@ -1223,9 +1235,18 @@
           state.mode  = DIFF_MODE[diff];
           startGame();
         } else {
-          // Warmup/Workout: show placeholders and wait for fact selection
-          renderPlaceholders(DIFF_MODE[diff]);
-          refreshButtonStates();
+          // Warmup/Workout: check if fact focus already selected
+          if (state.factFocus) {
+            // Fact focus already chosen - auto-start
+            state.level = resolveLevel(state.difficulty, state.factFocus);
+            state.mode  = DIFF_MODE[diff];
+            state.max   = resolveMax(state.difficulty, state.factFocus);
+            startGame();
+          } else {
+            // Show placeholders and wait for fact selection
+            renderPlaceholders(DIFF_MODE[diff]);
+            refreshButtonStates();
+          }
         }
       };
     });
