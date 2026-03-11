@@ -1288,7 +1288,7 @@
 
     function solve(nums, target, depth = 0) {
       // Prevent infinite recursion
-      if (depth > 20) return null;
+      if (depth > 6) return null; // Max 6 operations for 4 tiles
       
       if (nums.length === 1) return nums[0] === target ? [] : null;
       
@@ -1296,10 +1296,18 @@
       if (state.level === 7) {
         for (let i = 0; i < nums.length; i++) {
           const n = nums[i];
+          
+          // Skip useless squares: 0²=0, 1²=1, (-1)²=1
+          // These either don't change the number or create duplicates
+          if (n === 0 || n === 1 || n === -1) continue;
+          
           const squared = n * n;
           
           // Prevent runaway squaring - cap at 10000
           if (Math.abs(squared) > 10000) continue;
+          
+          // Don't create duplicates - if squared result already exists, skip
+          if (nums.includes(squared)) continue;
           
           const rest = nums.filter((_, k) => k !== i);
           const r = solve([squared, ...rest], target, depth + 1);
@@ -2565,7 +2573,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v60
 
   </script>
 </body>
