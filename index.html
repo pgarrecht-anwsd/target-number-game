@@ -1616,11 +1616,33 @@
           }
         }
         
-        // Ultimate fallback if still no solution - just use first number
+        // Ultimate fallback if still no solution - regenerate tiles
         if (!sol) {
-          console.warn('Master Mode: using ultimate fallback');
-          t = nums[0];
-          sol = [];
+          console.warn('Master Mode: no solution found, regenerating tiles');
+          // Generate new tiles
+          nums = [];
+          while (nums.length < state.mode) {
+            const n = randomInitialNumber(state.level, nums);
+            nums.push(n);
+          }
+          // Try with simple target
+          for (let tries = 0; tries < 10; tries++) {
+            t = Math.floor(Math.random() * 21) - 10;
+            if (nums.includes(t)) continue;
+            sol = solve([...nums], t);
+            if (sol) break;
+          }
+          // If STILL no solution, use guaranteed target (sum)
+          if (!sol) {
+            t = nums[0] + nums[1];
+            sol = solve([...nums], t);
+            // This should always work, but if not, use simpler tiles
+            if (!sol) {
+              nums = [2, 3, 4, 5];
+              t = 7; // 2 + 5 or 3 + 4
+              sol = solve([...nums], t);
+            }
+          }
         }
       } else {
         // Non-Master modes: existing logic
@@ -1667,6 +1689,14 @@
     ═══════════════════════════════════════════════════ */
 
     function renderNumbers(hidden = false, animate = false) {
+      // Defensive check: ensure no Infinity values
+      if (state.numbers.some(n => !isFinite(n))) {
+        console.error('ERROR: Infinity detected in state.numbers:', state.numbers);
+        // Reset to safe state
+        state.numbers = [2, 3, 4, 5];
+        state.target = 7;
+      }
+      
       if (!animate) {
         // Normal render without animation
         numbersRow.innerHTML = '';
@@ -1787,7 +1817,7 @@
           numbersRow.parentElement.style.position = 'relative';
           numbersRow.parentElement.appendChild(indicator);
           
-          setTimeout(() => {
+          const squareTimer = setTimeout(() => {
             indicator.remove();
             state.numbers = state.numbers.filter((_, k) => k !== state.selectedFirst);
             state.numbers.splice(state.selectedFirst, 0, res); // keep in same position
@@ -1795,6 +1825,7 @@
             numbersRow.children[state.selectedFirst]?.classList.add('fading-in');
             resetSelection();
             processingMove = false;
+            animationTimers = []; // clear timers
             
             if (state.numbers.length === 1 &&
                 state.numbers[0] === state.target &&
@@ -1807,6 +1838,7 @@
               setTimeout(nextProblem, 2000);
             }
           }, 800);
+          animationTimers.push(squareTimer);
           
           return;
         }
@@ -1825,6 +1857,7 @@
     ═══════════════════════════════════════════════════ */
 
     let processingMove = false; // guard against double-click race condition
+    let animationTimers = []; // track all active animation timers
 
     function numberClick(i, btn) {
       if (state.solutionShown || !state.gameStarted) return;
@@ -1896,9 +1929,10 @@
       const targetPosition = state.selectedFirst; // result appears at first tile's position
       
       // Keep highlights visible during the slide animation
-      setTimeout(() => {
+      const timer1 = setTimeout(() => {
         clearHighlights();
       }, 800); // clear after slide completes
+      animationTimers.push(timer1);
       
       // Calculate slide distance
       const firstRect = firstBtn.getBoundingClientRect();
@@ -1910,7 +1944,7 @@
       secondBtn.classList.add('merging');
       secondBtn.style.transform = `translate(${slideX}px, ${slideY}px)`;
       
-      setTimeout(() => {
+      const timer2 = setTimeout(() => {
         // Remove second tile instantly (no fade)
         secondBtn.remove();
         
@@ -1924,10 +1958,10 @@
         firstBtn.style.fontSize = '28px'; // smaller for equation
         
         // After equation is visible for a moment, fade to result
-        setTimeout(() => {
+        const timer3 = setTimeout(() => {
           firstBtn.classList.add('text-fade-out');
           
-          setTimeout(() => {
+          const timer4 = setTimeout(() => {
             // Now show the result
             firstBtn.textContent = res;
             firstBtn.style.fontSize = ''; // reset to default
@@ -1954,6 +1988,7 @@
             if (!resultTile) {
               console.error('Result tile not found!');
               processingMove = false; // unlock even on error
+              animationTimers = []; // clear timers
               return;
             }
             resultTile.removeAttribute('data-result-tile'); // clean up
@@ -1997,6 +2032,7 @@
             
             // DOM is now synced with state - safe to unlock
             processingMove = false;
+            animationTimers = []; // clear all timers
             
             // Check if problem is solved and trigger fireworks immediately
             if (state.numbers.length === 1 &&
@@ -2016,9 +2052,12 @@
               setTimeout(nextProblem, 2000);
             }
             
-          }, 480); // equation fade-out duration  
+          }, 480); // equation fade-out duration
+          animationTimers.push(timer4);
       }, 600); // show equation duration
+      animationTimers.push(timer3);
     }, 800); // slide duration
+    animationTimers.push(timer2);
     }
 
     /* ═══════════════════════════════════════════════════
@@ -2197,6 +2236,13 @@
 
     resetBtn.onclick = () => {
       if (state.solutionShown) return;
+      
+      // Cancel all pending animation timers
+      animationTimers.forEach(timer => clearTimeout(timer));
+      animationTimers = [];
+      processingMove = false; // unlock immediately
+      
+      // Reset state
       state.numbers = state.original.slice();
       state.moveCount = 0;
       // DON'T reset hintUsedThisProblem - penalty persists even after reset
@@ -2746,7 +2792,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v64
 
   </script>
 </body>
