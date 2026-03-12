@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -1351,6 +1352,73 @@
       }
       return null;
     }
+    
+    /* ═══════════════════════════════════════════════════
+       FIND SHORTEST SOLUTION (for Show Solution button)
+    ═══════════════════════════════════════════════════ */
+    
+    function findShortestSolution(nums, target, maxDepth = 6) {
+      const solutions = [];
+      
+      function solveAll(nums, target, depth = 0, path = []) {
+        if (depth > maxDepth) return;
+        if (nums.length === 1) {
+          if (nums[0] === target) solutions.push([...path]);
+          return;
+        }
+        
+        // Try binary operations first (simpler)
+        for (let i = 0; i < nums.length; i++) {
+          for (let j = 0; j < nums.length; j++) {
+            if (i === j) continue;
+            const a = nums[i], b = nums[j];
+            const rest = nums.filter((_, k) => k !== i && k !== j);
+
+            const ops = [
+              { v: a + b, op: '+', ai: i, bi: j },
+              { v: a * b, op: '*', ai: i, bi: j },
+              { v: a - b, op: '-', ai: i, bi: j },
+              { v: b - a, op: '-', ai: j, bi: i }
+            ];
+
+            if (b !== 0 && Number.isInteger(a / b)) ops.push({ v: a / b, op: '/', ai: i, bi: j });
+            if (a !== 0 && Number.isInteger(b / a)) ops.push({ v: b / a, op: '/', ai: j, bi: i });
+
+            for (const o of ops) {
+              if (!Number.isInteger(o.v)) continue;
+              if (state.level !== 7 && o.v < 0) continue;
+              if (state.difficulty === 'workout' && Math.abs(o.v) > 100) continue;
+              if (Math.abs(o.v) > 10000) continue;
+              
+              const step = { a: nums[o.ai], b: nums[o.bi], op: o.op, result: o.v };
+              solveAll([o.v, ...rest], target, depth + 1, [...path, step]);
+            }
+          }
+        }
+        
+        // Try x² operations last (more complex, only for Master)
+        if (state.level === 7) {
+          for (let i = 0; i < nums.length; i++) {
+            const n = nums[i];
+            if (n === 0 || n === 1 || n === -1) continue;
+            
+            const squared = n * n;
+            if (Math.abs(squared) > 10000) continue;
+            if (nums.includes(squared)) continue;
+            
+            const rest = nums.filter((_, k) => k !== i);
+            const step = { a: n, b: null, op: '^2', result: squared };
+            solveAll([squared, ...rest], target, depth + 1, [...path, step]);
+          }
+        }
+      }
+      
+      solveAll(nums, target, 0, []);
+      
+      // Return shortest solution, or null if none found
+      if (solutions.length === 0) return null;
+      return solutions.sort((a, b) => a.length - b.length)[0];
+    }
 
     /* ═══════════════════════════════════════════════════
        SOLUTION QUALITY FILTER
@@ -2078,34 +2146,49 @@
        SHOW SOLUTION
     ═══════════════════════════════════════════════════ */
 
-    solutionBtn.onclick = () => {
+    solutionBtn.onclick = async () => {
       if (state.solutionShown) return;
 
       state.solutionShown = true;
       state.solutionsUsed++;
       refreshButtonStates();
-
-      let nums = state.original.slice();
-      const steps = [];
-
-      state.solution.forEach(s => {
-        if (s.op === '^2') {
-          // Unary operation: x²
-          steps.push(`${s.a}² = ${s.result}`);
-          nums.splice(nums.indexOf(s.a), 1);
-          nums.unshift(s.result);
-        } else {
-          // Binary operation
-          const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
-          steps.push(`${s.a} ${sym} ${s.b} = ${s.result}`);
-          nums.splice(nums.indexOf(s.a), 1);
-          nums.splice(nums.indexOf(s.b), 1);
-          nums.unshift(s.result);
-        }
-      });
-
-      solutionBox.innerHTML = `<b>One valid solution:</b> ${steps.join('; ')}`;
+      
+      // Show loading indicator
+      solutionBox.innerHTML = `<b>🔍 Computing optimal solution...</b>`;
       solutionBox.style.display = 'block';
+      
+      // Use setTimeout to allow UI to update before heavy computation
+      setTimeout(() => {
+        // Find shortest solution
+        const bestSolution = findShortestSolution(state.original, state.target);
+        
+        if (!bestSolution) {
+          solutionBox.innerHTML = `<b>Error:</b> Could not find a solution. This shouldn't happen!`;
+          return;
+        }
+
+        let nums = state.original.slice();
+        const steps = [];
+
+        bestSolution.forEach(s => {
+          if (s.op === '^2') {
+            // Unary operation: x² - add parentheses for negative numbers
+            const displayNum = s.a < 0 ? `(${s.a})` : s.a;
+            steps.push(`${displayNum}² = ${s.result}`);
+            nums.splice(nums.indexOf(s.a), 1);
+            nums.unshift(s.result);
+          } else {
+            // Binary operation
+            const sym = s.op === '*' ? '×' : s.op === '/' ? '÷' : s.op;
+            steps.push(`${s.a} ${sym} ${s.b} = ${s.result}`);
+            nums.splice(nums.indexOf(s.a), 1);
+            nums.splice(nums.indexOf(s.b), 1);
+            nums.unshift(s.result);
+          }
+        });
+
+        solutionBox.innerHTML = `<b>Shortest solution (${steps.length} step${steps.length > 1 ? 's' : ''}):</b> ${steps.join('; ')}`;
+      }, 100); // Small delay to let UI update
     };
 
     /* ═══════════════════════════════════════════════════
@@ -2202,6 +2285,62 @@
 
     function generateMasterCode() {
       return generateUnlockCode('NB'); // NB = Number Blaster
+    }
+    
+    /* ═══════════════════════════════════════════════════
+       MATH NINJA CREDENTIALS GENERATOR
+    ═══════════════════════════════════════════════════ */
+    
+    function generateNinjaCredentials() {
+      // Cool math-themed ninja codenames
+      const codenames = [
+        { name: 'SIGMA STRIKER', title: 'Master of Summation' },
+        { name: 'DELTA PHANTOM', title: 'Change Agent' },
+        { name: 'VECTOR VIPER', title: 'Direction Dominator' },
+        { name: 'MATRIX SHADOW', title: 'Array Architect' },
+        { name: 'PRIME BLADE', title: 'Indivisible Warrior' },
+        { name: 'THEOREM THUNDER', title: 'Proof Perfectionist' },
+        { name: 'AXIOM ASSASSIN', title: 'Truth Seeker' },
+        { name: 'EXPONENTIAL EDGE', title: 'Growth Guardian' },
+        { name: 'THE INFINITE CIPHER', title: 'Endless Enigma' },
+        { name: 'FIBONACCI FANG', title: 'Sequence Specialist' },
+        { name: 'EULER\'S GHOST', title: 'Identity Hunter' },
+        { name: 'PYTHAGORAS REX', title: 'Triangle Titan' },
+        { name: 'NEWTON\'S FURY', title: 'Calculus Commander' },
+        { name: 'GAUSS GUARDIAN', title: 'Number Theorist' },
+        { name: 'ARCHIMEDES ACE', title: 'Principle Pioneer' },
+        { name: 'PASCAL\'S STORM', title: 'Probability Prodigy' },
+        { name: 'FRACTAL FURY', title: 'Pattern Prophet' },
+        { name: 'QUANTUM QUAKE', title: 'Uncertainty Expert' },
+        { name: 'INTEGRAL INFERNO', title: 'Area Analyst' },
+        { name: 'DERIVATIVE DRIFT', title: 'Rate Master' },
+        { name: 'ALGORITHM ALPHA', title: 'Process Perfectionist' },
+        { name: 'BINARY BLITZ', title: 'Base Two Boss' },
+        { name: 'RADICAL RONIN', title: 'Root Ruler' },
+        { name: 'POLYNOMIAL PROWLER', title: 'Degree Defender' }
+      ];
+      
+      // Pick a random codename
+      const ninja = codenames[Math.floor(Math.random() * codenames.length)];
+      
+      // Generate unique username based on codename + random suffix
+      const usernameBase = ninja.name.split(' ').map(w => w[0]).join(''); // e.g., "SS" from "SIGMA STRIKER"
+      const randomNum = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
+      const username = usernameBase + randomNum;
+      
+      // Generate password: 6-character alphanumeric
+      const CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      let password = '';
+      for (let i = 0; i < 6; i++) {
+        password += CHARS[Math.floor(Math.random() * CHARS.length)];
+      }
+      
+      return {
+        codename: ninja.name,
+        title: ninja.title,
+        username: username,
+        password: password
+      };
     }
 
     /* Verify a code entered by the student */
@@ -2417,6 +2556,36 @@
             html: true
           };
         }
+        
+        // Math Ninja credentials for 940+ on Master Mode
+        if (state.difficulty === 'master' && state.score >= 940) {
+          const ninjaCredentials = generateNinjaCredentials();
+          return {
+            color: '#9b59b6',
+            text: `🥷 <b style="font-size: 18px;">MATH NINJA CREDENTIALS EARNED</b> 🥷<br><br>
+                   You have proven yourself worthy of the highest honor.<br><br>
+                   <div style="background: rgba(0,0,0,0.5); padding: 16px; border-radius: 8px; margin-top: 12px; border: 2px solid #9b59b6;">
+                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">👤 Your Math Ninja Identity:</div>
+                     <div style="font-size: 24px; font-weight: bold; color: #e74c3c; text-shadow: 0 0 10px rgba(231,76,60,0.5);">${ninjaCredentials.codename}</div>
+                     <div style="font-size: 11px; opacity: 0.7; margin-top: 4px; font-style: italic;">"${ninjaCredentials.title}"</div>
+                     
+                     <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2);">
+                       <div style="font-size: 13px; opacity: 0.9; margin-bottom: 6px;">🔑 Access Credentials:</div>
+                       <div style="font-size: 13px; font-family: monospace; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px; margin-top: 4px;">
+                         <div><span style="opacity: 0.7;">Username:</span> <span style="color: #3498db; font-weight: bold;">${ninjaCredentials.username}</span></div>
+                         <div style="margin-top: 4px;"><span style="opacity: 0.7;">Password:</span> <span style="color: #3498db; font-weight: bold;">${ninjaCredentials.password}</span></div>
+                       </div>
+                     </div>
+                     
+                     <div style="font-size: 12px; opacity: 0.9; margin-top: 14px; line-height: 1.6; background: rgba(231,76,60,0.2); padding: 10px; border-radius: 4px; border-left: 3px solid #e74c3c;">
+                       📸 <b>Screenshot and save these credentials!</b><br>
+                       They will grant you access to a secret mission...<br>
+                       <span style="opacity: 0.8; font-size: 11px;">Coming soon: Math Ninja Level</span>
+                     </div>
+                   </div>`,
+            html: true
+          };
+        }
 
         // Challenge high score (900+) but not unlock threshold → encourage another try
         if (isChallenge && state.score >= 900 && state.score < 940) {
@@ -2577,7 +2746,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v60
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus
 
   </script>
 </body>
