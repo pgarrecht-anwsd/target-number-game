@@ -1787,6 +1787,10 @@
       }
       
       if (state.selectedOp === '/' && !Number.isInteger(a / b)) {
+        console.log('Division validation failed:', a, '÷', b, '=', a/b, 'isInteger:', Number.isInteger(a/b));
+        console.log('First number type:', typeof a, 'Second number type:', typeof b);
+        console.log('state.numbers:', state.numbers);
+        console.log('selectedFirst:', state.selectedFirst, 'selectedSecond:', i);
         showFeedback('Each step must result in a whole number.');
         resetSelection();
         return;
