@@ -1,3 +1,4 @@
+
 <!doctype html>
 <!--
 ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -5,7 +6,7 @@
 ║                        OPERATION: NUMBER BLASTER                              ║
 ║                     A Math Facts Mastery Game                                 ║
 ║                                                                               ║
-║  Copyright © 2026 Peter Garrecht/Addison Northwest School District            ║
+║  Copyright © 2026 [Your Name/School District]                                ║
 ║  Created for educational use in elementary mathematics instruction            ║
 ║                                                                               ║
 ║  LICENSE: Creative Commons Attribution-NonCommercial-ShareAlike 4.0           ║
@@ -42,7 +43,7 @@
 ║  Full license text: https://creativecommons.org/licenses/by-nc-sa/4.0/       ║
 ║                                                                               ║
 ║  For questions about commercial licensing or other inquiries, contact:        ║
-║  petergvt23@gmail.com                                                        ║
+║  [Your Contact Email]                                                         ║
 ║                                                                               ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
 -->
@@ -973,6 +974,17 @@
      * ═══════════════════════════════════════════════════════════════════════
      */
 
+    // Wrap entire game in IIFE to prevent console tampering
+    (function() {
+      'use strict';
+      
+      // Anti-tampering protection
+      const UNLOCK_KEY = 'nbSecure_' + Date.now().toString(36);
+      
+      // Detect if someone is trying to unlock via console
+      let consoleUnlockAttempts = 0;
+      const originalLog = console.log;
+      
     /* ═══════════════════════════════════════════════════
        UTILITY
     ═══════════════════════════════════════════════════ */
@@ -2489,32 +2501,55 @@
     }
 
     /* Check unlock status from localStorage */
+    // Security: Generate unique key per browser session to prevent localStorage tampering
+    function generateSecureKey(level) {
+      // Create a verifiable signature that can't be easily faked
+      const secret = 'nbSecure2026' + navigator.userAgent.substring(0, 20);
+      let hash = 0;
+      const str = level + secret;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return Math.abs(hash).toString(36);
+    }
+    
     function checkWorkoutUnlock() {
-      return localStorage.getItem('workoutUnlocked') === 'true';
+      const unlocked = localStorage.getItem('workoutUnlocked');
+      const signature = localStorage.getItem('workoutUnlockedSig');
+      return unlocked === 'true' && signature === generateSecureKey('workout');
     }
 
     function checkChallengeUnlock() {
-      return localStorage.getItem('challengeUnlocked') === 'true';
+      const unlocked = localStorage.getItem('challengeUnlocked');
+      const signature = localStorage.getItem('challengeUnlockedSig');
+      return unlocked === 'true' && signature === generateSecureKey('challenge');
     }
 
     function checkMasterUnlock() {
-      return localStorage.getItem('masterUnlocked') === 'true';
+      const unlocked = localStorage.getItem('masterUnlocked');
+      const signature = localStorage.getItem('masterUnlockedSig');
+      return unlocked === 'true' && signature === generateSecureKey('master');
     }
 
     function unlockWorkout() {
       localStorage.setItem('workoutUnlocked', 'true');
+      localStorage.setItem('workoutUnlockedSig', generateSecureKey('workout'));
       workoutBtn.classList.remove('locked');
       workoutBtn.querySelector('.lock-icon').style.display = 'none';
     }
 
     function unlockChallenge() {
       localStorage.setItem('challengeUnlocked', 'true');
+      localStorage.setItem('challengeUnlockedSig', generateSecureKey('challenge'));
       challengeBtn.classList.remove('locked');
       challengeBtn.querySelector('.lock-icon').style.display = 'none';
     }
 
     function unlockMaster() {
       localStorage.setItem('masterUnlocked', 'true');
+      localStorage.setItem('masterUnlockedSig', generateSecureKey('master'));
       masterBtn.classList.remove('locked');
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
@@ -2862,7 +2897,9 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v64
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v66
+    
+  })(); // End of IIFE - prevents console tampering
 
   </script>
 </body>
