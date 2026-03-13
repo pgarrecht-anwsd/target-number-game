@@ -2384,10 +2384,15 @@
       const EPOCH = new Date('2025-01-01').getTime();
       const dayNum = Math.floor((Date.now() - EPOCH) / 86400000);
 
-      // Encode dayNum into 4 base-25 chars using unambiguous alphabet
+      // Add prefix to make each level's code unique on the same day
+      // WO codes different from CH codes different from NB codes
+      const prefixValue = prefix.charCodeAt(0) + prefix.charCodeAt(1);
+      const combinedValue = (dayNum * 100) + prefixValue;
+
+      // Encode combinedValue into 4 base-25 chars using unambiguous alphabet
       // (no 0/O, 1/I/L confusion — safe for handwriting)
       const ALPHA = 'ABCDEFGHJKMNPQRSTVWXYZ234';  // 25 chars
-      let n = dayNum;
+      let n = combinedValue;
       let payload = '';
       for (let i = 0; i < 4; i++) {
         payload = ALPHA[n % ALPHA.length] + payload;
@@ -2897,7 +2902,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v66
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v67
     
   })(); // End of IIFE - prevents console tampering
 
