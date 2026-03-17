@@ -51,7 +51,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Operation: Number Blaster</title>
+  <title>Operation: Number Blaster v68</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
   <style>
@@ -999,9 +999,9 @@
     }
 
     function randomInitialNumber(level, existing = []) {
-      // Master Mode (level 7): -10 to 10 range
+      // Master Mode (level 7): -10 to 10 range, excluding 0
       if (level === 7) {
-        const fullPool = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10];
+        const fullPool = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9,10];
         const available = fullPool.filter(n => !existing.includes(n));
         const candidates = available.length ? available : fullPool;
         return candidates[Math.floor(Math.random() * candidates.length)];
@@ -1673,7 +1673,7 @@
             t = Math.floor(Math.random() * 61) - 30; // -30 to 30
           }
           
-          if (nums.includes(t)) continue;
+          if (t === 0 || nums.includes(t)) continue;
           sol = solve([...nums], t);
           if (sol) break;
         }
@@ -1690,7 +1690,7 @@
           ];
           
           for (const fb of fallbacks) {
-            if (Math.abs(fb) <= 99 && !nums.includes(fb)) {
+            if (fb !== 0 && Math.abs(fb) <= 99 && !nums.includes(fb)) {
               t = fb;
               sol = solve([...nums], t);
               if (sol) break;
@@ -1707,16 +1707,17 @@
             const n = randomInitialNumber(state.level, nums);
             nums.push(n);
           }
-          // Try with simple target
+          // Try with simple target (non-zero)
           for (let tries = 0; tries < 10; tries++) {
             t = Math.floor(Math.random() * 21) - 10;
-            if (nums.includes(t)) continue;
+            if (t === 0 || nums.includes(t)) continue;
             sol = solve([...nums], t);
             if (sol) break;
           }
-          // If STILL no solution, use guaranteed target (sum)
+          // If STILL no solution, use guaranteed target (sum, avoiding zero)
           if (!sol) {
             t = nums[0] + nums[1];
+            if (t === 0) t = nums[0] * nums[1]; // fallback to product if sum is zero
             sol = solve([...nums], t);
             // This should always work, but if not, use simpler tiles
             if (!sol) {
@@ -2902,7 +2903,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v67
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68
     
   })(); // End of IIFE - prevents console tampering
 
