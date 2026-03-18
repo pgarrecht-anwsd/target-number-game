@@ -2485,13 +2485,26 @@
       const payload = match[1];
       const check   = match[2];
 
-      // Recompute checksum
+      // Step 1: Verify checksum matches payload (structural validity)
       const indices = payload.split('').map(c => ALPHA.indexOf(c));
       const sum = indices.reduce((a, b) => a + b, 0) % ALPHA.length;
       const xor = indices.reduce((a, b) => a ^ b, 0) % ALPHA.length;
       const expected = ALPHA[sum] + ALPHA[xor];
+      if (check !== expected) return false;
 
-      return check === expected;
+      // Step 2: Decode payload back to combinedValue and verify it encodes THIS prefix.
+      // Generation sets combinedValue = (dayNum * 100) + prefixValue.
+      // prefixValue = prefix.charCodeAt(0) + prefix.charCodeAt(1).
+      // So (combinedValue % 100) must equal the expected prefixValue for this prefix.
+      // This makes it impossible to reuse a WO- code as CH- or NB-.
+      let combinedValue = 0;
+      for (const idx of indices) {
+        combinedValue = combinedValue * ALPHA.length + idx;
+      }
+      const expectedPrefixValue = prefix.charCodeAt(0) + prefix.charCodeAt(1);
+      if (combinedValue % 100 !== expectedPrefixValue % 100) return false;
+
+      return true;
     }
 
     function verifyWorkoutCode(code) {
@@ -2903,7 +2916,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.2
     
   })(); // End of IIFE - prevents console tampering
 
