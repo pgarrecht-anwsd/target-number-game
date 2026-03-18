@@ -2916,9 +2916,54 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.2
-    
-  })(); // End of IIFE - prevents console tampering
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus
+
+    /* ═══════════════════════════════════════════════════
+       TEACHER RESET — Shift+Alt+R
+       Clears all unlock flags from localStorage so a
+       student's hacked or legitimately earned unlocks
+       are wiped and levels return to locked state.
+       Not documented anywhere in the UI.
+    ═══════════════════════════════════════════════════ */
+
+    document.addEventListener('keydown', e => {
+      if (!e.ctrlKey && e.shiftKey && e.altKey && e.key === 'R') {
+        e.preventDefault();
+
+        // Clear all unlock flags and their signatures
+        localStorage.removeItem('workoutUnlocked');
+        localStorage.removeItem('workoutUnlockedSig');
+        localStorage.removeItem('challengeUnlocked');
+        localStorage.removeItem('challengeUnlockedSig');
+        localStorage.removeItem('masterUnlocked');
+        localStorage.removeItem('masterUnlockedSig');
+
+        // Re-lock buttons in the UI immediately
+        [workoutBtn, challengeBtn, masterBtn].forEach(btn => {
+          btn.classList.add('locked');
+          const icon = btn.querySelector('.lock-icon');
+          if (icon) icon.style.display = '';
+        });
+
+        // If a game is running, quit it cleanly first
+        if (state.gameStarted) resetGame(false);
+
+        // Brief visual confirmation — subtle, not student-facing
+        const flash = document.createElement('div');
+        flash.textContent = '🔒 Levels reset';
+        flash.style.cssText = [
+          'position:fixed', 'bottom:24px', 'left:50%', 'transform:translateX(-50%)',
+          'background:rgba(0,0,0,0.75)', 'color:#fff', 'font-size:13px',
+          'padding:8px 18px', 'border-radius:20px', 'z-index:9999',
+          'pointer-events:none', 'opacity:1', 'transition:opacity 1s ease 1.5s'
+        ].join(';');
+        document.body.appendChild(flash);
+        requestAnimationFrame(() => requestAnimationFrame(() => { flash.style.opacity = '0'; }));
+        setTimeout(() => flash.remove(), 2800);
+      }
+    });
+
+  })(); // End of IIFE - prevents console tampering v68.3
 
   </script>
 </body>
