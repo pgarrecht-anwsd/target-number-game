@@ -51,7 +51,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Operation: Number Blaster v68</title>
+  <title>Operation: Number Blaster</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
   <style>
@@ -831,6 +831,112 @@
 
     .master-btn:active { transform: translateY(3px); }
     .master-btn:hover  { filter: brightness(1.2); }
+
+    /* ── Fact Flash ── */
+    .fact-flash-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0 4px;
+      animation: ffFadeIn 0.35s ease-out;
+    }
+
+    @keyframes ffFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fact-flash-equation {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: #fff;
+      text-shadow: 0 0 16px rgba(100,180,255,0.5);
+    }
+
+    .fact-flash-equation .ff-blank {
+      display: inline-block;
+      min-width: 52px;
+      border-bottom: 3px solid rgba(255,235,59,0.8);
+      color: rgba(255,255,255,0.25);
+      text-align: center;
+      font-size: 38px;
+      vertical-align: baseline;
+    }
+
+    .fact-flash-choices {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .ff-choice {
+      border: none;
+      border-radius: 12px;
+      background: var(--num);
+      box-shadow: 0 6px var(--numShadow);
+      color: #fff;
+      font-size: 26px;
+      font-weight: 900;
+      min-width: 72px;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: transform .05s, box-shadow .05s, filter .1s;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .ff-choice:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px rgba(0,0,0,.4);
+    }
+
+    .ff-choice.correct {
+      background: var(--opAdd);
+      box-shadow: 0 6px #1a8a4a;
+      animation: ffCorrectPop 0.35s ease-out;
+    }
+
+    .ff-choice.wrong {
+      background: var(--opDiv);
+      box-shadow: 0 6px #8a1a1a;
+      animation: ffShake 0.35s ease-out;
+    }
+
+    .ff-choice.reveal {
+      background: var(--opAdd);
+      box-shadow: 0 6px #1a8a4a;
+    }
+
+    @keyframes ffCorrectPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes ffShake {
+      0%, 100% { transform: translateX(0); }
+      25%  { transform: translateX(-6px); }
+      75%  { transform: translateX(6px); }
+    }
+
+    .fact-flash-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,235,59,0.75);
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .fact-flash-feedback {
+      font-size: 13px;
+      font-weight: 600;
+      min-height: 18px;
+      color: #ff9800;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -999,9 +1105,9 @@
     }
 
     function randomInitialNumber(level, existing = []) {
-      // Master Mode (level 7): -10 to 10 range, excluding 0
+      // Master Mode (level 7): -10 to 10 range
       if (level === 7) {
-        const fullPool = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8,9,10];
+        const fullPool = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10];
         const available = fullPool.filter(n => !existing.includes(n));
         const candidates = available.length ? available : fullPool;
         return candidates[Math.floor(Math.random() * candidates.length)];
@@ -1051,6 +1157,188 @@
 
       if (!candidates.length) candidates = fullPool;
       return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    /* ═══════════════════════════════════════════════════
+       FACT FLASH — pre-puzzle activation for levels 1–4
+    ═══════════════════════════════════════════════════ */
+
+    // All facts in each family, ordered from most-foundational to hardest.
+    // Each entry: [a, b] — the fact shown is a × b = ?
+    const FACT_FLASH_FACTS = {
+      1: [ [2,2],[2,3],[2,4],[2,5],[2,6],[2,7],[2,8],[2,9],[2,10],[5,5],[5,6],[5,7],[5,8],[5,9] ],
+      2: [ [3,3],[3,4],[3,5],[3,6],[3,7],[3,8],[3,9],[4,4],[4,5],[4,6],[4,7],[4,8],[4,9] ],
+      3: [ [6,6],[6,7],[6,8],[6,9],[7,7],[7,8],[7,9],[6,2],[6,3],[6,4],[6,5],[7,2],[7,3],[7,4],[7,5] ],
+      4: [ [8,8],[8,9],[9,9],[8,2],[8,3],[8,4],[8,5],[8,6],[8,7],[9,2],[9,3],[9,4],[9,5],[9,6],[9,7] ]
+    };
+
+    // Track which facts have been shown this game session, per level
+    // Resets each new game
+    let factFlashQueue = []; // shuffled list of fact indices for this game
+
+    function buildFactFlashQueue(level) {
+      const pool = FACT_FLASH_FACTS[level];
+      if (!pool) return [];
+      // Shuffle and return enough for 10 problems (with wrap-around if pool < 10)
+      const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+      // Extend to 10 by repeating if needed, but avoid adjacent repeats
+      const result = [];
+      while (result.length < TOTAL_PROBLEMS) {
+        for (const f of shuffled) {
+          if (result.length < TOTAL_PROBLEMS) result.push(f);
+        }
+      }
+      return result;
+    }
+
+    function makeDistractors(correct, a, b) {
+      // Generate 3 plausible wrong answers — nearby products, off-by-one multiples, etc.
+      const candidates = new Set();
+      // Common error patterns
+      candidates.add(correct + a);       // forgot one group
+      candidates.add(correct - a);       // one fewer group
+      candidates.add(correct + b);
+      candidates.add(correct - b);
+      candidates.add(a * (b + 1));       // adjacent fact
+      candidates.add(a * (b - 1));
+      candidates.add((a + 1) * b);
+      candidates.add((a - 1) * b);
+      candidates.add(correct + 1);
+      candidates.add(correct - 1);
+      candidates.add(a * a);             // confusion with square
+      candidates.add(b * b);
+      candidates.add(a + b);             // addition confusion
+      candidates.add(Math.round(correct * 1.5)); // rough multiples
+
+      // Filter: positive, not equal to correct, reasonable range
+      const pool = [...candidates].filter(n =>
+        n > 0 && n !== correct && n >= correct - 20 && n <= correct + 20
+      );
+
+      // Shuffle and pick 3
+      pool.sort(() => Math.random() - 0.5);
+      return pool.slice(0, 3);
+    }
+
+    // Returns which problem number (1-based) we're on when flash is needed
+    // flash runs BEFORE the problem is generated, so state.problems is already set
+    function shouldShowFactFlash() {
+      // Only for Warm-Up and Workout, fact focus levels 1–4 (not Mixed Facts = 5)
+      return (state.difficulty === 'warmup' || state.difficulty === 'workout') &&
+             state.factFocus >= 1 && state.factFocus <= 4;
+    }
+
+    function showFactFlash(onComplete) {
+      // Pick the fact for this problem slot
+      const problemIndex = state.problems - 1; // 0-based
+      const factPair = factFlashQueue[problemIndex] || factFlashQueue[0] || [2, 5];
+      const [a, b] = factPair;
+      const correct = a * b;
+
+      // Store flashed pair so generateProblem can use it
+      state.flashedPair = [a, b];
+      state.flashActive = true;
+      refreshButtonStates(); // disable hint/solution/reset while flash is showing
+
+      // Wrap onComplete to clear flashActive
+      const done = () => {
+        state.flashActive = false;
+        onComplete();
+      };
+
+      // Build answer choices: correct + 3 distractors, shuffled
+      const distractors = makeDistractors(correct, a, b);
+      const choices = [correct, ...distractors].sort(() => Math.random() - 0.5);
+
+      let attemptsLeft = 2; // first try + one retry
+      let answered = false;
+
+      function render(feedbackText = '', revealIndex = null) {
+        numbersRow.innerHTML = '';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'fact-flash-wrap';
+
+        // Label
+        const lbl = document.createElement('div');
+        lbl.className = 'fact-flash-label';
+        lbl.textContent = 'Fact Flash — choose the answer';
+        wrap.appendChild(lbl);
+
+        // Equation: a × b = ___
+        const eq = document.createElement('div');
+        eq.className = 'fact-flash-equation';
+        eq.innerHTML = `${a} × ${b} = <span class="ff-blank">?</span>`;
+        wrap.appendChild(eq);
+
+        // Choice buttons
+        const choicesDiv = document.createElement('div');
+        choicesDiv.className = 'fact-flash-choices';
+
+        choices.forEach(val => {
+          const btn = document.createElement('button');
+          btn.className = 'ff-choice';
+          btn.textContent = val;
+
+          if (revealIndex !== null) {
+            // Post-attempt state: reveal correct, mark wrong
+            if (val === correct) btn.classList.add('reveal');
+            else if (val === revealIndex) btn.classList.add('wrong');
+            btn.disabled = true;
+          } else {
+            btn.onclick = () => handleChoice(val);
+          }
+          choicesDiv.appendChild(btn);
+        });
+        wrap.appendChild(choicesDiv);
+
+        // Feedback line
+        const fb = document.createElement('div');
+        fb.className = 'fact-flash-feedback';
+        fb.innerHTML = feedbackText;
+        wrap.appendChild(fb);
+
+        numbersRow.appendChild(wrap);
+      }
+
+      function handleChoice(chosen) {
+        if (answered) return;
+        attemptsLeft--;
+
+        if (chosen === correct) {
+          // Correct — flash green, brief pause, then load puzzle
+          answered = true;
+          const btns = numbersRow.querySelectorAll('.ff-choice');
+          btns.forEach(b => {
+            b.disabled = true;
+            if (+b.textContent === correct) b.classList.add('correct');
+          });
+          setTimeout(done, 600);
+        } else if (attemptsLeft > 0) {
+          // First wrong: show feedback + reveal correct, offer retry
+          render(`Not quite — the answer is highlighted. Try once more!`, chosen);
+          const btns = numbersRow.querySelectorAll('.ff-choice');
+          btns.forEach(b => {
+            if (+b.textContent === correct) {
+              b.classList.remove('reveal');
+              b.classList.add('correct');
+              b.disabled = false;
+              b.onclick = () => {
+                answered = true;
+                b.disabled = true;
+                setTimeout(done, 500);
+              };
+            }
+          });
+        } else {
+          // Second wrong: reveal answer, then auto-advance
+          answered = true;
+          render(`${a} × ${b} = ${correct} — now let's use it!`, chosen);
+          setTimeout(done, 1800);
+        }
+      }
+
+      render();
     }
 
     /* ═══════════════════════════════════════════════════
@@ -1119,7 +1407,11 @@
 
       // Summary stats
       hintsUsed:     0,
-      solutionsUsed: 0
+      solutionsUsed: 0,
+
+      // Fact Flash
+      flashedPair: null,  // [a, b] from the Fact Flash shown before this problem
+      flashActive: false  // true while Fact Flash is showing (disables game buttons)
     };
 
     /* ═══════════════════════════════════════════════════
@@ -1170,7 +1462,7 @@
     }
 
     function refreshButtonStates() {
-      const active  = state.gameStarted && !state.solutionShown;
+      const active  = state.gameStarted && !state.solutionShown && !state.flashActive;
       const canHint = active && state.moveCount === 0;
 
       setEnabled(hintBtn,     canHint);
@@ -1635,7 +1927,26 @@
       const anchors = ANCHORS[state.level] || [];
 
       let nums = [];
-      if (anchors.length) {
+
+      // ── Soft guarantee: if a Fact Flash pair was shown, try to include both
+      // numbers as tiles, unless doing so would make the puzzle trivially one-step.
+      // "Trivially obvious" = only 3 tiles (Warm-Up) AND the product of the pair
+      // is already a valid target with no other operations needed.
+      if (state.flashedPair && state.level >= 1 && state.level <= 4) {
+        const [fa, fb] = state.flashedPair;
+        const product = fa * fb;
+        const tileCount = state.mode; // 3 for warmup, 4 for workout
+        // Include both if: 4-tile mode (always room for strategy) OR
+        // 3-tile mode but product is large enough not to be an obvious sole move
+        const tooObvious = tileCount === 3 && product <= 20;
+        if (!tooObvious) {
+          nums.push(fa);
+          if (fb !== fa) nums.push(fb);
+        } else {
+          // Fall back to standard anchor
+          if (anchors.length) nums.push(anchors[Math.floor(Math.random() * anchors.length)]);
+        }
+      } else if (anchors.length) {
         nums.push(anchors[Math.floor(Math.random() * anchors.length)]);
       }
 
@@ -1673,7 +1984,7 @@
             t = Math.floor(Math.random() * 61) - 30; // -30 to 30
           }
           
-          if (t === 0 || nums.includes(t)) continue;
+          if (nums.includes(t)) continue;
           sol = solve([...nums], t);
           if (sol) break;
         }
@@ -1690,7 +2001,7 @@
           ];
           
           for (const fb of fallbacks) {
-            if (fb !== 0 && Math.abs(fb) <= 99 && !nums.includes(fb)) {
+            if (Math.abs(fb) <= 99 && !nums.includes(fb)) {
               t = fb;
               sol = solve([...nums], t);
               if (sol) break;
@@ -1707,17 +2018,16 @@
             const n = randomInitialNumber(state.level, nums);
             nums.push(n);
           }
-          // Try with simple target (non-zero)
+          // Try with simple target
           for (let tries = 0; tries < 10; tries++) {
             t = Math.floor(Math.random() * 21) - 10;
-            if (t === 0 || nums.includes(t)) continue;
+            if (nums.includes(t)) continue;
             sol = solve([...nums], t);
             if (sol) break;
           }
-          // If STILL no solution, use guaranteed target (sum, avoiding zero)
+          // If STILL no solution, use guaranteed target (sum)
           if (!sol) {
             t = nums[0] + nums[1];
-            if (t === 0) t = nums[0] * nums[1]; // fallback to product if sum is zero
             sol = solve([...nums], t);
             // This should always work, but if not, use simpler tiles
             if (!sol) {
@@ -1761,6 +2071,7 @@
       state.original = nums.slice();
       state.target   = t;
       state.solution = sol;
+      state.flashedPair = null; // consumed — clear so it doesn't affect next problem
 
       targetEl.textContent = state.gameStarted ? state.target : '--';
       renderNumbers(false); // always render actual numbers; pre-game shows hidden via renderPlaceholders
@@ -2347,7 +2658,22 @@
       }
       state.problems++;
       problemsEl.textContent = `${state.problems}/${TOTAL_PROBLEMS}`;
-      generateProblem();
+
+      if (shouldShowFactFlash()) {
+        // Clear the game area and show Fact Flash before next puzzle
+        solutionBox.style.display = 'none';
+        targetEl.textContent = '--';
+        state.flashedPair = null;
+        showFactFlash(() => {
+          generateProblem();
+          targetEl.textContent = state.target;
+          renderNumbers(false);
+          refreshButtonStates();
+        });
+      } else {
+        state.flashedPair = null;
+        generateProblem();
+      }
     }
 
     /* ═══════════════════════════════════════════════════
@@ -2360,12 +2686,26 @@
       problemsEl.textContent = `1/${TOTAL_PROBLEMS}`;
 
       lockMenu();
-      generateProblem();
 
-      // Reveal the problem
-      targetEl.textContent = state.target;
-      renderNumbers(false);
-      refreshButtonStates();
+      // Build fact flash queue for this game (levels 1–4 only)
+      if (shouldShowFactFlash()) {
+        factFlashQueue = buildFactFlashQueue(state.factFocus);
+        // Show flash for problem 1, then generate + reveal puzzle
+        renderPlaceholders(state.mode); // keep layout stable during flash
+        showFactFlash(() => {
+          generateProblem();
+          targetEl.textContent = state.target;
+          renderNumbers(false);
+          refreshButtonStates();
+        });
+      } else {
+        factFlashQueue = [];
+        state.flashedPair = null;
+        generateProblem();
+        targetEl.textContent = state.target;
+        renderNumbers(false);
+        refreshButtonStates();
+      }
     }
 
     /* ═══════════════════════════════════════════════════
@@ -2485,26 +2825,13 @@
       const payload = match[1];
       const check   = match[2];
 
-      // Step 1: Verify checksum matches payload (structural validity)
+      // Recompute checksum
       const indices = payload.split('').map(c => ALPHA.indexOf(c));
       const sum = indices.reduce((a, b) => a + b, 0) % ALPHA.length;
       const xor = indices.reduce((a, b) => a ^ b, 0) % ALPHA.length;
       const expected = ALPHA[sum] + ALPHA[xor];
-      if (check !== expected) return false;
 
-      // Step 2: Decode payload back to combinedValue and verify it encodes THIS prefix.
-      // Generation sets combinedValue = (dayNum * 100) + prefixValue.
-      // prefixValue = prefix.charCodeAt(0) + prefix.charCodeAt(1).
-      // So (combinedValue % 100) must equal the expected prefixValue for this prefix.
-      // This makes it impossible to reuse a WO- code as CH- or NB-.
-      let combinedValue = 0;
-      for (const idx of indices) {
-        combinedValue = combinedValue * ALPHA.length + idx;
-      }
-      const expectedPrefixValue = prefix.charCodeAt(0) + prefix.charCodeAt(1);
-      if (combinedValue % 100 !== expectedPrefixValue % 100) return false;
-
-      return true;
+      return check === expected;
     }
 
     function verifyWorkoutCode(code) {
@@ -2864,8 +3191,12 @@
         selectedFirst: null, selectedOp: null,
         score: 0, problems: 0, moveCount: 0,
         hintUsedThisProblem: false, solutionShown: false, gameStarted: false,
-        hintsUsed: 0, solutionsUsed: 0
+        hintsUsed: 0, solutionsUsed: 0,
+        flashedPair: null,
+        flashActive: false
       };
+
+      factFlashQueue = [];
 
       scoreEl.textContent    = '0';
       problemsEl.textContent = `0/${TOTAL_PROBLEMS}`;
@@ -2916,54 +3247,9 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus
-
-    /* ═══════════════════════════════════════════════════
-       TEACHER RESET — Shift+Alt+R
-       Clears all unlock flags from localStorage so a
-       student's hacked or legitimately earned unlocks
-       are wiped and levels return to locked state.
-       Not documented anywhere in the UI.
-    ═══════════════════════════════════════════════════ */
-
-    document.addEventListener('keydown', e => {
-      if (!e.ctrlKey && e.shiftKey && e.altKey && e.key === 'R') {
-        e.preventDefault();
-
-        // Clear all unlock flags and their signatures
-        localStorage.removeItem('workoutUnlocked');
-        localStorage.removeItem('workoutUnlockedSig');
-        localStorage.removeItem('challengeUnlocked');
-        localStorage.removeItem('challengeUnlockedSig');
-        localStorage.removeItem('masterUnlocked');
-        localStorage.removeItem('masterUnlockedSig');
-
-        // Re-lock buttons in the UI immediately
-        [workoutBtn, challengeBtn, masterBtn].forEach(btn => {
-          btn.classList.add('locked');
-          const icon = btn.querySelector('.lock-icon');
-          if (icon) icon.style.display = '';
-        });
-
-        // If a game is running, quit it cleanly first
-        if (state.gameStarted) resetGame(false);
-
-        // Brief visual confirmation — subtle, not student-facing
-        const flash = document.createElement('div');
-        flash.textContent = '🔒 Levels reset';
-        flash.style.cssText = [
-          'position:fixed', 'bottom:24px', 'left:50%', 'transform:translateX(-50%)',
-          'background:rgba(0,0,0,0.75)', 'color:#fff', 'font-size:13px',
-          'padding:8px 18px', 'border-radius:20px', 'z-index:9999',
-          'pointer-events:none', 'opacity:1', 'transition:opacity 1s ease 1.5s'
-        ].join(';');
-        document.body.appendChild(flash);
-        requestAnimationFrame(() => requestAnimationFrame(() => { flash.style.opacity = '0'; }));
-        setTimeout(() => flash.remove(), 2800);
-      }
-    });
-
-  })(); // End of IIFE - prevents console tampering v68.3
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.3
+    
+  })(); // End of IIFE - prevents console tampering
 
   </script>
 </body>
