@@ -832,7 +832,21 @@
     .master-btn:active { transform: translateY(3px); }
     .master-btn:hover  { filter: brightness(1.2); }
 
-    /* ── Fact Flash ── */
+    /* ── Flash Zone ── */
+    #gameArea {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #flashZone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 6px 0 2px;
+    }
+
     .fact-flash-wrap {
       display: flex;
       flex-direction: column;
@@ -905,11 +919,6 @@
       animation: ffShake 0.35s ease-out;
     }
 
-    .ff-choice.reveal {
-      background: var(--opAdd);
-      box-shadow: 0 6px #1a8a4a;
-    }
-
     @keyframes ffCorrectPop {
       0%   { transform: scale(1); }
       40%  { transform: scale(1.18); }
@@ -928,14 +937,6 @@
       text-transform: uppercase;
       color: rgba(255,235,59,0.75);
       font-family: 'Orbitron', sans-serif;
-    }
-
-    .fact-flash-feedback {
-      font-size: 13px;
-      font-weight: 600;
-      min-height: 18px;
-      color: #ff9800;
-      text-align: center;
     }
   </style>
 </head>
@@ -1018,17 +1019,25 @@
       <span></span>
     </div>
 
-    <!-- Operator Buttons -->
-    <div class="row">
-      <button class="op add" data-op="+">+</button>
-      <button class="op sub" data-op="-">−</button>
-      <button class="op mul" data-op="*">×</button>
-      <button class="op div" data-op="/">÷</button>
-      <button class="op sqr" data-op="^2" id="sqrBtn" style="display:none;">x²</button>
-    </div>
+    <!-- Op + Number tile area — flash zone overlays both during Fact Flash -->
+    <div id="gameArea">
 
-    <!-- Number Buttons -->
-    <div class="row" id="numbersRow"></div>
+      <!-- Operator Buttons -->
+      <div class="row" id="opRow">
+        <button class="op add" data-op="+">+</button>
+        <button class="op sub" data-op="-">−</button>
+        <button class="op mul" data-op="*">×</button>
+        <button class="op div" data-op="/">÷</button>
+        <button class="op sqr" data-op="^2" id="sqrBtn" style="display:none;">x²</button>
+      </div>
+
+      <!-- Flash Zone — shown only during Fact Flash, hidden otherwise -->
+      <div id="flashZone" style="display:none;"></div>
+
+      <!-- Number Buttons -->
+      <div class="row" id="numbersRow"></div>
+
+    </div>
 
     <!-- Inline feedback for invalid moves -->
     <div id="feedbackMsg" style="
@@ -1163,8 +1172,7 @@
        FACT FLASH — pre-puzzle activation for levels 1–4
     ═══════════════════════════════════════════════════ */
 
-    // All facts in each family, ordered from most-foundational to hardest.
-    // Each entry: [a, b] — the fact shown is a × b = ?
+    // Workout queue: facts for each family, used for Workout single-flash
     const FACT_FLASH_FACTS = {
       1: [ [2,2],[2,3],[2,4],[2,5],[2,6],[2,7],[2,8],[2,9],[2,10],[5,5],[5,6],[5,7],[5,8],[5,9] ],
       2: [ [3,3],[3,4],[3,5],[3,6],[3,7],[3,8],[3,9],[4,4],[4,5],[4,6],[4,7],[4,8],[4,9] ],
@@ -1172,16 +1180,12 @@
       4: [ [8,8],[8,9],[9,9],[8,2],[8,3],[8,4],[8,5],[8,6],[8,7],[9,2],[9,3],[9,4],[9,5],[9,6],[9,7] ]
     };
 
-    // Track which facts have been shown this game session, per level
-    // Resets each new game
-    let factFlashQueue = []; // shuffled list of fact indices for this game
+    let factFlashQueue = [];
 
     function buildFactFlashQueue(level) {
       const pool = FACT_FLASH_FACTS[level];
       if (!pool) return [];
-      // Shuffle and return enough for 10 problems (with wrap-around if pool < 10)
       const shuffled = pool.slice().sort(() => Math.random() - 0.5);
-      // Extend to 10 by repeating if needed, but avoid adjacent repeats
       const result = [];
       while (result.length < TOTAL_PROBLEMS) {
         for (const f of shuffled) {
@@ -1191,154 +1195,221 @@
       return result;
     }
 
-    function makeDistractors(correct, a, b) {
-      // Generate 3 plausible wrong answers — nearby products, off-by-one multiples, etc.
-      const candidates = new Set();
-      // Common error patterns
-      candidates.add(correct + a);       // forgot one group
-      candidates.add(correct - a);       // one fewer group
-      candidates.add(correct + b);
-      candidates.add(correct - b);
-      candidates.add(a * (b + 1));       // adjacent fact
-      candidates.add(a * (b - 1));
-      candidates.add((a + 1) * b);
-      candidates.add((a - 1) * b);
-      candidates.add(correct + 1);
-      candidates.add(correct - 1);
-      candidates.add(a * a);             // confusion with square
-      candidates.add(b * b);
-      candidates.add(a + b);             // addition confusion
-      candidates.add(Math.round(correct * 1.5)); // rough multiples
+    // Extract the dominant mult/div fact from a solution for Warm-Up flash
+    // Returns { a, b, product } where a×b=product is the key step, or null
+    function extractSolutionFact(solution) {
+      if (!solution) return null;
+      const LEVEL_CONFIG = {
+        1: { required: [2,5] },
+        2: { required: [3,4] },
+        3: { required: [6,7] },
+        4: { required: [8,9] }
+      };
+      const cfg = LEVEL_CONFIG[state.level];
+      if (!cfg) return null;
+      const { required } = cfg;
 
-      // Filter: positive, not equal to correct, reasonable range
+      // Find the first meaningful mult step whose operands include a required number
+      for (const s of solution) {
+        if (s.op === '*' && s.a > 1 && s.b > 1) {
+          if (required.includes(s.a) || required.includes(s.b)) {
+            return { a: s.a, b: s.b, product: s.result };
+          }
+        }
+        // Division counts too — reconstruct the underlying mult
+        if (s.op === '/' && s.result > 1) {
+          const product = s.a; // dividend
+          const divisor = s.b;
+          const quotient = s.result;
+          if (required.includes(divisor) || required.includes(quotient)) {
+            return { a: divisor, b: quotient, product };
+          }
+        }
+      }
+      // Fallback: first mult step of any kind
+      for (const s of solution) {
+        if (s.op === '*' && s.a > 1 && s.b > 1) {
+          return { a: s.a, b: s.b, product: s.result };
+        }
+      }
+      return null;
+    }
+
+    function makeDistractors(correct, a, b, isDivision = false) {
+      const candidates = new Set();
+      if (isDivision) {
+        // Division distractors: nearby quotients, off-by-one
+        candidates.add(correct + 1);
+        candidates.add(correct - 1);
+        candidates.add(correct + 2);
+        candidates.add(correct - 2);
+        candidates.add(a / (b + 1) | 0);   // nearby divisor
+        candidates.add(a / (b - 1) | 0);
+        candidates.add(b + 1);              // confusion with divisor
+        candidates.add(b - 1);
+        candidates.add(correct * 2);        // doubling confusion
+      } else {
+        candidates.add(correct + a);
+        candidates.add(correct - a);
+        candidates.add(correct + b);
+        candidates.add(correct - b);
+        candidates.add(a * (b + 1));
+        candidates.add(a * (b - 1));
+        candidates.add((a + 1) * b);
+        candidates.add((a - 1) * b);
+        candidates.add(correct + 1);
+        candidates.add(correct - 1);
+        candidates.add(a * a);
+        candidates.add(b * b);
+        candidates.add(a + b);
+        candidates.add(Math.round(correct * 1.5));
+      }
       const pool = [...candidates].filter(n =>
         n > 0 && n !== correct && n >= correct - 20 && n <= correct + 20
       );
-
-      // Shuffle and pick 3
       pool.sort(() => Math.random() - 0.5);
       return pool.slice(0, 3);
     }
 
-    // Returns which problem number (1-based) we're on when flash is needed
-    // flash runs BEFORE the problem is generated, so state.problems is already set
     function shouldShowFactFlash() {
-      // Only for Warm-Up and Workout, fact focus levels 1–4 (not Mixed Facts = 5)
       return (state.difficulty === 'warmup' || state.difficulty === 'workout') &&
              state.factFocus >= 1 && state.factFocus <= 4;
     }
 
+    // Show one flash question. fact = { equation: string, correct: number, a, b, isDivision }
+    // Calls onDone when student gets it right.
+    function showOneFlash(fact, flashZone, onDone) {
+      const { equation, correct, a, b, isDivision } = fact;
+      const distractors = makeDistractors(correct, a, b, isDivision);
+      const allChoices = [correct, ...distractors];
+      const eliminated = new Set();
+
+      function render() {
+        flashZone.innerHTML = '';
+
+        const lbl = document.createElement('div');
+        lbl.className = 'fact-flash-label';
+        lbl.textContent = 'Fact Flash — choose the answer';
+        flashZone.appendChild(lbl);
+
+        const eq = document.createElement('div');
+        eq.className = 'fact-flash-equation';
+        eq.innerHTML = equation;
+        flashZone.appendChild(eq);
+
+        const choicesDiv = document.createElement('div');
+        choicesDiv.className = 'fact-flash-choices';
+
+        const active = allChoices.filter(v => !eliminated.has(v));
+        const elim   = allChoices.filter(v =>  eliminated.has(v));
+        active.sort(() => Math.random() - 0.5);
+        [...active, ...elim].forEach(val => {
+          const btn = document.createElement('button');
+          btn.className = 'ff-choice';
+          btn.textContent = val;
+          if (eliminated.has(val)) {
+            btn.classList.add('wrong');
+            btn.disabled = true;
+          } else {
+            btn.onclick = () => {
+              flashZone.querySelectorAll('.ff-choice').forEach(b => { b.disabled = true; });
+              if (val === correct) {
+                btn.classList.add('correct');
+                setTimeout(onDone, 550);
+              } else {
+                btn.classList.add('wrong');
+                eliminated.add(val);
+                setTimeout(render, 650);
+              }
+            };
+          }
+          choicesDiv.appendChild(btn);
+        });
+        flashZone.appendChild(choicesDiv);
+      }
+
+      render();
+    }
+
+    // Main entry point — shows 1 flash (Workout) or 2 sequential flashes (Warm-Up)
+    // For Warm-Up: puzzle is generated first so we can derive the flash facts from it.
+    // For Workout: flash shown first, puzzle generated after using flashedPair.
     function showFactFlash(onComplete) {
-      // Pick the fact for this problem slot
-      const problemIndex = state.problems - 1; // 0-based
-      const factPair = factFlashQueue[problemIndex] || factFlashQueue[0] || [2, 5];
-      const [a, b] = factPair;
-      const correct = a * b;
-
-      // Store flashed pair so generateProblem can use it
-      state.flashedPair = [a, b];
       state.flashActive = true;
-      refreshButtonStates(); // disable hint/solution/reset while flash is showing
+      refreshButtonStates();
 
-      // Wrap onComplete to clear flashActive
+      const opRow     = document.getElementById('opRow');
+      const flashZone = document.getElementById('flashZone');
+
+      // Clear any leftover tile content, then hide both rows
+      numbersRow.innerHTML = '';
+      opRow.style.display     = 'none';
+      numbersRow.style.display = 'none';
+      flashZone.style.display  = 'flex';
+
       const done = () => {
+        flashZone.style.display  = 'none';
+        flashZone.innerHTML      = '';
+        opRow.style.display      = '';
+        numbersRow.style.display = '';
         state.flashActive = false;
         onComplete();
       };
 
-      // Build answer choices: correct + 3 distractors, shuffled
-      const distractors = makeDistractors(correct, a, b);
-      const choices = [correct, ...distractors].sort(() => Math.random() - 0.5);
+      if (state.difficulty === 'warmup') {
+        // ── Warm-Up: generate puzzle first, derive facts from solution ──
+        generateProblem(); // populates state.numbers, state.target, state.solution
+        const fact = extractSolutionFact(state.solution);
 
-      let attemptsLeft = 2; // first try + one retry
-      let answered = false;
-
-      function render(feedbackText = '', revealIndex = null) {
-        numbersRow.innerHTML = '';
-
-        const wrap = document.createElement('div');
-        wrap.className = 'fact-flash-wrap';
-
-        // Label
-        const lbl = document.createElement('div');
-        lbl.className = 'fact-flash-label';
-        lbl.textContent = 'Fact Flash — choose the answer';
-        wrap.appendChild(lbl);
-
-        // Equation: a × b = ___
-        const eq = document.createElement('div');
-        eq.className = 'fact-flash-equation';
-        eq.innerHTML = `${a} × ${b} = <span class="ff-blank">?</span>`;
-        wrap.appendChild(eq);
-
-        // Choice buttons
-        const choicesDiv = document.createElement('div');
-        choicesDiv.className = 'fact-flash-choices';
-
-        choices.forEach(val => {
-          const btn = document.createElement('button');
-          btn.className = 'ff-choice';
-          btn.textContent = val;
-
-          if (revealIndex !== null) {
-            // Post-attempt state: reveal correct, mark wrong
-            if (val === correct) btn.classList.add('reveal');
-            else if (val === revealIndex) btn.classList.add('wrong');
-            btn.disabled = true;
-          } else {
-            btn.onclick = () => handleChoice(val);
-          }
-          choicesDiv.appendChild(btn);
-        });
-        wrap.appendChild(choicesDiv);
-
-        // Feedback line
-        const fb = document.createElement('div');
-        fb.className = 'fact-flash-feedback';
-        fb.innerHTML = feedbackText;
-        wrap.appendChild(fb);
-
-        numbersRow.appendChild(wrap);
-      }
-
-      function handleChoice(chosen) {
-        if (answered) return;
-        attemptsLeft--;
-
-        if (chosen === correct) {
-          // Correct — flash green, brief pause, then load puzzle
-          answered = true;
-          const btns = numbersRow.querySelectorAll('.ff-choice');
-          btns.forEach(b => {
-            b.disabled = true;
-            if (+b.textContent === correct) b.classList.add('correct');
-          });
-          setTimeout(done, 600);
-        } else if (attemptsLeft > 0) {
-          // First wrong: show feedback + reveal correct, offer retry
-          render(`Not quite — the answer is highlighted. Try once more!`, chosen);
-          const btns = numbersRow.querySelectorAll('.ff-choice');
-          btns.forEach(b => {
-            if (+b.textContent === correct) {
-              b.classList.remove('reveal');
-              b.classList.add('correct');
-              b.disabled = false;
-              b.onclick = () => {
-                answered = true;
-                b.disabled = true;
-                setTimeout(done, 500);
-              };
-            }
-          });
-        } else {
-          // Second wrong: reveal answer, then auto-advance
-          answered = true;
-          render(`${a} × ${b} = ${correct} — now let's use it!`, chosen);
-          setTimeout(done, 1800);
+        if (!fact) {
+          // No extractable fact — skip flash and go straight to puzzle
+          done();
+          return;
         }
-      }
 
-      render();
+        // Flash 1: a × b = product
+        const flash1 = {
+          equation: `${fact.a} × ${fact.b} = <span class="ff-blank">?</span>`,
+          correct:  fact.product,
+          a: fact.a, b: fact.b,
+          isDivision: false
+        };
+
+        // Flash 2: product ÷ a = b  (or product ÷ b = a if a===b, same thing)
+        const divA = fact.a, divB = fact.b;
+        const flash2 = {
+          equation: `${fact.product} ÷ ${divA} = <span class="ff-blank">?</span>`,
+          correct:  divB,
+          a: fact.product, b: divA,
+          isDivision: true
+        };
+
+        // Store flashed pair for generateProblem's soft-guarantee (already generated,
+        // but kept for consistency — won't be re-used since puzzle is already set)
+        state.flashedPair = [fact.a, fact.b];
+
+        showOneFlash(flash1, flashZone, () => {
+          // Brief gap between the two flashes
+          flashZone.innerHTML = '';
+          setTimeout(() => showOneFlash(flash2, flashZone, done), 200);
+        });
+
+      } else {
+        // ── Workout: queue-based single flash, then generate puzzle ──
+        const problemIndex = state.problems - 1;
+        const factPair = factFlashQueue[problemIndex] || factFlashQueue[0] || [2, 5];
+        const [a, b] = factPair;
+        state.flashedPair = [a, b];
+
+        const flash = {
+          equation: `${a} × ${b} = <span class="ff-blank">?</span>`,
+          correct:  a * b,
+          a, b,
+          isDivision: false
+        };
+
+        showOneFlash(flash, flashZone, done);
+      }
     }
 
     /* ═══════════════════════════════════════════════════
@@ -2660,12 +2731,13 @@
       problemsEl.textContent = `${state.problems}/${TOTAL_PROBLEMS}`;
 
       if (shouldShowFactFlash()) {
-        // Clear the game area and show Fact Flash before next puzzle
         solutionBox.style.display = 'none';
         targetEl.textContent = '--';
         state.flashedPair = null;
         showFactFlash(() => {
-          generateProblem();
+          if (state.difficulty !== 'warmup') {
+            generateProblem();
+          }
           targetEl.textContent = state.target;
           renderNumbers(false);
           refreshButtonStates();
@@ -2687,13 +2759,16 @@
 
       lockMenu();
 
-      // Build fact flash queue for this game (levels 1–4 only)
       if (shouldShowFactFlash()) {
+        // For Warm-Up: generateProblem() is called inside showFactFlash
+        // For Workout: generateProblem() is called in the onComplete callback
         factFlashQueue = buildFactFlashQueue(state.factFocus);
-        // Show flash for problem 1, then generate + reveal puzzle
-        renderPlaceholders(state.mode); // keep layout stable during flash
+        numbersRow.innerHTML = ''; // clear any placeholders
         showFactFlash(() => {
-          generateProblem();
+          if (state.difficulty !== 'warmup') {
+            // Workout: puzzle not yet generated
+            generateProblem();
+          }
           targetEl.textContent = state.target;
           renderNumbers(false);
           refreshButtonStates();
@@ -3247,7 +3322,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.3
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.4
     
   })(); // End of IIFE - prevents console tampering
 
