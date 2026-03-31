@@ -836,6 +836,7 @@
     #gameArea {
       display: flex;
       flex-direction: column;
+      min-height: 190px; /* matches combined height of opRow + numbersRow */
     }
 
     #flashZone {
@@ -845,6 +846,7 @@
       justify-content: center;
       gap: 10px;
       padding: 6px 0 2px;
+      flex: 1; /* expand to fill the full gameArea height */
     }
 
     .fact-flash-wrap {
@@ -3322,7 +3324,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.4
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.5
     
   })(); // End of IIFE - prevents console tampering
 
