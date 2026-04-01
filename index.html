@@ -212,9 +212,27 @@
       50%       { opacity: 0.35; }
     }
 
-    .difficulty-label.flashing,
-    .fact-label.flashing {
+    .difficulty-label.flashing {
       animation: prompt-flash 1.6s ease-in-out infinite;
+    }
+
+    /* Gentle pulse on unselected buttons to prompt interaction */
+    @keyframes btn-pulse {
+      0%, 100% { opacity: 0.65; box-shadow: 0 3px rgba(0,0,0,.3); }
+      50%       { opacity: 1;    box-shadow: 0 3px rgba(0,0,0,.3), 0 0 8px rgba(255,255,255,0.35); }
+    }
+
+    @keyframes diff-pulse {
+      0%, 100% { opacity: 0.65; }
+      50%       { opacity: 1; box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 4px rgba(0,0,0,.35); }
+    }
+
+    .fact-btn.pulsing {
+      animation: btn-pulse 1.8s ease-in-out infinite;
+    }
+
+    .diff-btn.pulsing {
+      animation: diff-pulse 1.8s ease-in-out infinite;
     }
 
     /* Fact Focus block — label above, buttons centred below */
@@ -984,7 +1002,7 @@
 
             <!-- Fact Focus block (hidden for Challenge) -->
             <div class="fact-row" id="factRow">
-              <span class="fact-label" id="factLabel">Choose your Fact Focus to begin</span>
+              <span class="fact-label" id="factLabel"></span>
               <div class="fact-buttons">
                 <button class="fact-btn" data-fact="1">2s &amp; 5s</button>
                 <button class="fact-btn" data-fact="2">3s &amp; 4s</button>
@@ -1063,9 +1081,10 @@
     <button id="quitBtn" class="quit-btn" style="position:absolute; bottom:18px; right:18px;">QUIT</button>
     
     <!-- Copyright Notice -->
-    <div style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 10px; opacity: 0.5; text-align: center; line-height: 1.3;">
-      Operation: Number Blaster © 2026<br>
-      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" style="color: inherit; text-decoration: none;">CC BY-NC-SA 4.0</a> • Free for Educational Use Only
+    <div style="position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 10px; opacity: 0.5; text-align: center; white-space: nowrap;">
+      Operation: Number Blaster © 2026 &nbsp;·&nbsp;
+      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" style="color: inherit; text-decoration: none;">CC BY-NC-SA 4.0</a>
+      &nbsp;·&nbsp; Free for Educational Use Only
     </div>
 
   </div><!-- .container -->
@@ -1546,14 +1565,20 @@
       // Quit button: always visible, active (red + clickable) only during game
       quitBtn.classList.toggle('active', state.gameStarted);
 
-      // Flash difficulty label only before game starts — not during play
-      const shouldFlashDifficulty = !state.gameStarted && !state.difficultyChosen;
-      difficultyLabel.classList.toggle('flashing', shouldFlashDifficulty);
+      // Pulse difficulty buttons until one is chosen
+      const shouldPulseDiff = !state.gameStarted && !state.difficultyChosen;
+      diffBtns.forEach(b => {
+        // Only pulse unlocked buttons; locked ones stay as-is
+        if (!b.classList.contains('locked')) {
+          b.classList.toggle('pulsing', shouldPulseDiff);
+        }
+      });
+      difficultyLabel.classList.toggle('flashing', shouldPulseDiff);
 
-      // Flash fact-focus label when waiting for a fact pick (warmup/workout only)
+      // Pulse fact-focus buttons when difficulty chosen but fact not yet picked
       const needsFact = (state.difficulty === 'warmup' || state.difficulty === 'workout')
-                        && state.factFocus === null;
-      factLabel.classList.toggle('flashing', !state.gameStarted && needsFact);
+                        && state.factFocus === null && state.difficultyChosen;
+      factBtns.forEach(b => b.classList.toggle('pulsing', !state.gameStarted && needsFact));
     }
 
     /* ═══════════════════════════════════════════════════
@@ -1581,10 +1606,10 @@
           <div class="mission-brief-item">Mission Control provides hint for 1st move only</div>
         `,
         'master': `
-          <div class="mission-brief-title">Master Objectives</div>
-          <div class="mission-brief-item">Target includes negative numbers</div>
-          <div class="mission-brief-item">Use x² to square any number</div>
+          <div class="mission-brief-title">Mission Objectives</div>
+          <div class="mission-brief-item">Hit the Target using any Operation</div>
           <div class="mission-brief-item">Each step must result in an integer</div>
+          <div class="mission-brief-item">Mission Control provides hint for 1st move only</div>
         `
       };
       missionBrief.innerHTML = briefHTML[diff] || briefHTML['warmup'];
@@ -1603,8 +1628,9 @@
       updateMissionBrief(diff);
       
       // Update label to prompt for fact focus if needed (Warmup/Workout only)
+      // (button pulsing handles the visual prompt — no text label needed)
       if ((diff === 'warmup' || diff === 'workout') && !state.factFocus) {
-        difficultyLabel.textContent = 'Now choose a Fact Focus';
+        difficultyLabel.textContent = 'Choose a Difficulty Level to start a New Game';
       }
       
       // Show/hide x² button for Master mode
@@ -2693,7 +2719,7 @@
           }
         });
 
-        solutionBox.innerHTML = `<b>Shortest solution (${steps.length} step${steps.length > 1 ? 's' : ''}):</b> ${steps.join('; ')}`;
+        solutionBox.innerHTML = `<b>One possible solution:</b> ${steps.join('; ')}`;
       }, 100); // Small delay to let UI update
     };
 
@@ -3324,7 +3350,7 @@
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.5
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.6
     
   })(); // End of IIFE - prevents console tampering
 
