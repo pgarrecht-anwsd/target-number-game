@@ -1565,19 +1565,19 @@
       // Quit button: always visible, active (red + clickable) only during game
       quitBtn.classList.toggle('active', state.gameStarted);
 
-      // Pulse difficulty buttons until one is chosen
+      // Pulse all unlocked difficulty buttons until ANY difficulty is chosen
       const shouldPulseDiff = !state.gameStarted && !state.difficultyChosen;
       diffBtns.forEach(b => {
-        // Only pulse unlocked buttons; locked ones stay as-is
         if (!b.classList.contains('locked')) {
           b.classList.toggle('pulsing', shouldPulseDiff);
         }
       });
       difficultyLabel.classList.toggle('flashing', shouldPulseDiff);
 
-      // Pulse fact-focus buttons when difficulty chosen but fact not yet picked
+      // Pulse fact-focus buttons until a fact is chosen
+      // (visible and pulsing from the start — no need to wait for difficulty first)
       const needsFact = (state.difficulty === 'warmup' || state.difficulty === 'workout')
-                        && state.factFocus === null && state.difficultyChosen;
+                        && state.factFocus === null;
       factBtns.forEach(b => b.classList.toggle('pulsing', !state.gameStarted && needsFact));
     }
 
@@ -2987,6 +2987,7 @@
       localStorage.setItem('workoutUnlockedSig', generateSecureKey('workout'));
       workoutBtn.classList.remove('locked');
       workoutBtn.querySelector('.lock-icon').style.display = 'none';
+      refreshButtonStates();
     }
 
     function unlockChallenge() {
@@ -2994,6 +2995,7 @@
       localStorage.setItem('challengeUnlockedSig', generateSecureKey('challenge'));
       challengeBtn.classList.remove('locked');
       challengeBtn.querySelector('.lock-icon').style.display = 'none';
+      refreshButtonStates();
     }
 
     function unlockMaster() {
@@ -3001,6 +3003,7 @@
       localStorage.setItem('masterUnlockedSig', generateSecureKey('master'));
       masterBtn.classList.remove('locked');
       masterBtn.querySelector('.lock-icon').style.display = 'none';
+      refreshButtonStates();
     }
 
     function showUnlockModal(levelName, codePrefix, verifyFn, unlockFn, hintText) {
@@ -3335,10 +3338,8 @@
     // Set up menu visuals — no fact pre-selected, Start greyed out with nudge
     initMenuSelections();
     renderPlaceholders(3); // show 3 placeholders immediately so layout doesn't jump
-    refreshButtonStates();
-    
-    // Check Master unlock status
-    // Check unlock status on page load
+
+    // Check unlock status BEFORE refreshButtonStates so unlocked buttons pulse correctly
     if (checkWorkoutUnlock()) {
       unlockWorkout();
     }
@@ -3349,8 +3350,10 @@
       masterBtn.classList.remove('locked');
       masterBtn.querySelector('.lock-icon').style.display = 'none';
     }
+
+    refreshButtonStates();
     
-    // No generateProblem() on load — wait for student to pick difficulty + fact focus v68.6
+    // No generateProblem() on load — wait for student to pick difficulty + fact focus
     
   })(); // End of IIFE - prevents console tampering
 
