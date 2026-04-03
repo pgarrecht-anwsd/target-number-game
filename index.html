@@ -206,16 +206,6 @@
       opacity: 0.9;
     }
 
-    /* Flashing prompt state — applied while awaiting a selection */
-    @keyframes prompt-flash {
-      0%, 100% { opacity: 0.9; }
-      50%       { opacity: 0.35; }
-    }
-
-    .difficulty-label.flashing {
-      animation: prompt-flash 1.6s ease-in-out infinite;
-    }
-
     /* Gentle pulse on unselected buttons to prompt interaction */
     @keyframes btn-pulse {
       0%, 100% { opacity: 0.65; box-shadow: 0 3px rgba(0,0,0,.3); }
@@ -371,8 +361,8 @@
       border-radius: 20px;
       padding: 6px 12px;
       white-space: nowrap;
-      background: #224a7c;
-      box-shadow: 0 3px rgba(0,0,0,.3);
+      background: var(--num);
+      box-shadow: 0 3px var(--numShadow);
       transition: transform .05s, box-shadow .05s, filter .15s, opacity .15s;
       opacity: 0.65;
     }
@@ -939,6 +929,12 @@
       animation: ffShake 0.35s ease-out;
     }
 
+    /* Already-eliminated tiles on re-render: red but no shake */
+    .ff-choice.wrong-static {
+      background: var(--opDiv);
+      box-shadow: 0 6px #8a1a1a;
+    }
+
     @keyframes ffCorrectPop {
       0%   { transform: scale(1); }
       40%  { transform: scale(1.18); }
@@ -1329,7 +1325,7 @@
           btn.className = 'ff-choice';
           btn.textContent = val;
           if (eliminated.has(val)) {
-            btn.classList.add('wrong');
+            btn.classList.add('wrong-static'); // red but no shake on re-render
             btn.disabled = true;
           } else {
             btn.onclick = () => {
@@ -1572,10 +1568,8 @@
           b.classList.toggle('pulsing', shouldPulseDiff);
         }
       });
-      difficultyLabel.classList.toggle('flashing', shouldPulseDiff);
 
       // Pulse fact-focus buttons until a fact is chosen
-      // (visible and pulsing from the start — no need to wait for difficulty first)
       const needsFact = (state.difficulty === 'warmup' || state.difficulty === 'workout')
                         && state.factFocus === null;
       factBtns.forEach(b => b.classList.toggle('pulsing', !state.gameStarted && needsFact));
@@ -1627,11 +1621,7 @@
       // Update mission brief
       updateMissionBrief(diff);
       
-      // Update label to prompt for fact focus if needed (Warmup/Workout only)
       // (button pulsing handles the visual prompt — no text label needed)
-      if ((diff === 'warmup' || diff === 'workout') && !state.factFocus) {
-        difficultyLabel.textContent = 'Choose a Difficulty Level to start a New Game';
-      }
       
       // Show/hide x² button for Master mode
       sqrBtn.style.display = (diff === 'master') ? 'inline-flex' : 'none';
@@ -1668,8 +1658,8 @@
         state.max   = resolveMax(state.difficulty, state.factFocus);
         startGame();
       } else {
-        // Show prompt to select difficulty if not yet chosen
-        difficultyLabel.textContent = 'Now choose a Difficulty Level';
+        // Difficulty not yet chosen — wait for it; refreshButtonStates handles pulsing
+        refreshButtonStates();
       }
     }
 
@@ -2786,17 +2776,14 @@
       problemsEl.textContent = `1/${TOTAL_PROBLEMS}`;
 
       lockMenu();
+      numbersRow.innerHTML = ''; // clear any placeholders before flash or puzzle
 
       if (shouldShowFactFlash()) {
-        // For Warm-Up: generateProblem() is called inside showFactFlash
-        // For Workout: generateProblem() is called in the onComplete callback
         factFlashQueue = buildFactFlashQueue(state.factFocus);
-        numbersRow.innerHTML = ''; // clear any placeholders
         showFactFlash(() => {
-          if (state.difficulty !== 'warmup') {
-            // Workout: puzzle not yet generated
-            generateProblem();
-          }
+          // For Workout: puzzle generated after flash (flashedPair already set)
+          // For Warm-Up: puzzle generated inside showFactFlash before flashes shown
+          if (state.difficulty !== 'warmup') generateProblem();
           targetEl.textContent = state.target;
           renderNumbers(false);
           refreshButtonStates();
